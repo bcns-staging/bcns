@@ -17,6 +17,10 @@ pnpm-debug.log*
 .env
 .env.production
 
+# local-machine TLS-inspection CA certs (see README) - never commit real certs
+certs/*
+!certs/.gitkeep
+
 # macOS-specific files
 .DS_Store
 

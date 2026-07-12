@@ -39,6 +39,12 @@ docker compose up --build prod   # prod-like build served by nginx at http://loc
 
 The `prod` service builds and serves the exact static output GitHub Pages will serve, so it's the best way to sanity-check a change before it ships.
 
+### Local Docker builds behind SSL-inspecting proxies
+
+If `docker compose up` fails with `UNABLE_TO_VERIFY_LEAF_SIGNATURE` or "certificate not trusted", something on your network/machine (corporate proxy, or antivirus SSL scanning like Norton, Kaspersky, etc.) is intercepting HTTPS and the container doesn't trust its root certificate — even though your host OS does. This doesn't affect GitHub Actions (no interception there), only local builds.
+
+Fix: export that root CA cert and drop it in `certs/` (already gitignored, so it never gets committed) — the Dockerfile and `dev` service pick up any `certs/*.crt` file automatically. On Windows, find the cert in `certmgr.msc` under Trusted Root Certification Authorities (look for your antivirus/proxy vendor's name) and export it as Base-64 X.509 (`.cer`/`.crt`).
+
 ## Commands
 
 | Command          | Action                                    |

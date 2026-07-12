@@ -2,6 +2,16 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
+# Trust any extra CA cert placed in certs/ (e.g. corporate/antivirus TLS-inspection
+# root certs — see README "Local Docker builds behind SSL-inspecting proxies").
+# Appended directly to the base image's existing bundle: no-op when certs/ is
+# empty, and avoids needing network access (via apk) to install trust tooling,
+# which would itself be blocked by an untrusted intercepting proxy.
+COPY certs/ /tmp/extra-certs/
+RUN for f in /tmp/extra-certs/*.crt; do [ -f "$f" ] && cat "$f" >> /etc/ssl/certs/ca-certificates.crt; done; \
+    rm -rf /tmp/extra-certs
+ENV NODE_OPTIONS=--use-system-ca
+
 COPY package.json package-lock.json* ./
 RUN npm ci
 
