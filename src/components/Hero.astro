@@ -1,0 +1,66 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  subtitle,
+  ctaLabel,
+  ctaHref,
+} = Astro.props;
+---
+
+<style>
+  section {
+    padding-block: 6rem 5rem;
+  }
+
+  .eyebrow {
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 1rem;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.25rem;
+    max-width: 40ch;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: 1.125rem;
+    max-width: 55ch;
+    margin: 0 0 2rem;
+  }
+
+  .cta {
+    display: inline-block;
+    background: var(--color-accent);
+    color: #101418;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+  }
+</style>
+
+<section class="container">
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  <h1>{title}</h1>
+  <p>{subtitle}</p>
+  {ctaLabel && ctaHref && (
+    <a class="cta" href={ctaHref}>{ctaLabel}</a>
+  )}
+</section>

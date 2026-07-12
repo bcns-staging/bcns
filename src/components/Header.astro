@@ -1,0 +1,33 @@
+---
+interface Props {
+  siteName?: string;
+}
+
+const { siteName = "7 Beacons" } = Astro.props;
+---
+
+<style>
+  header {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 1.25rem;
+  }
+
+  .brand {
+    font-weight: 700;
+    font-size: 1.125rem;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+</style>
+
+<header>
+  <div class="container bar">
+    <a class="brand" href="/">{siteName}</a>
+  </div>
+</header>

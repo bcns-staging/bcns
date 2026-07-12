@@ -1,0 +1,25 @@
+services:
+  # Hot-reloading dev server: docker compose up dev
+  dev:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host"
+    ports:
+      - "4321:4321"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+
+  # Production-like build served by nginx, same artifact GitHub Pages will serve.
+  # docker compose up --build prod
+  prod:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "8080:80"
+
+volumes:
+  node_modules:
