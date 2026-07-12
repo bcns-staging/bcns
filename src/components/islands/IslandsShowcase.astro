@@ -1,0 +1,150 @@
+---
+import IslandCard from "./IslandCard.astro";
+import StaticPulse from "./StaticPulse.astro";
+import Counter from "./Counter.tsx";
+import IdleFact from "./IdleFact.tsx";
+import ScrollReveal from "./ScrollReveal.tsx";
+import MobileOnlyMenu from "./MobileOnlyMenu.tsx";
+import LiveClock from "./LiveClock.tsx";
+---
+
+<style>
+  section {
+    padding-block: 3rem 5rem;
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 2rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.25rem;
+  }
+
+  :global(.island-demo) {
+    min-height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.island-btn) {
+    background: var(--color-accent);
+    color: #101418;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+  }
+
+  :global(.island-fact) {
+    font-size: 0.875rem;
+    text-align: center;
+    margin: 0;
+  }
+
+  :global(.island-menu) {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  :global(.island-bars) {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    width: 100%;
+    height: 4rem;
+  }
+
+  :global(.island-bar) {
+    flex: 1;
+    background: var(--color-accent);
+    border-radius: 0.25rem 0.25rem 0 0;
+    transition: height 0.8s ease;
+  }
+
+  :global(.island-clock) {
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+  }
+
+  :global(.island-clock-sub) {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin: 0.25rem 0 0;
+  }
+</style>
+
+<section class="container">
+  <h2>Islands, up close</h2>
+  <p class="intro">
+    Each card below is a real Astro "island" hydrated a different way. Open dev
+    tools → Network to watch exactly when (or whether) each one's JavaScript loads.
+  </p>
+
+  <div class="grid">
+    <IslandCard
+      title="No island at all"
+      directive="(no directive)"
+      description="Pure CSS animation. This card ships zero JavaScript, full stop."
+    >
+      <StaticPulse />
+    </IslandCard>
+
+    <IslandCard
+      title="Eager hydration"
+      directive="client:load"
+      description="Hydrates immediately on page load — for things needed right away."
+    >
+      <Counter client:load />
+    </IslandCard>
+
+    <IslandCard
+      title="Idle hydration"
+      directive="client:idle"
+      description="Hydrates once the browser is idle, after everything else is done."
+    >
+      <IdleFact client:idle />
+    </IslandCard>
+
+    <IslandCard
+      title="Visible hydration"
+      directive="client:visible"
+      description="Hydrates only once scrolled into view — scroll down and back up to re-trigger on reload."
+    >
+      <ScrollReveal client:visible />
+    </IslandCard>
+
+    <IslandCard
+      title="Conditional hydration"
+      directive={'client:media="(max-width: 600px)"'}
+      description="Only hydrates below a 600px viewport. Resize your browser narrower to see it activate."
+    >
+      <MobileOnlyMenu client:media="(max-width: 600px)" />
+    </IslandCard>
+
+    <IslandCard
+      title="Client-only"
+      directive='client:only="react"'
+      description="Skips server rendering entirely — for things like a clock, where server time and browser time would mismatch."
+    >
+      <LiveClock client:only="react" />
+    </IslandCard>
+  </div>
+</section>
