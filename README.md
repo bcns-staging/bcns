@@ -65,6 +65,7 @@ Fix: export that root CA cert and drop it in `certs/` (already gitignored, so it
 
 - Settings → Pages → Build and deployment → Source: **GitHub Actions**.
 - Settings → Pages → Custom domain: `www.7beacons.com` (this also gets committed via `public/CNAME`), then enable **Enforce HTTPS** once the certificate is issued.
-- DNS at your registrar (Namecheap):
+- DNS at your registrar (Namecheap → Domain List → Manage → Advanced DNS):
   - `CNAME` record: host `www` → `bcns-staging.github.io`
-  - Apex `7beacons.com` → redirect to `https://www.7beacons.com` (Namecheap's "URL Redirect Record", since GitHub recommends the `www` subdomain as the canonical domain for Pages)
+  - `A` records: host `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (GitHub Pages' IPs, so the bare `7beacons.com` resolves too; GitHub auto-redirects it to `www.7beacons.com` per `public/CNAME`)
+  - DNS propagation can take up to ~24h; GitHub will show a green check on Settings → Pages once it verifies the domain and issues the HTTPS certificate.
