@@ -1,0 +1,95 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import GlobeMap from "../components/map/GlobeMap.tsx";
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 1.5rem;
+  }
+
+  :global(.globe-wrap) {
+    position: relative;
+    width: 100%;
+    height: min(70vh, 40rem);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  :global(.globe-canvas) {
+    width: 100%;
+    height: 100%;
+  }
+
+  :global(.globe-search) {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  :global(.globe-search input) {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    width: 16rem;
+    max-width: 60vw;
+  }
+
+  :global(.globe-search button) {
+    background: var(--color-accent);
+    color: #101418;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+
+  :global(.globe-error) {
+    position: absolute;
+    top: 3.5rem;
+    left: 1rem;
+    z-index: 1;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    max-width: 60vw;
+  }
+</style>
+
+<Layout title="Map — 7 Beacons" description="Interactive 3D globe with coordinate search.">
+  <Header siteName="7 Beacons" />
+  <section class="container">
+    <h1>Map</h1>
+    <p class="intro">
+      A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
+      straight to a location.
+    </p>
+    <GlobeMap client:load />
+  </section>
+  <Footer />
+</Layout>

@@ -13,7 +13,12 @@ export default defineConfig({
       // hydration runtime) and merges these in; no 'unsafe-inline' needed.
       directives: [
         "default-src 'self'",
-        "img-src 'self' data:",
+        // data:/blob: for MapLibre's rendered tile bitmaps; blob: workers
+        // and tiles.openfreemap.org connect-src are for the /map page.
+        "img-src 'self' data: blob:",
+        "worker-src blob:",
+        "child-src blob:",
+        "connect-src 'self' https://tiles.openfreemap.org",
         "form-action 'self'",
         "base-uri 'none'",
       ],

@@ -24,10 +24,29 @@ const { siteName = "7 Beacons" } = Astro.props;
     text-decoration: none;
     letter-spacing: -0.01em;
   }
+
+  nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  nav a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  nav a:hover {
+    color: var(--color-text);
+  }
 </style>
 
 <header>
   <div class="container bar">
     <a class="brand" href="/">{siteName}</a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/map">Map</a>
+    </nav>
   </div>
 </header>
