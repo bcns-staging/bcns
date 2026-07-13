@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { BEACONS, beaconArcs } from "./beacons";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+const ACCENT = "#ffb703";
 
 function parseCoordinates(input: string): { lat: number; lng: number } | null {
   const match = input.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
@@ -35,6 +37,33 @@ export default function GlobeMap() {
 
     map.on("style.load", () => {
       map.setProjection({ type: "globe" });
+
+      map.addSource("beacon-arcs", { type: "geojson", data: beaconArcs() });
+      map.addLayer({
+        id: "beacon-arcs",
+        type: "line",
+        source: "beacon-arcs",
+        paint: {
+          "line-color": ACCENT,
+          "line-width": 1.5,
+          "line-opacity": 0.55,
+        },
+      });
+
+      for (const beacon of BEACONS) {
+        const el = document.createElement("div");
+        el.className = "beacon-marker";
+        el.innerHTML = '<span class="beacon-dot"></span>';
+
+        const popup = new maplibregl.Popup({ offset: 14, closeButton: false }).setHTML(
+          `<strong>${beacon.name}</strong><br/>${beacon.description}`
+        );
+
+        new maplibregl.Marker({ element: el })
+          .setLngLat([beacon.lng, beacon.lat])
+          .setPopup(popup)
+          .addTo(map);
+      }
     });
 
     return () => {
