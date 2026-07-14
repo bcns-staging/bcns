@@ -2,10 +2,15 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { localTimeAt } from "./localTime";
-import { LayersControl } from "./LayersControl";
+import { IconButtonControl } from "./IconButtonControl";
 import { terminatorBands } from "./dayNight";
 import { fetchPlaceInfo } from "./placeInfo";
 import { fetchSeaName } from "./seaName";
+
+const LAYERS_ICON =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12,16L19.36,10.27L21,9L12,2L3,9L4.63,10.27M12,18.54L4.62,12.81L3,14.07L12,21.07L21,14.07L19.37,12.8L12,18.54Z" /></svg>';
+const SEARCH_ICON =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.5,14H14.71L14.43,13.73C15.41,12.59 16,11.11 16,9.5A6.5,6.5 0 0,0 9.5,3A6.5,6.5 0 0,0 3,9.5A6.5,6.5 0 0,0 9.5,16C11.11,16 12.59,15.41 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14C7,14 5,12 5,9.5C5,7 7,5 9.5,5C12,5 14,7 14,9.5C14,12 12,14 9.5,14Z" /></svg>';
 
 const DRAG_CLOSE_THRESHOLD_PX = 80;
 const DAY_NIGHT_UPDATE_MS = 60000;
@@ -37,6 +42,7 @@ export default function GlobeMap() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [dayNightOn, setDayNightOn] = useState(false);
   const [mapStyleId, setMapStyleId] = useState<(typeof MAP_STYLES)[number]["id"]>("dark");
   const dayNightOnRef = useRef(dayNightOn);
@@ -63,7 +69,20 @@ export default function GlobeMap() {
       new maplibregl.FullscreenControl({ container: wrapRef.current ?? undefined }),
       "top-right"
     );
-    map.addControl(new LayersControl(() => setLayersOpen((open) => !open)), "top-right");
+    map.addControl(
+      new IconButtonControl(LAYERS_ICON, "Layers", () => {
+        setSearchOpen(false);
+        setLayersOpen((open) => !open);
+      }),
+      "top-right"
+    );
+    map.addControl(
+      new IconButtonControl(SEARCH_ICON, "Search", () => {
+        setLayersOpen(false);
+        setSearchOpen((open) => !open);
+      }),
+      "top-right"
+    );
 
     // Slow ambient auto-rotation, stopped for good the moment the user
     // interacts (click or manually spinning it via drag).
@@ -204,17 +223,32 @@ export default function GlobeMap() {
 
   return (
     <div className="globe-wrap" ref={wrapRef}>
-      <form className="globe-search" onSubmit={handleSearch}>
-        <input
-          type="text"
-          inputMode="decimal"
-          placeholder="Latitude, longitude (e.g. 48.8566, 2.3522)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button type="submit">Go</button>
-      </form>
-      {error && <p className="globe-error">{error}</p>}
+      {searchOpen && (
+        <div className="layers-panel">
+          <div className="layers-panel-header">
+            <span>Search coordinates</span>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(false)}
+              aria-label="Close search"
+            >
+              &times;
+            </button>
+          </div>
+          <form className="search-form" onSubmit={handleSearch}>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="Latitude, longitude (e.g. 48.8566, 2.3522)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+            />
+            <button type="submit">Go</button>
+            {error && <p className="search-error">{error}</p>}
+          </form>
+        </div>
+      )}
 
       {layersOpen && (
         <div className="layers-panel">

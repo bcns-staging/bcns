@@ -42,29 +42,23 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     height: 100%;
   }
 
-  :global(.globe-search) {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    right: 1rem;
-    z-index: 1;
+  :global(.search-form) {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 0.5rem;
   }
 
-  :global(.globe-search input) {
+  :global(.search-form input) {
     background: var(--color-bg);
     color: var(--color-text);
     border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 0.6rem 0.75rem;
     font-size: 0.875rem;
-    width: 16rem;
-    max-width: 60vw;
+    width: 100%;
   }
 
-  :global(.globe-search button) {
+  :global(.search-form button) {
     background: var(--color-accent);
     color: #101418;
     font-weight: 600;
@@ -76,18 +70,10 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     cursor: pointer;
   }
 
-  :global(.globe-error) {
-    position: absolute;
-    top: 3.5rem;
-    left: 1rem;
-    z-index: 1;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    padding: 0.4rem 0.75rem;
+  :global(.search-error) {
     font-size: 0.75rem;
     color: var(--color-text-muted);
-    max-width: 60vw;
+    margin: 0;
   }
 
   :global(.maplibregl-popup-content) {
@@ -213,11 +199,11 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
   <section class="container">
     <h1>Map</h1>
     <p class="intro">
-      A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
-      straight to a location, click anywhere for that spot's local time and
-      place (city, state/province, country), use the fullscreen button
-      (top-right) to maximize it, or open the layers panel below it to
-      switch base styles or toggle the day/night terminator.
+      A 3D globe you can drag, zoom, and tilt (it slowly spins on its own
+      until you interact with it). Click anywhere for that spot's local time
+      and place (city, state/province, country). Top-right: fullscreen,
+      layers (base style + day/night terminator), and search (fly to
+      coordinates).
     </p>
     <GlobeMap client:load />
   </section>
