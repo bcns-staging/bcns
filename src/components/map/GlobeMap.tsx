@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { localTimeAt } from "./localTime";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+const DRAG_CLOSE_THRESHOLD_PX = 80;
 
 function parseCoordinates(input: string): { lat: number; lng: number } | null {
   const match = input.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
@@ -56,6 +57,24 @@ export default function GlobeMap() {
           `<strong>${time}</strong><br/>${date}<br/><span class="time-offset">${timeZone}</span>`
         )
         .addTo(map);
+    });
+
+    // Auto-close the time popup once the map has been dragged a good
+    // distance, rather than leaving it pinned somewhere no longer relevant.
+    let dragStartCenter: maplibregl.LngLat | null = null;
+    map.on("dragstart", () => {
+      dragStartCenter = map.getCenter();
+    });
+    map.on("drag", () => {
+      if (!dragStartCenter || !timePopup) return;
+      const startPx = map.project(dragStartCenter);
+      const centerPx = map.project(map.getCenter());
+      const dx = startPx.x - centerPx.x;
+      const dy = startPx.y - centerPx.y;
+      if (Math.sqrt(dx * dx + dy * dy) > DRAG_CLOSE_THRESHOLD_PX) {
+        timePopup.remove();
+        timePopup = null;
+      }
     });
 
     return () => {
