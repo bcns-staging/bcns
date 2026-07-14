@@ -19,5 +19,15 @@ export function localTimeAt(lat: number, lng: number, at: Date = new Date()) {
     year: "numeric",
   });
 
-  return { time, date, timeZone };
+  // "GMT+9" / "GMT-4:30" style offset, e.g. as a quick-glance complement to
+  // the IANA zone name (which most people don't have memorized).
+  const offsetPart = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(at)
+    .find((part) => part.type === "timeZoneName");
+  const utcOffset = offsetPart ? offsetPart.value.replace("GMT", "UTC") : "";
+
+  return { time, date, timeZone, utcOffset };
 }
