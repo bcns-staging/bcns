@@ -3,15 +3,11 @@ import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { BEACONS, beaconArcs } from "./beacons";
 import { flightLine, flightPosition } from "./flightPath";
-import { createPlaneImage, fetchLiveTraffic, liveTrafficGeoJSON } from "./liveTraffic";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const ACCENT = "#ffb703";
 const SPEEDS = [1, 2, 4, 8] as const;
 const BASE_FLIGHT_DURATION_MS = 25000;
-const LIVE_POLL_MS = 8000;
-
-type LiveStatus = "off" | "loading" | "ok" | "error";
 
 const PLANE_ICON =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2 L19 21 L12 17 L5 21 Z" /></svg>';
@@ -42,13 +38,6 @@ export default function GlobeMap() {
     speedRef.current = speed;
   }, [speed]);
 
-  const [liveOn, setLiveOn] = useState(false);
-  const [liveStatus, setLiveStatus] = useState<LiveStatus>("off");
-  const liveOnRef = useRef(liveOn);
-  useEffect(() => {
-    liveOnRef.current = liveOn;
-  }, [liveOn]);
-
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -64,7 +53,6 @@ export default function GlobeMap() {
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
 
     let rafId: number;
-    let liveTimeoutId: number;
 
     map.on("style.load", () => {
       map.setProjection({ type: "globe" });
@@ -138,69 +126,14 @@ export default function GlobeMap() {
         rafId = requestAnimationFrame(tick);
       };
       rafId = requestAnimationFrame(tick);
-
-      // Live traffic: real aircraft near NYC via our Worker proxy. Opt-in
-      // (polling costs a free third-party API's quota), and degrades
-      // gracefully — a failed/rate-limited poll just leaves the last known
-      // positions in place and tries again next interval, never breaking
-      // the simulated flight above.
-      map.addImage("live-plane-icon", createPlaneImage(24, "#ff6b6b"));
-      map.addSource("live-traffic", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-      map.addLayer({
-        id: "live-traffic",
-        type: "symbol",
-        source: "live-traffic",
-        layout: {
-          "icon-image": "live-plane-icon",
-          "icon-rotate": ["get", "track"],
-          "icon-rotation-alignment": "map",
-          "icon-allow-overlap": true,
-          "icon-size": 0.7,
-        },
-      });
-
-      const pollLive = async () => {
-        if (liveOnRef.current) {
-          setLiveStatus("loading");
-          try {
-            const aircraft = await fetchLiveTraffic();
-            (map.getSource("live-traffic") as maplibregl.GeoJSONSource).setData(
-              liveTrafficGeoJSON(aircraft)
-            );
-            setLiveStatus("ok");
-          } catch {
-            setLiveStatus("error");
-          }
-        }
-        liveTimeoutId = window.setTimeout(pollLive, LIVE_POLL_MS);
-      };
-      pollLive();
     });
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.clearTimeout(liveTimeoutId);
       map.remove();
       mapRef.current = null;
     };
   }, []);
-
-  const toggleLive = () => {
-    setLiveOn((on) => {
-      const next = !on;
-      if (!next) {
-        const source = mapRef.current?.getSource("live-traffic") as
-          | maplibregl.GeoJSONSource
-          | undefined;
-        source?.setData({ type: "FeatureCollection", features: [] });
-        setLiveStatus("off");
-      }
-      return next;
-    });
-  };
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -250,23 +183,6 @@ export default function GlobeMap() {
             {s}x
           </button>
         ))}
-      </div>
-
-      <div className="live-controls">
-        <button
-          type="button"
-          className={`flight-btn${liveOn ? " active" : ""}`}
-          onClick={toggleLive}
-        >
-          {liveOn ? "Live traffic: on" : "Live traffic: off"}
-        </button>
-        {liveOn && (
-          <span className="live-status">
-            {liveStatus === "loading" && "fetching…"}
-            {liveStatus === "ok" && "● live (NYC area)"}
-            {liveStatus === "error" && "unavailable, retrying…"}
-          </span>
-        )}
       </div>
 
       <div ref={containerRef} className="globe-canvas" />
