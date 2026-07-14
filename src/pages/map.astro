@@ -108,6 +108,63 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     color: var(--color-text-muted);
     font-size: 0.7rem;
   }
+
+  :global(.layers-panel) {
+    position: absolute;
+    top: 1rem;
+    /* Sits just left of the top-right control stack (nav/fullscreen/layers
+       buttons) rather than under it. */
+    right: 3.5rem;
+    z-index: 1;
+    width: 14rem;
+    max-height: calc(100% - 2rem);
+    overflow-y: auto;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  :global(.layers-panel-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  :global(.layers-panel-header button) {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.125rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  :global(.layers-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    cursor: pointer;
+    padding-block: 0.2rem;
+  }
+
+  :global(.layers-section-label) {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin: 0.75rem 0 0.25rem;
+  }
+
+  :global(.layers-section-label:first-of-type) {
+    margin-top: 0;
+  }
 </style>
 
 <Layout title="Map — 7 Beacons" description="Interactive 3D globe with coordinate search.">
@@ -116,8 +173,9 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     <h1>Map</h1>
     <p class="intro">
       A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
-      straight to a location, click anywhere for that spot's local time, or
-      use the fullscreen button (top-right) to maximize it.
+      straight to a location, click anywhere for that spot's local time, use
+      the fullscreen button (top-right) to maximize it, or open the layers
+      panel below it to toggle the day/night terminator.
     </p>
     <GlobeMap client:load />
   </section>
