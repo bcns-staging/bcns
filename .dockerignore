@@ -1,4 +1,5 @@
 node_modules
+worker
 dist
 .astro
 npm-debug.log*

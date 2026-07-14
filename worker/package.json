@@ -1,0 +1,14 @@
+{
+  "name": "beacons-adsb-proxy",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260708.1",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.110.0"
+  }
+}

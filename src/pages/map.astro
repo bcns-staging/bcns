@@ -160,6 +160,25 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     color: #101418;
     border-color: var(--color-accent);
   }
+
+  :global(.live-controls) {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  :global(.live-status) {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.6rem;
+  }
 </style>
 
 <Layout title="Map — 7 Beacons" description="Interactive 3D globe with coordinate search.">
@@ -170,7 +189,8 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
       A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
       straight to a location, click a glowing beacon for details, or watch
       the tracked flight from New York to San Francisco (bottom-left controls
-      pause it or speed it up).
+      pause it or speed it up). The bottom-right toggle shows real live air
+      traffic near New York, pulled from a public ADS-B feed.
     </p>
     <GlobeMap client:load />
   </section>
