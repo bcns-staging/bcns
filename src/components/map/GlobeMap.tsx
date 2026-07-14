@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { BEACONS } from "./beacons";
+import { localTimeAt } from "./localTime";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+const DRAG_CLOSE_THRESHOLD_PX = 80;
 
 function parseCoordinates(input: string): { lat: number; lng: number } | null {
   const match = input.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
@@ -15,6 +16,7 @@ function parseCoordinates(input: string): { lat: number; lng: number } | null {
 }
 
 export default function GlobeMap() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [query, setQuery] = useState("");
@@ -33,23 +35,45 @@ export default function GlobeMap() {
     mapRef.current = map;
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    // Fullscreens the whole wrapper (map + search bar), not just the canvas,
+    // so the search bar is still usable while fullscreen.
+    map.addControl(
+      new maplibregl.FullscreenControl({ container: wrapRef.current ?? undefined }),
+      "top-right"
+    );
 
     map.on("style.load", () => {
       map.setProjection({ type: "globe" });
+    });
 
-      for (const beacon of BEACONS) {
-        const el = document.createElement("div");
-        el.className = "beacon-marker";
-        el.innerHTML = '<span class="beacon-dot"></span>';
+    let timePopup: maplibregl.Popup | null = null;
+    map.on("click", (e) => {
+      timePopup?.remove();
+      const { lng, lat } = e.lngLat;
+      const { time, date, timeZone } = localTimeAt(lat, lng);
+      timePopup = new maplibregl.Popup({ offset: 12 })
+        .setLngLat([lng, lat])
+        .setHTML(
+          `<strong>${time}</strong><br/>${date}<br/><span class="time-offset">${timeZone}</span>`
+        )
+        .addTo(map);
+    });
 
-        const popup = new maplibregl.Popup({ offset: 14, closeButton: false }).setHTML(
-          `<strong>${beacon.name}</strong><br/>${beacon.description}`
-        );
-
-        new maplibregl.Marker({ element: el })
-          .setLngLat([beacon.lng, beacon.lat])
-          .setPopup(popup)
-          .addTo(map);
+    // Auto-close the time popup once the map has been dragged a good
+    // distance, rather than leaving it pinned somewhere no longer relevant.
+    let dragStartCenter: maplibregl.LngLat | null = null;
+    map.on("dragstart", () => {
+      dragStartCenter = map.getCenter();
+    });
+    map.on("drag", () => {
+      if (!dragStartCenter || !timePopup) return;
+      const startPx = map.project(dragStartCenter);
+      const centerPx = map.project(map.getCenter());
+      const dx = startPx.x - centerPx.x;
+      const dy = startPx.y - centerPx.y;
+      if (Math.sqrt(dx * dx + dy * dy) > DRAG_CLOSE_THRESHOLD_PX) {
+        timePopup.remove();
+        timePopup = null;
       }
     });
 
@@ -75,7 +99,7 @@ export default function GlobeMap() {
   };
 
   return (
-    <div className="globe-wrap">
+    <div className="globe-wrap" ref={wrapRef}>
       <form className="globe-search" onSubmit={handleSearch}>
         <input
           type="text"
