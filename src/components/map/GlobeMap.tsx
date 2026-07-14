@@ -9,6 +9,8 @@ import { fetchSeaName } from "./seaName";
 
 const DRAG_CLOSE_THRESHOLD_PX = 80;
 const DAY_NIGHT_UPDATE_MS = 60000;
+const SPIN_SECONDS_PER_REVOLUTION = 120; // one full turn every 2 minutes
+const SPIN_MAX_ZOOM = 5; // stop auto-spin once zoomed in this far, spin gesture stops making sense
 
 // Dark first - it's the default style on load (index 0 = initial map style).
 const MAP_STYLES = [
@@ -63,6 +65,18 @@ export default function GlobeMap() {
     );
     map.addControl(new LayersControl(() => setLayersOpen((open) => !open)), "top-right");
 
+    // Slow ambient auto-rotation, stopped for good the moment the user
+    // interacts (click or manually spinning it via drag).
+    let spinEnabled = true;
+    const spinGlobe = () => {
+      if (!spinEnabled || map.getZoom() >= SPIN_MAX_ZOOM) return;
+      const center = map.getCenter();
+      center.lng -= 360 / SPIN_SECONDS_PER_REVOLUTION;
+      map.easeTo({ center, duration: 1000, easing: (n) => n });
+    };
+    map.on("moveend", spinGlobe);
+    spinGlobe();
+
     // Runs on initial load AND again after every setStyle() call (switching
     // base style), since setStyle replaces the whole style - our custom
     // source/layer need re-adding each time, restoring whatever the current
@@ -103,6 +117,7 @@ export default function GlobeMap() {
     let timePopup: maplibregl.Popup | null = null;
     let clickId = 0;
     map.on("click", async (e) => {
+      spinEnabled = false;
       timePopup?.remove();
       timePopup = null;
       const thisClick = ++clickId;
@@ -137,6 +152,7 @@ export default function GlobeMap() {
     // distance, rather than leaving it pinned somewhere no longer relevant.
     let dragStartCenter: maplibregl.LngLat | null = null;
     map.on("dragstart", () => {
+      spinEnabled = false;
       dragStartCenter = map.getCenter();
     });
     map.on("drag", () => {
