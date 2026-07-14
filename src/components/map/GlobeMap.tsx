@@ -10,10 +10,10 @@ import { fetchSeaName } from "./seaName";
 const DRAG_CLOSE_THRESHOLD_PX = 80;
 const DAY_NIGHT_UPDATE_MS = 60000;
 
-// Liberty first - it's the default style on load (index 0 = initial map style).
+// Dark first - it's the default style on load (index 0 = initial map style).
 const MAP_STYLES = [
-  { id: "liberty", name: "Liberty", url: "https://tiles.openfreemap.org/styles/liberty" },
   { id: "dark", name: "Dark", url: "https://tiles.openfreemap.org/styles/dark" },
+  { id: "liberty", name: "Liberty", url: "https://tiles.openfreemap.org/styles/liberty" },
   { id: "positron", name: "Positron (light)", url: "https://tiles.openfreemap.org/styles/positron" },
   { id: "bright", name: "Bright", url: "https://tiles.openfreemap.org/styles/bright" },
   { id: "fiord", name: "Fiord", url: "https://tiles.openfreemap.org/styles/fiord" },
@@ -36,7 +36,7 @@ export default function GlobeMap() {
   const [error, setError] = useState<string | null>(null);
   const [layersOpen, setLayersOpen] = useState(false);
   const [dayNightOn, setDayNightOn] = useState(false);
-  const [mapStyleId, setMapStyleId] = useState<(typeof MAP_STYLES)[number]["id"]>("liberty");
+  const [mapStyleId, setMapStyleId] = useState<(typeof MAP_STYLES)[number]["id"]>("dark");
   const dayNightOnRef = useRef(dayNightOn);
   useEffect(() => {
     dayNightOnRef.current = dayNightOn;
