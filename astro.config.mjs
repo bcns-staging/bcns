@@ -18,7 +18,7 @@ export default defineConfig({
         "img-src 'self' data: blob:",
         "worker-src blob:",
         "child-src blob:",
-        "connect-src 'self' https://tiles.openfreemap.org",
+        "connect-src 'self' https://tiles.openfreemap.org https://beacons-adsb-proxy.rk-0ne.workers.dev",
         "form-action 'self'",
         "base-uri 'none'",
       ],
