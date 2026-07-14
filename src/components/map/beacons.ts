@@ -1,5 +1,3 @@
-import { greatCircle } from "./geo";
-
 export interface Beacon {
   name: string;
   description: string;
@@ -18,19 +16,3 @@ export const BEACONS: Beacon[] = [
   { name: "Cape Town", description: "Africa", lng: 18.4241, lat: -33.9249 },
   { name: "Rio de Janeiro", description: "South America", lng: -43.1729, lat: -22.9068 },
 ];
-
-/** Great-circle arcs connecting the beacons in a loop, as a GeoJSON FeatureCollection. */
-export function beaconArcs(): GeoJSON.FeatureCollection<GeoJSON.LineString> {
-  const features: GeoJSON.Feature<GeoJSON.LineString>[] = BEACONS.map((beacon, i) => {
-    const next = BEACONS[(i + 1) % BEACONS.length];
-    return {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "LineString",
-        coordinates: greatCircle(beacon, next),
-      },
-    };
-  });
-  return { type: "FeatureCollection", features };
-}

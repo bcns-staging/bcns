@@ -124,61 +124,6 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
   :global(.maplibregl-popup-close-button) {
     color: var(--color-text-muted);
   }
-
-  :global(.plane-marker) {
-    width: 1.125rem;
-    height: 1.125rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8fd3ff;
-    filter: drop-shadow(0 0 3px rgba(143, 211, 255, 0.7));
-  }
-
-  :global(.flight-controls) {
-    position: absolute;
-    bottom: 1rem;
-    left: 1rem;
-    z-index: 1;
-    display: flex;
-    gap: 0.4rem;
-  }
-
-  :global(.flight-btn) {
-    background: var(--color-bg);
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    padding: 0.4rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  :global(.flight-btn.active) {
-    background: var(--color-accent);
-    color: #101418;
-    border-color: var(--color-accent);
-  }
-
-  :global(.live-controls) {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  :global(.live-status) {
-    font-size: 0.7rem;
-    color: var(--color-text-muted);
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    padding: 0.3rem 0.6rem;
-  }
 </style>
 
 <Layout title="Map — 7 Beacons" description="Interactive 3D globe with coordinate search.">
@@ -187,10 +132,7 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     <h1>Map</h1>
     <p class="intro">
       A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
-      straight to a location, click a glowing beacon for details, or watch
-      the tracked flight from New York to San Francisco (bottom-left controls
-      pause it or speed it up). The bottom-right toggle shows real live air
-      traffic near New York, pulled from a public ADS-B feed.
+      straight to a location, or click a glowing beacon for details.
     </p>
     <GlobeMap client:load />
   </section>
