@@ -80,33 +80,6 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     max-width: 60vw;
   }
 
-  :global(.beacon-marker) {
-    width: 1rem;
-    height: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  :global(.beacon-dot) {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 999px;
-    background: var(--color-accent);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 60%, transparent);
-    animation: beacon-pulse 2s ease-out infinite;
-  }
-
-  @keyframes beacon-pulse {
-    0% {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
-    }
-    100% {
-      box-shadow: 0 0 0 0.9rem transparent;
-    }
-  }
-
   :global(.maplibregl-popup-content) {
     background: var(--color-bg-alt);
     color: var(--color-text);
@@ -132,7 +105,7 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
     <h1>Map</h1>
     <p class="intro">
       A 3D globe you can drag, zoom, and tilt. Enter coordinates below to fly
-      straight to a location, or click a glowing beacon for details.
+      straight to a location.
     </p>
     <GlobeMap client:load />
   </section>

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { BEACONS } from "./beacons";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 
@@ -36,21 +35,6 @@ export default function GlobeMap() {
 
     map.on("style.load", () => {
       map.setProjection({ type: "globe" });
-
-      for (const beacon of BEACONS) {
-        const el = document.createElement("div");
-        el.className = "beacon-marker";
-        el.innerHTML = '<span class="beacon-dot"></span>';
-
-        const popup = new maplibregl.Popup({ offset: 14, closeButton: false }).setHTML(
-          `<strong>${beacon.name}</strong><br/>${beacon.description}`
-        );
-
-        new maplibregl.Marker({ element: el })
-          .setLngLat([beacon.lng, beacon.lat])
-          .setPopup(popup)
-          .addTo(map);
-      }
     });
 
     return () => {
