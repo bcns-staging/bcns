@@ -4,6 +4,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { localTimeAt } from "./localTime";
 import { LayersControl } from "./LayersControl";
 import { terminatorBands } from "./dayNight";
+import { fetchPlaceInfo } from "./placeInfo";
+import { fetchSeaName } from "./seaName";
 
 const DRAG_CLOSE_THRESHOLD_PX = 80;
 const DAY_NIGHT_UPDATE_MS = 60000;
@@ -99,16 +101,36 @@ export default function GlobeMap() {
     }, DAY_NIGHT_UPDATE_MS);
 
     let timePopup: maplibregl.Popup | null = null;
-    map.on("click", (e) => {
+    let clickId = 0;
+    map.on("click", async (e) => {
       timePopup?.remove();
+      timePopup = null;
+      const thisClick = ++clickId;
       const { lng, lat } = e.lngLat;
-      const { time, date, timeZone } = localTimeAt(lat, lng);
-      timePopup = new maplibregl.Popup({ offset: 12 })
-        .setLngLat([lng, lat])
-        .setHTML(
-          `<strong>${time}</strong><br/>${date}<br/><span class="time-offset">${timeZone}</span>`
-        )
-        .addTo(map);
+      const { time, date, timeZone, utcOffset } = localTimeAt(lat, lng);
+
+      const place = await fetchPlaceInfo(lat, lng).catch(() => null);
+      let location = place ? [place.city, place.state, place.countryCode].filter(Boolean).join(", ") : "";
+
+      // No address (Nominatim doesn't index open water) - try the ocean/sea
+      // instead, so clicking water isn't just silent on the location line.
+      if (!location) {
+        location = (await fetchSeaName(lat, lng).catch(() => null)) ?? "";
+      }
+
+      // A newer click happened while these lookups were in flight - drop it,
+      // the later click's own popup already took over.
+      if (thisClick !== clickId) return;
+      const html = `
+        <div class="place-popup">
+          ${location ? `<div class="place-popup-location">${location}</div>` : ""}
+          <div class="place-popup-time">${time}</div>
+          <div class="place-popup-date">${date}</div>
+          <div class="place-popup-tz">${timeZone}${utcOffset ? ` &middot; ${utcOffset}` : ""}</div>
+        </div>
+      `;
+
+      timePopup = new maplibregl.Popup({ offset: 12 }).setLngLat([lng, lat]).setHTML(html).addTo(map);
     });
 
     // Auto-close the time popup once the map has been dragged a good
