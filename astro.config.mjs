@@ -18,7 +18,7 @@ export default defineConfig({
         "img-src 'self' data: blob:",
         "worker-src blob:",
         "child-src blob:",
-        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org",
+        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app http://localhost:4000",
         "form-action 'self'",
         "base-uri 'none'",
       ],

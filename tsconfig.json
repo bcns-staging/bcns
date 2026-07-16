@@ -5,7 +5,8 @@
     "**/*"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "graphql-api"
   ],
   "compilerOptions": {
     "jsx": "react-jsx",
