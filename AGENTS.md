@@ -1,21 +1,24 @@
 # 7 Beacons
 
 Landing page for `www.7beacons.com`. Astro (static, ships ~zero JS), containerized
-with Docker, deployed to GitHub Pages via GitHub Actions. Full details in [README.md](README.md).
+with Docker, deployed to Google Cloud Run (behind an external HTTPS Load Balancer) via
+GitHub Actions. Full details in [README.md](README.md).
 
 ## Repo / hosting facts
 
 - GitHub: `bcns-staging/bcns` (`gh` CLI is authenticated with repo/workflow scope — prefer `gh api`/`gh pr`/`gh run` over asking the user to click through the GitHub UI).
-- Domain: `www.7beacons.com` is canonical (set in `public/CNAME` and `astro.config.mjs`); apex `7beacons.com` redirects to it.
-- DNS lives at Namecheap: `A` records on `@` point to GitHub Pages' 4 IPs, `CNAME` on `www` points to `bcns-staging.github.io`.
-- GitHub Pages source is "GitHub Actions" (set via `gh api repos/bcns-staging/bcns/pages`, not the UI). HTTPS is enforced; cert auto-renews via GitHub.
+- Domain: `www.7beacons.com` is canonical (set in `astro.config.mjs`); apex `7beacons.com` is also served directly (both are on the Load Balancer's managed SSL cert).
+- DNS lives at Namecheap: `A` records on both `@` and `www` point to the GCP Load Balancer's reserved static IP `136.69.58.246`.
+- GCP project: `project-0abb08b6-4e60-4be0-8db`, region `us-central1`. Resources: Artifact Registry repo `bcns`, Cloud Run service `bcns-site`, external HTTPS Load Balancer (serverless NEG `bcns-neg` → backend service `bcns-backend` → url-maps `bcns-urlmap`/`bcns-urlmap-redirect` → static IP `bcns-lb-ip` → managed cert `bcns-ssl-cert` → proxies `bcns-https-proxy`/`bcns-http-proxy` → forwarding rules `bcns-https-fr`/`bcns-http-fr`).
+- GitHub Actions authenticates to GCP via Workload Identity Federation (pool `github-pool`, provider `github-provider`, scoped to `repository == bcns-staging/bcns`) impersonating service account `bcns-deployer@project-0abb08b6-4e60-4be0-8db.iam.gserviceaccount.com` — no long-lived key stored in GitHub.
+- GitHub Pages is disabled (was the previous host); `.github/workflows/deploy.yml` is kept but manually disabled (not deleted) as a reference/rollback point.
 
 ## Pipeline (4 stages)
 
 1. **Dev**: `npm run dev` or `docker compose up dev` → `localhost:4321`, hot reload.
-2. **Prod-like local preview**: `npm run build && npm run preview`, or `docker compose up --build prod` → `localhost:8080`, the exact static output + nginx security headers that ship to production. Do this before opening a PR.
-3. **CI** (`.github/workflows/ci.yml`): runs on PRs into `main` and on pushes to any other branch. Type-checks, builds, uploads the build as a downloadable artifact (no live preview URL — GitHub Pages only serves one site per repo).
-4. **Deploy** (`.github/workflows/deploy.yml`): runs on push to `main`. Builds and deploys to GitHub Pages. No manual approval gate is configured yet — every merge to `main` goes live immediately. (Optional: add required reviewers on the `github-pages` environment in Settings → Environments to add one.)
+2. **Prod-like local preview**: `npm run build && npm run preview`, or `docker compose up --build prod` → `localhost:8080`, the exact container image (nginx on port 8080, matching Cloud Run's required port) that ships to production. Do this before opening a PR.
+3. **CI** (`.github/workflows/ci.yml`): runs on PRs into `main` and on pushes to any other branch. Type-checks, builds, uploads the build as a downloadable artifact.
+4. **Deploy** (`.github/workflows/deploy-gcp.yml`): runs on push to `main`. Type-checks, builds the Docker image, pushes it to Artifact Registry, and deploys to Cloud Run. No manual approval gate is configured yet — every merge to `main` goes live immediately.
 
 Normal flow: branch → edit → dev check → prod-like preview check → push → PR → CI passes → merge → deploy runs automatically.
 
