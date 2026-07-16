@@ -1,24 +1,23 @@
 # 7 Beacons
 
-Landing page for [www.7beacons.com](https://www.7beacons.com), built with [Astro](https://astro.build) and deployed to GitHub Pages.
+Landing page for [www.7beacons.com](https://www.7beacons.com), built with [Astro](https://astro.build) and deployed to Google Cloud Run.
 
 ## Project structure
 
 ```text
 /
-├── public/
-│   └── CNAME              # custom domain for GitHub Pages
 ├── src/
 │   ├── components/        # Header, Hero, Footer
 │   ├── layouts/           # Layout.astro (HTML shell, meta, CSP)
 │   ├── styles/            # global.css
 │   └── pages/
 │       └── index.astro
-├── Dockerfile              # multi-stage: build with Node, serve with nginx
+├── Dockerfile              # multi-stage: build with Node, serve with nginx (port 8080)
+├── nginx.conf               # nginx config (listens on 8080 for Cloud Run)
 ├── docker-compose.yml       # `dev` (hot reload) and `prod` (nginx, prod-like) services
 └── .github/workflows/
     ├── ci.yml               # runs on PRs: typecheck, build, uploads preview artifact
-    └── deploy.yml            # runs on push to main: build, deploy to GitHub Pages
+    └── deploy-gcp.yml         # runs on push to main: build, push to Artifact Registry, deploy to Cloud Run
 ```
 
 ## Local development
@@ -37,7 +36,7 @@ docker compose up dev            # hot reload at http://localhost:4321
 docker compose up --build prod   # prod-like build served by nginx at http://localhost:8080
 ```
 
-The `prod` service builds and serves the exact static output GitHub Pages will serve, so it's the best way to sanity-check a change before it ships.
+The `prod` service builds and serves the exact container image that ships to Cloud Run, so it's the best way to sanity-check a change before it ships.
 
 ### Local Docker builds behind SSL-inspecting proxies
 
@@ -58,14 +57,15 @@ Fix: export that root CA cert and drop it in `certs/` (already gitignored, so it
 ## Deployment pipeline
 
 1. **Open a PR** against `main`. The `CI` workflow type-checks and builds the site, and uploads the build as a downloadable artifact (`site-preview`) so it can be reviewed before merging.
-2. **Merge to `main`**. The `Deploy to GitHub Pages` workflow rebuilds the site and deploys it to GitHub Pages.
-3. Optional manual gate: add required reviewers on the `github-pages` environment (repo Settings → Environments) so a deploy to production needs an explicit approval after CI passes and before it goes live.
+2. **Merge to `main`**. The `Deploy to Cloud Run` workflow (`.github/workflows/deploy-gcp.yml`) type-checks, builds the Docker image, pushes it to Artifact Registry, and deploys it to the `bcns-site` Cloud Run service.
+3. No manual approval gate is configured — every merge to `main` goes live immediately.
 
-### One-time repo setup (do this once in GitHub)
+Authentication to GCP uses Workload Identity Federation (no long-lived service account key in GitHub): the workflow exchanges its OIDC token for short-lived credentials, impersonating a deploy-only service account scoped to this repo.
 
-- Settings → Pages → Build and deployment → Source: **GitHub Actions**.
-- Settings → Pages → Custom domain: `www.7beacons.com` (this also gets committed via `public/CNAME`), then enable **Enforce HTTPS** once the certificate is issued.
-- DNS at your registrar (Namecheap → Domain List → Manage → Advanced DNS):
-  - `CNAME` record: host `www` → `bcns-staging.github.io`
-  - `A` records: host `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` (GitHub Pages' IPs, so the bare `7beacons.com` resolves too; GitHub auto-redirects it to `www.7beacons.com` per `public/CNAME`)
-  - DNS propagation can take up to ~24h; GitHub will show a green check on Settings → Pages once it verifies the domain and issues the HTTPS certificate.
+### Infrastructure (one-time GCP setup, already provisioned)
+
+- **Compute**: Cloud Run service `bcns-site` in `us-central1`, container listens on port 8080.
+- **Registry**: Artifact Registry Docker repo `bcns` in `us-central1`.
+- **Traffic**: external HTTPS Load Balancer in front of Cloud Run (serverless NEG → backend service → URL map → reserved static IP → Google-managed SSL cert for `www.7beacons.com` + `7beacons.com` → HTTPS proxy, plus an HTTP proxy that redirects to HTTPS).
+- **DNS** at your registrar (Namecheap → Domain List → Manage → Advanced DNS): `A` records on both `@` and `www` point to the Load Balancer's reserved static IP.
+- **Auth**: Workload Identity Pool/provider trusting GitHub's OIDC issuer, restricted to `repository == bcns-staging/bcns`, bound to a dedicated `bcns-deployer` service account with `run.developer`, `artifactregistry.writer`, and `iam.serviceAccountUser` roles only.
