@@ -14,62 +14,11 @@ const SEARCH_ICON =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.5,14H14.71L14.43,13.73C15.41,12.59 16,11.11 16,9.5A6.5,6.5 0 0,0 9.5,3A6.5,6.5 0 0,0 3,9.5A6.5,6.5 0 0,0 9.5,16C11.11,16 12.59,15.41 13.73,14.43L14,14.71V15.5L19,20.49L20.49,19L15.5,14M9.5,14C7,14 5,12 5,9.5C5,7 7,5 9.5,5C12,5 14,7 14,9.5C14,12 12,14 9.5,14Z" /></svg>';
 const USERS_ICON =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16,17V19H2V17S2,13 9,13 16,17 16,17M12.5,7.5A3.5,3.5 0 0,0 9,4A3.5,3.5 0 0,0 5.5,7.5A3.5,3.5 0 0,0 9,11A3.5,3.5 0 0,0 12.5,7.5M15.94,13C17.79,14.24 18,15.72 18,17V19H22V17C22,17 22,14.05 15.94,13M15,4A3.39,3.39 0 0,0 13.07,4.59C13.98,5.94 14,7.5 14,7.5C14,7.5 13.98,9.06 13.07,10.41C13.5,10.79 14.19,11 15,11A3.5,3.5 0 0,0 18.5,7.5A3.5,3.5 0 0,0 15,4Z" /></svg>';
-const FLIGHTS_ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22,16.21V14.32L14,9.31V5.5A1.5,1.5 0 0,0 12.5,4A1.5,1.5 0 0,0 11,5.5V9.31L3,14.32V16.21L11,13.69V18.36L8.5,20.29V21.71L12.5,20.5L16.5,21.71V20.29L14,18.36V13.69L22,16.21Z" /></svg>';
 
 interface PersonListItem {
   id: string;
   userName: string;
 }
-
-interface AircraftListItem {
-  icao24: string;
-  callsign: string;
-  originCountry: string;
-}
-
-interface AircraftLocation {
-  icao24: string;
-  callsign: string;
-  location: { lat: number; lng: number };
-  heading: number | null;
-}
-
-const AIRCRAFT_QUERY = /* GraphQL */ `
-  query AircraftNearNYC {
-    aircraftNearNYC {
-      icao24
-      callsign
-      originCountry
-    }
-  }
-`;
-
-const AIRCRAFT_LOCATIONS_QUERY = /* GraphQL */ `
-  query AircraftLocations {
-    aircraftNearNYC {
-      icao24
-      callsign
-      location {
-        lat
-        lng
-      }
-      heading
-    }
-  }
-`;
-
-// Aircraft transponder data is public by aviation regulation - no role
-// argument here, unlike the person-tracking subscription above.
-const AIRCRAFT_SUBSCRIPTION = /* GraphQL */ `
-  subscription AircraftPositionUpdated($icao24: ID!) {
-    aircraftPositionUpdated(icao24: $icao24) {
-      lat
-      lng
-      heading
-    }
-  }
-`;
 
 interface PersonLocation {
   id: string;
@@ -148,20 +97,13 @@ export default function GlobeMap() {
   const [layersOpen, setLayersOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
-  const [flightsOpen, setFlightsOpen] = useState(false);
   const [dayNightOn, setDayNightOn] = useState(false);
   const [mapStyleId, setMapStyleId] = useState<(typeof MAP_STYLES)[number]["id"]>("dark");
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [usersLoading, setUsersLoading] = useState(false);
-  const [aircraft, setAircraft] = useState<AircraftListItem[]>([]);
-  const [selectedAircraftIds, setSelectedAircraftIds] = useState<Set<string>>(new Set());
-  const [aircraftLoading, setAircraftLoading] = useState(false);
-  const [aircraftListFetched, setAircraftListFetched] = useState(false);
   const userMarkersRef = useRef<maplibregl.Marker[]>([]);
   const trackingControllersRef = useRef<AbortController[]>([]);
-  const aircraftMarkersRef = useRef<maplibregl.Marker[]>([]);
-  const aircraftTrackingControllersRef = useRef<AbortController[]>([]);
   const dayNightOnRef = useRef(dayNightOn);
   useEffect(() => {
     dayNightOnRef.current = dayNightOn;
@@ -190,7 +132,6 @@ export default function GlobeMap() {
       new IconButtonControl(LAYERS_ICON, "Layers", () => {
         setSearchOpen(false);
         setUsersOpen(false);
-        setFlightsOpen(false);
         setLayersOpen((open) => !open);
       }),
       "top-right"
@@ -199,7 +140,6 @@ export default function GlobeMap() {
       new IconButtonControl(SEARCH_ICON, "Search", () => {
         setLayersOpen(false);
         setUsersOpen(false);
-        setFlightsOpen(false);
         setSearchOpen((open) => !open);
       }),
       "top-right"
@@ -208,17 +148,7 @@ export default function GlobeMap() {
       new IconButtonControl(USERS_ICON, "Users", () => {
         setLayersOpen(false);
         setSearchOpen(false);
-        setFlightsOpen(false);
         setUsersOpen((open) => !open);
-      }),
-      "top-right"
-    );
-    map.addControl(
-      new IconButtonControl(FLIGHTS_ICON, "Flights", () => {
-        setLayersOpen(false);
-        setSearchOpen(false);
-        setUsersOpen(false);
-        setFlightsOpen((open) => !open);
       }),
       "top-right"
     );
@@ -281,7 +211,7 @@ export default function GlobeMap() {
       // listener on the marker element). Skip the time popup for those so
       // it doesn't show alongside the marker's own name popup.
       const target = e.originalEvent.target as HTMLElement | null;
-      if (target?.closest(".user-location-dot, .aircraft-location-dot")) return;
+      if (target?.closest(".user-location-dot")) return;
 
       spinEnabled = false;
       timePopup?.remove();
@@ -338,7 +268,7 @@ export default function GlobeMap() {
     // they're on the far side of the sphere - hide them manually each
     // frame using MapLibre's own occlusion check.
     map.on("render", () => {
-      for (const marker of [...userMarkersRef.current, ...aircraftMarkersRef.current]) {
+      for (const marker of userMarkersRef.current) {
         const el = marker.getElement();
         el.style.display = map.transform.isLocationOccluded(marker.getLngLat()) ? "none" : "";
       }
@@ -348,8 +278,6 @@ export default function GlobeMap() {
       window.clearInterval(dayNightIntervalId);
       trackingControllersRef.current.forEach((controller) => controller.abort());
       trackingControllersRef.current = [];
-      aircraftTrackingControllersRef.current.forEach((controller) => controller.abort());
-      aircraftTrackingControllersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
@@ -480,102 +408,6 @@ export default function GlobeMap() {
     }
   };
 
-  useEffect(() => {
-    if (!flightsOpen || aircraft.length > 0 || aircraftListFetched) return;
-    graphqlRequest<{ aircraftNearNYC: AircraftListItem[] }>(AIRCRAFT_QUERY)
-      .then((data) => setAircraft(data.aircraftNearNYC))
-      .catch(() => {})
-      .finally(() => setAircraftListFetched(true));
-  }, [flightsOpen]);
-
-  const toggleSelectedAircraft = (icao24: string) => {
-    setSelectedAircraftIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(icao24)) next.delete(icao24);
-      else next.add(icao24);
-      return next;
-    });
-  };
-
-  const trackAircraftLive = async (
-    marker: maplibregl.Marker,
-    icao24: string,
-    signal: AbortSignal
-  ) => {
-    try {
-      for await (const update of graphqlSubscribe<{
-        aircraftPositionUpdated: { lat: number; lng: number; heading: number | null };
-      }>(AIRCRAFT_SUBSCRIPTION, { icao24 }, signal)) {
-        marker.setLngLat([update.aircraftPositionUpdated.lng, update.aircraftPositionUpdated.lat]);
-        if (update.aircraftPositionUpdated.heading !== null) {
-          marker.setRotation(update.aircraftPositionUpdated.heading);
-        }
-      }
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        console.error(`Live tracking stopped for ${icao24}:`, err);
-      }
-    }
-  };
-
-  const handleShowAircraftOnMap = async () => {
-    const map = mapRef.current;
-    if (!map || selectedAircraftIds.size === 0) return;
-
-    setAircraftLoading(true);
-
-    aircraftTrackingControllersRef.current.forEach((controller) => controller.abort());
-    aircraftTrackingControllersRef.current = [];
-    aircraftMarkersRef.current.forEach((marker) => marker.remove());
-    aircraftMarkersRef.current = [];
-
-    try {
-      const data = await graphqlRequest<{ aircraftNearNYC: AircraftLocation[] }>(
-        AIRCRAFT_LOCATIONS_QUERY
-      );
-
-      const bounds = new maplibregl.LngLatBounds();
-      const locations: [number, number][] = [];
-      for (const plane of data.aircraftNearNYC) {
-        if (!selectedAircraftIds.has(plane.icao24)) continue;
-
-        const lngLat: [number, number] = [plane.location.lng, plane.location.lat];
-
-        const el = document.createElement("div");
-        el.className = "aircraft-location-dot";
-        el.innerHTML = FLIGHTS_ICON;
-
-        const marker = new maplibregl.Marker({
-          element: el,
-          // 'map' alignment keeps the heading true to compass direction as
-          // the globe rotates/pans, rather than spinning with the viewport.
-          rotationAlignment: "map",
-          rotation: plane.heading ?? 0,
-        })
-          .setLngLat(lngLat)
-          .setPopup(new maplibregl.Popup({ offset: 12 }).setText(plane.callsign))
-          .addTo(map);
-
-        aircraftMarkersRef.current.push(marker);
-        locations.push(lngLat);
-        bounds.extend(lngLat);
-
-        const controller = new AbortController();
-        aircraftTrackingControllersRef.current.push(controller);
-        trackAircraftLive(marker, plane.icao24, controller.signal);
-      }
-
-      if (locations.length === 1) {
-        map.flyTo({ center: locations[0], zoom: 8, duration: 1500 });
-      } else if (locations.length > 1) {
-        map.fitBounds(bounds, { padding: 80, maxZoom: 9, duration: 1500 });
-      }
-      setFlightsOpen(false);
-    } finally {
-      setAircraftLoading(false);
-    }
-  };
-
   return (
     <div className="globe-wrap" ref={wrapRef}>
       {searchOpen && (
@@ -674,46 +506,6 @@ export default function GlobeMap() {
             disabled={selectedIds.size === 0 || usersLoading}
           >
             {usersLoading ? "Loading…" : "Show on map"}
-          </button>
-        </div>
-      )}
-
-      {flightsOpen && (
-        <div className="layers-panel">
-          <div className="layers-panel-header">
-            <span>Flights near NYC</span>
-            <button
-              type="button"
-              onClick={() => setFlightsOpen(false)}
-              aria-label="Close flights panel"
-            >
-              &times;
-            </button>
-          </div>
-
-          {aircraft.length === 0 && (
-            <p className="layers-section-label">
-              {aircraftListFetched ? "No live flights available right now." : "Loading live flights…"}
-            </p>
-          )}
-          {aircraft.map((a) => (
-            <label className="layers-item" key={a.icao24}>
-              <input
-                type="checkbox"
-                checked={selectedAircraftIds.has(a.icao24)}
-                onChange={() => toggleSelectedAircraft(a.icao24)}
-              />
-              {a.callsign} ({a.originCountry})
-            </label>
-          ))}
-
-          <button
-            type="button"
-            className="users-submit"
-            onClick={handleShowAircraftOnMap}
-            disabled={selectedAircraftIds.size === 0 || aircraftLoading}
-          >
-            {aircraftLoading ? "Loading…" : "Show on map"}
           </button>
         </div>
       )}
