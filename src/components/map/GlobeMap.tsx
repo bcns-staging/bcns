@@ -205,6 +205,14 @@ export default function GlobeMap() {
     let timePopup: maplibregl.Popup | null = null;
     let clickId = 0;
     map.on("click", async (e) => {
+      // A click on a user-location-dot bubbles up as the map's own click
+      // event too (that's how MapLibre's own Marker popup-toggle works -
+      // it listens on the map's click and checks the target, rather than
+      // a separate listener on the marker element). Skip the time popup
+      // for those so it doesn't show alongside the marker's name popup.
+      const target = e.originalEvent.target as HTMLElement | null;
+      if (target?.closest(".user-location-dot")) return;
+
       spinEnabled = false;
       timePopup?.remove();
       timePopup = null;
@@ -370,10 +378,6 @@ export default function GlobeMap() {
 
         const el = document.createElement("div");
         el.className = "user-location-dot";
-        // Without this, a click on the dot also bubbles to the map's own
-        // click handler underneath it, which opens the local-time popup for
-        // that spot at the same time as the marker's own name popup.
-        el.addEventListener("click", (e) => e.stopPropagation());
 
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat(lngLat)
