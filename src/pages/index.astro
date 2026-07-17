@@ -5,12 +5,20 @@ import Hero from "../components/Hero.astro";
 import Footer from "../components/Footer.astro";
 ---
 
+<style>
+  .version {
+    padding-block: 0.75rem 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+</style>
+
 <Layout
   title="7 Beacons"
   description="7 Beacons."
 >
   <Header siteName="7 Beacons" />
-  <p>Stable version: 1.0</p>
+  <p class="container version">Stable version: 1.0</p>
   <Hero
     eyebrow="Coming soon"
     title="7 Beacons is on its way."
