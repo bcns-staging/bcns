@@ -27,6 +27,11 @@ const typeDefs = /* GraphQL */ `
     userName: String!
   }
 
+  type Coordinates {
+    lat: Float!
+    lng: Float!
+  }
+
   type Person {
     id: ID!
     userName: String!
@@ -40,6 +45,7 @@ const typeDefs = /* GraphQL */ `
     contact: String
     creditCardNumber: String
     dlNumber: String
+    lastKnownLocation: Coordinates
   }
 
   type Query {

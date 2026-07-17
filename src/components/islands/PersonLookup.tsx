@@ -8,6 +8,11 @@ interface PersonSummary {
   userName: string;
 }
 
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 interface Person {
   id: string;
   userName: string;
@@ -21,6 +26,7 @@ interface Person {
   contact: string | null;
   creditCardNumber: string | null;
   dlNumber: string | null;
+  lastKnownLocation: Coordinates | null;
 }
 
 const PEOPLE_QUERY = /* GraphQL */ `
@@ -40,7 +46,7 @@ const FIELDS_BY_ROLE: Record<UserRole, string> = {
   PUBLIC: "id userName gender country age",
   PRIVATE: "id userName gender country age dob socials imageUrl",
   ADMIN:
-    "id userName gender country age dob socials imageUrl ssn contact creditCardNumber dlNumber",
+    "id userName gender country age dob socials imageUrl ssn contact creditCardNumber dlNumber lastKnownLocation { lat lng }",
 };
 
 function buildPersonQuery(role: UserRole) {
@@ -67,6 +73,7 @@ const FIELD_LABELS: Array<[keyof Person, string]> = [
   ["contact", "Contact"],
   ["creditCardNumber", "Credit card number"],
   ["dlNumber", "DL number"],
+  ["lastKnownLocation", "Last known location"],
 ];
 
 export default function PersonLookup() {
@@ -143,6 +150,8 @@ export default function PersonLookup() {
                 <dd>
                   {field === "imageUrl" ? (
                     <img src={String(value)} alt={`${result.userName} avatar`} width={64} height={64} />
+                  ) : field === "lastKnownLocation" ? (
+                    `${(value as Coordinates).lat}, ${(value as Coordinates).lng}`
                   ) : (
                     String(value)
                   )}

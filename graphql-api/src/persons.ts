@@ -2,6 +2,11 @@ import { firestore } from "./firestore.js";
 
 export type UserRole = "PUBLIC" | "PRIVATE" | "ADMIN";
 
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 export interface PersonRecord {
   id: string;
   userName: string;
@@ -15,6 +20,7 @@ export interface PersonRecord {
   contact: string;
   creditCardNumber: string;
   dlNumber: string;
+  lastKnownLocation: Coordinates;
 }
 
 // Field tiers matching the access-control diagram: each role sees its own
@@ -27,6 +33,7 @@ const ADMIN_FIELDS = [
   "contact",
   "creditCardNumber",
   "dlNumber",
+  "lastKnownLocation",
 ] as const;
 
 const FIELDS_BY_ROLE: Record<UserRole, readonly (keyof PersonRecord)[]> = {
