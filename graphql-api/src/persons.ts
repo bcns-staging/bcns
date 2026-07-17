@@ -74,3 +74,15 @@ export async function getPersonById(id: string): Promise<PersonRecord | null> {
   if (!doc.exists) return null;
   return { id: doc.id, ...(doc.data() as Omit<PersonRecord, "id">) };
 }
+
+// No real GPS feed behind this demo - simulates believable movement (like a
+// vehicle driving) as a small random step from the last position, clamped/
+// wrapped to stay within valid lat/lng ranges over a long-running walk.
+export function randomWalkStep(from: Coordinates): Coordinates {
+  const STEP = 0.03;
+  let lat = from.lat + (Math.random() - 0.5) * STEP;
+  let lng = from.lng + (Math.random() - 0.5) * STEP;
+  lat = Math.max(-90, Math.min(90, lat));
+  lng = ((((lng + 180) % 360) + 360) % 360) - 180;
+  return { lat: Number(lat.toFixed(5)), lng: Number(lng.toFixed(5)) };
+}

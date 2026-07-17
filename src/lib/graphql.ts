@@ -20,3 +20,44 @@ export async function graphqlRequest<T>(
   if (json.errors) throw new Error(json.errors[0].message);
   return json.data;
 }
+
+// GraphQL subscriptions stream over Server-Sent Events: one HTTP response
+// whose body keeps arriving in `data: {...}` frames as the server has new
+// values to push, instead of the client repeatedly asking for updates.
+export async function* graphqlSubscribe<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  signal?: AbortSignal,
+): AsyncGenerator<T> {
+  const res = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+    body: JSON.stringify({ query, variables }),
+    signal,
+  });
+  if (!res.body) throw new Error("Subscription response had no body");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) return;
+
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+
+    for (const frame of frames) {
+      const dataLine = frame.split("\n").find((line) => line.startsWith("data:"));
+      if (!dataLine) continue;
+      const payload = dataLine.slice(5).trim();
+      if (!payload) continue;
+
+      const json = JSON.parse(payload);
+      if (json.errors) throw new Error(json.errors[0].message);
+      if (json.data) yield json.data as T;
+    }
+  }
+}

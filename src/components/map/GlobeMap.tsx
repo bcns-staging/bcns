@@ -6,7 +6,7 @@ import { IconButtonControl } from "./IconButtonControl";
 import { terminatorBands } from "./dayNight";
 import { fetchPlaceInfo } from "./placeInfo";
 import { fetchSeaName } from "./seaName";
-import { graphqlRequest } from "../../lib/graphql";
+import { graphqlRequest, graphqlSubscribe } from "../../lib/graphql";
 
 const LAYERS_ICON =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12,16L19.36,10.27L21,9L12,2L3,9L4.63,10.27M12,18.54L4.62,12.81L3,14.07L12,21.07L21,14.07L19.37,12.8L12,18.54Z" /></svg>';
@@ -53,6 +53,18 @@ const PEOPLE_LOCATIONS_QUERY = /* GraphQL */ `
   }
 `;
 
+// Pushed from the server every ~2.5s over SSE (see graphql-api's
+// personLocationUpdated subscription) - no polling, the client just keeps
+// this one stream open per tracked marker.
+const LOCATION_SUBSCRIPTION = /* GraphQL */ `
+  subscription PersonLocationUpdated($id: ID!, $role: UserRole!) {
+    personLocationUpdated(id: $id, role: $role) {
+      lat
+      lng
+    }
+  }
+`;
+
 const DRAG_CLOSE_THRESHOLD_PX = 80;
 const DAY_NIGHT_UPDATE_MS = 60000;
 const SPIN_SECONDS_PER_REVOLUTION = 120; // one full turn every 2 minutes
@@ -91,6 +103,7 @@ export default function GlobeMap() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [usersLoading, setUsersLoading] = useState(false);
   const userMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const trackingControllersRef = useRef<AbortController[]>([]);
   const dayNightOnRef = useRef(dayNightOn);
   useEffect(() => {
     dayNightOnRef.current = dayNightOn;
@@ -255,6 +268,8 @@ export default function GlobeMap() {
 
     return () => {
       window.clearInterval(dayNightIntervalId);
+      trackingControllersRef.current.forEach((controller) => controller.abort());
+      trackingControllersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
@@ -306,12 +321,34 @@ export default function GlobeMap() {
     });
   };
 
+  // Keeps a marker's position in sync with the live subscription until the
+  // signal aborts (component unmount or a new "Show on map" submission).
+  const trackPersonLive = async (
+    marker: maplibregl.Marker,
+    personId: string,
+    signal: AbortSignal
+  ) => {
+    try {
+      for await (const update of graphqlSubscribe<{
+        personLocationUpdated: { lat: number; lng: number };
+      }>(LOCATION_SUBSCRIPTION, { id: personId, role: "ADMIN" }, signal)) {
+        marker.setLngLat([update.personLocationUpdated.lng, update.personLocationUpdated.lat]);
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error(`Live tracking stopped for ${personId}:`, err);
+      }
+    }
+  };
+
   const handleShowOnMap = async () => {
     const map = mapRef.current;
     if (!map || selectedIds.size === 0) return;
 
     setUsersLoading(true);
 
+    trackingControllersRef.current.forEach((controller) => controller.abort());
+    trackingControllersRef.current = [];
     userMarkersRef.current.forEach((marker) => marker.remove());
     userMarkersRef.current = [];
 
@@ -342,6 +379,10 @@ export default function GlobeMap() {
         userMarkersRef.current.push(marker);
         locations.push(lngLat);
         bounds.extend(lngLat);
+
+        const controller = new AbortController();
+        trackingControllersRef.current.push(controller);
+        trackPersonLive(marker, person.id, controller.signal);
       }
 
       // fitBounds on a single point is a zero-area bounding box, which can

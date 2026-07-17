@@ -1,6 +1,13 @@
 import { createSchema } from "graphql-yoga";
+import { GraphQLError } from "graphql";
 import { beacons, type BeaconStatus } from "./data.js";
-import { getAllPersons, getPersonById, maskPersonForRole, type UserRole } from "./persons.js";
+import {
+  getAllPersons,
+  getPersonById,
+  maskPersonForRole,
+  randomWalkStep,
+  type UserRole,
+} from "./persons.js";
 
 const typeDefs = /* GraphQL */ `
   enum BeaconStatus {
@@ -48,6 +55,10 @@ const typeDefs = /* GraphQL */ `
     people(role: UserRole = PUBLIC): [Person!]!
     person(id: ID!, role: UserRole!): Person
   }
+
+  type Subscription {
+    personLocationUpdated(id: ID!, role: UserRole!): Coordinates!
+  }
 `;
 
 const resolvers = {
@@ -61,6 +72,27 @@ const resolvers = {
     person: async (_parent: unknown, args: { id: string; role: UserRole }) => {
       const record = await getPersonById(args.id);
       return record ? maskPersonForRole(record, args.role) : null;
+    },
+  },
+  Subscription: {
+    personLocationUpdated: {
+      // lastKnownLocation is ADMIN-tier only (same field, same rule as the
+      // person/people queries) - enforced here too since a subscription is
+      // its own separate access path, not covered by the query resolvers.
+      subscribe: async function* (_parent: unknown, args: { id: string; role: UserRole }) {
+        if (args.role !== "ADMIN") {
+          throw new GraphQLError("Not authorized to view this field.");
+        }
+        const record = await getPersonById(args.id);
+        if (!record) return;
+
+        let current = record.lastKnownLocation;
+        while (true) {
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          current = randomWalkStep(current);
+          yield { personLocationUpdated: current };
+        }
+      },
     },
   },
 };
