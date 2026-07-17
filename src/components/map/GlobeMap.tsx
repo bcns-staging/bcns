@@ -370,6 +370,10 @@ export default function GlobeMap() {
 
         const el = document.createElement("div");
         el.className = "user-location-dot";
+        // Without this, a click on the dot also bubbles to the map's own
+        // click handler underneath it, which opens the local-time popup for
+        // that spot at the same time as the marker's own name popup.
+        el.addEventListener("click", (e) => e.stopPropagation());
 
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat(lngLat)
