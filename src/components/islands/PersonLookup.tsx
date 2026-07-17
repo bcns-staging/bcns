@@ -32,24 +32,26 @@ const PEOPLE_QUERY = /* GraphQL */ `
   }
 `;
 
-const PERSON_QUERY = /* GraphQL */ `
-  query Person($id: ID!, $role: UserRole!) {
-    person(id: $id, role: $role) {
-      id
-      userName
-      gender
-      country
-      age
-      dob
-      socials
-      imageUrl
-      ssn
-      contact
-      creditCardNumber
-      dlNumber
+// Mirrors the server's field tiers (graphql-api/src/persons.ts) so the
+// client only ever *asks* for fields the selected role can see - the
+// response itself then only contains those keys, instead of the full
+// field set with nulls for whatever the role wasn't allowed to view.
+const FIELDS_BY_ROLE: Record<UserRole, string> = {
+  PUBLIC: "id userName gender country age",
+  PRIVATE: "id userName gender country age dob socials imageUrl",
+  ADMIN:
+    "id userName gender country age dob socials imageUrl ssn contact creditCardNumber dlNumber",
+};
+
+function buildPersonQuery(role: UserRole) {
+  return /* GraphQL */ `
+    query Person($id: ID!, $role: UserRole!) {
+      person(id: $id, role: $role) {
+        ${FIELDS_BY_ROLE[role]}
+      }
     }
-  }
-`;
+  `;
+}
 
 const ROLES: UserRole[] = ["PUBLIC", "PRIVATE", "ADMIN"];
 
@@ -92,7 +94,7 @@ export default function PersonLookup() {
     setError(null);
     setResult(null);
 
-    graphqlRequest<{ person: Person }>(PERSON_QUERY, { id: personId, role })
+    graphqlRequest<{ person: Person }>(buildPersonQuery(role), { id: personId, role })
       .then((data) => setResult(data.person))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
