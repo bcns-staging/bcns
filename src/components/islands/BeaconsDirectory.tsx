@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { graphqlRequest } from "../../lib/graphql";
 
 type BeaconStatus = "ACTIVE" | "PLANNED" | "ARCHIVED";
 
@@ -8,13 +9,6 @@ interface Beacon {
   description: string;
   status: BeaconStatus;
 }
-
-// Astro's static build bakes import.meta.env values in at build time, so
-// this picks the local dev server in `astro dev` and the deployed Cloud
-// Run service otherwise.
-const GRAPHQL_ENDPOINT = import.meta.env.DEV
-  ? "http://localhost:4000/graphql"
-  : "https://bcns-graphql-api-751371770492.us-central1.run.app/graphql";
 
 const QUERY = /* GraphQL */ `
   query Beacons($status: BeaconStatus) {
@@ -46,20 +40,12 @@ export default function BeaconsDirectory() {
     setLoading(true);
     setError(null);
 
-    fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: QUERY,
-        variables: { status: status || null },
-      }),
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.errors) throw new Error(json.errors[0].message);
-        setBeacons(json.data.beacons);
-      })
+    graphqlRequest<{ beacons: Beacon[] }>(
+      QUERY,
+      { status: status || null },
+      controller.signal,
+    )
+      .then((data) => setBeacons(data.beacons))
       .catch((err) => {
         if (err.name !== "AbortError") setError(err.message);
       })
