@@ -239,6 +239,37 @@ import GlobeMap from "../components/map/GlobeMap.tsx";
       box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
     }
   }
+
+  :global(.aircraft-location-dot) {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f59e0b;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0.6);
+    animation: aircraft-dot-pulse 2s infinite;
+    cursor: pointer;
+  }
+
+  :global(.aircraft-location-dot svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  @keyframes aircraft-dot-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 14px rgba(245, 158, 11, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+  }
 </style>
 
 <Layout title="Map — 7 Beacons" description="Interactive 3D globe with coordinate search.">
