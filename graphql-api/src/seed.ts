@@ -1,9 +1,17 @@
 import { firestore } from "./firestore.js";
-import type { PersonRecord } from "./persons.js";
+import type { Coordinates, PersonRecord } from "./persons.js";
+
+function randomCoordinates(): Coordinates {
+  return {
+    lat: Number((Math.random() * 180 - 90).toFixed(4)),
+    lng: Number((Math.random() * 360 - 180).toFixed(4)),
+  };
+}
 
 // Dummy data only. SSN and card numbers below are well-known
 // test/placeholder values (e.g. 4111 1111 1111 1111 is Visa's public test
-// card number) - not real people or real financial data.
+// card number) - not real people or real financial data. Location is
+// randomly generated on each seed run, not a real tracked position.
 const people: PersonRecord[] = [
   {
     id: "person1",
@@ -18,6 +26,7 @@ const people: PersonRecord[] = [
     contact: "+1-555-0101",
     creditCardNumber: "4111 1111 1111 1111",
     dlNumber: "D1234567",
+    lastKnownLocation: randomCoordinates(),
   },
   {
     id: "person2",
@@ -32,6 +41,7 @@ const people: PersonRecord[] = [
     contact: "+44-20-7946-0102",
     creditCardNumber: "5500 0000 0000 0004",
     dlNumber: "D7654321",
+    lastKnownLocation: randomCoordinates(),
   },
   {
     id: "person3",
@@ -46,6 +56,7 @@ const people: PersonRecord[] = [
     contact: "+91-98765-43210",
     creditCardNumber: "3400 0000 0000 009",
     dlNumber: "D1122334",
+    lastKnownLocation: randomCoordinates(),
   },
 ];
 
