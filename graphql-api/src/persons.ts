@@ -79,7 +79,7 @@ export async function getPersonById(id: string): Promise<PersonRecord | null> {
 // vehicle driving) as a small random step from the last position, clamped/
 // wrapped to stay within valid lat/lng ranges over a long-running walk.
 export function randomWalkStep(from: Coordinates): Coordinates {
-  const STEP = 0.03;
+  const STEP = 0.0015; // ~150m per tick at these latitudes - stays roughly in-city over a demo session
   let lat = from.lat + (Math.random() - 0.5) * STEP;
   let lng = from.lng + (Math.random() - 0.5) * STEP;
   lat = Math.max(-90, Math.min(90, lat));

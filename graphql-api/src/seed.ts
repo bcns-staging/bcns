@@ -1,17 +1,11 @@
 import { firestore } from "./firestore.js";
-import type { Coordinates, PersonRecord } from "./persons.js";
-
-function randomCoordinates(): Coordinates {
-  return {
-    lat: Number((Math.random() * 180 - 90).toFixed(4)),
-    lng: Number((Math.random() * 360 - 180).toFixed(4)),
-  };
-}
+import type { PersonRecord } from "./persons.js";
 
 // Dummy data only. SSN and card numbers below are well-known
 // test/placeholder values (e.g. 4111 1111 1111 1111 is Visa's public test
-// card number) - not real people or real financial data. Location is
-// randomly generated on each seed run, not a real tracked position.
+// card number) - not real people or real financial data. Locations are
+// fixed points around NYC (not real tracked positions) so the map demo
+// zooms into an actual city instead of scattering across oceans.
 const people: PersonRecord[] = [
   {
     id: "person1",
@@ -26,7 +20,7 @@ const people: PersonRecord[] = [
     contact: "+1-555-0101",
     creditCardNumber: "4111 1111 1111 1111",
     dlNumber: "D1234567",
-    lastKnownLocation: randomCoordinates(),
+    lastKnownLocation: { lat: 40.758, lng: -73.9855 }, // Times Square
   },
   {
     id: "person2",
@@ -41,7 +35,7 @@ const people: PersonRecord[] = [
     contact: "+44-20-7946-0102",
     creditCardNumber: "5500 0000 0000 0004",
     dlNumber: "D7654321",
-    lastKnownLocation: randomCoordinates(),
+    lastKnownLocation: { lat: 40.7061, lng: -73.9969 }, // Brooklyn Bridge
   },
   {
     id: "person3",
@@ -56,7 +50,7 @@ const people: PersonRecord[] = [
     contact: "+91-98765-43210",
     creditCardNumber: "3400 0000 0000 009",
     dlNumber: "D1122334",
-    lastKnownLocation: randomCoordinates(),
+    lastKnownLocation: { lat: 40.7829, lng: -73.9654 }, // Central Park
   },
 ];
 
