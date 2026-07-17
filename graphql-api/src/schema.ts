@@ -1,6 +1,5 @@
 import { createSchema } from "graphql-yoga";
 import { GraphQLError } from "graphql";
-import { beacons, type BeaconStatus } from "./data.js";
 import {
   getAllPersons,
   getPersonById,
@@ -10,19 +9,6 @@ import {
 } from "./persons.js";
 
 const typeDefs = /* GraphQL */ `
-  enum BeaconStatus {
-    ACTIVE
-    PLANNED
-    ARCHIVED
-  }
-
-  type Beacon {
-    id: ID!
-    name: String!
-    description: String!
-    status: BeaconStatus!
-  }
-
   enum UserRole {
     PUBLIC
     PRIVATE
@@ -51,7 +37,6 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Query {
-    beacons(status: BeaconStatus): [Beacon!]!
     people(role: UserRole = PUBLIC): [Person!]!
     person(id: ID!, role: UserRole!): Person
   }
@@ -63,8 +48,6 @@ const typeDefs = /* GraphQL */ `
 
 const resolvers = {
   Query: {
-    beacons: (_parent: unknown, args: { status?: BeaconStatus }) =>
-      args.status ? beacons.filter((b) => b.status === args.status) : beacons,
     people: async (_parent: unknown, args: { role?: UserRole }) => {
       const records = await getAllPersons();
       return records.map((r) => maskPersonForRole(r, args.role ?? "PUBLIC"));
