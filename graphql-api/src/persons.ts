@@ -61,13 +61,11 @@ export function maskPersonForRole(
 
 const collection = () => firestore.collection("persons");
 
-export async function getAllPersons(): Promise<
-  Pick<PersonRecord, "id" | "userName">[]
-> {
+export async function getAllPersons(): Promise<PersonRecord[]> {
   const snapshot = await collection().get();
   return snapshot.docs.map((doc) => ({
     id: doc.id,
-    userName: (doc.data() as PersonRecord).userName,
+    ...(doc.data() as Omit<PersonRecord, "id">),
   }));
 }
 

@@ -22,11 +22,6 @@ const typeDefs = /* GraphQL */ `
     ADMIN
   }
 
-  type PersonSummary {
-    id: ID!
-    userName: String!
-  }
-
   type Coordinates {
     lat: Float!
     lng: Float!
@@ -50,7 +45,7 @@ const typeDefs = /* GraphQL */ `
 
   type Query {
     beacons(status: BeaconStatus): [Beacon!]!
-    people: [PersonSummary!]!
+    people(role: UserRole = PUBLIC): [Person!]!
     person(id: ID!, role: UserRole!): Person
   }
 `;
@@ -59,7 +54,10 @@ const resolvers = {
   Query: {
     beacons: (_parent: unknown, args: { status?: BeaconStatus }) =>
       args.status ? beacons.filter((b) => b.status === args.status) : beacons,
-    people: () => getAllPersons(),
+    people: async (_parent: unknown, args: { role?: UserRole }) => {
+      const records = await getAllPersons();
+      return records.map((r) => maskPersonForRole(r, args.role ?? "PUBLIC"));
+    },
     person: async (_parent: unknown, args: { id: string; role: UserRole }) => {
       const record = await getPersonById(args.id);
       return record ? maskPersonForRole(record, args.role) : null;
