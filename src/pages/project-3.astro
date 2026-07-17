@@ -1,0 +1,113 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import PersonLookup from "../components/islands/PersonLookup.tsx";
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 1.5rem;
+  }
+
+  :global(.person-lookup) {
+    max-width: 32rem;
+  }
+
+  :global(.person-lookup-form) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+
+  :global(.person-lookup-form label) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  :global(.person-lookup-form select) {
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-border, #ccc);
+    font: inherit;
+  }
+
+  :global(.person-lookup-form button) {
+    padding: 0.5rem 1.2rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-accent, #222);
+    background: var(--color-accent, #222);
+    color: var(--color-bg, #fff);
+    cursor: pointer;
+    font: inherit;
+  }
+
+  :global(.person-lookup-form button:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  :global(.person-lookup-error) {
+    color: #b3261e;
+  }
+
+  :global(.person-lookup-result) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  :global(.person-lookup-result div) {
+    display: contents;
+  }
+
+  :global(.person-lookup-result dt) {
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  :global(.person-lookup-result dd) {
+    margin: 0;
+  }
+
+  :global(.person-lookup-result img) {
+    border-radius: 50%;
+    display: block;
+  }
+</style>
+
+<Layout title="Project 3 | 7 Beacons">
+  <Header />
+  <main>
+    <section>
+      <h1>Project 3: Role-based access demo</h1>
+      <p class="intro">
+        Pick a user type and a person, then submit — the same GraphQL query
+        returns more fields the higher the selected access level, backed by
+        real records in Firestore.
+      </p>
+      <PersonLookup client:load />
+    </section>
+  </main>
+  <Footer />
+</Layout>
