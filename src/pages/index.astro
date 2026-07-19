@@ -6,6 +6,27 @@ import Footer from "../components/Footer.astro";
 ---
 
 <style>
+  /* Industrial/futuristic theme scoped to the landing page only - gunmetal
+     panels + a red-to-yellow neon glow accent, inspired by a sci-fi door
+     reference. Overrides the shared design tokens as CSS custom properties,
+     which cascade into Header/Hero/Footer through the real DOM regardless
+     of Astro's per-component style scoping, without touching those shared
+     components' own color values (they're also used on /map and /project-3,
+     which must stay on the default theme). */
+  .landing-theme {
+    --color-bg: #0a0d12;
+    --color-bg-alt: #1b232c;
+    --color-text: #f2f5f8;
+    --color-text-muted: #8b96a3;
+    --color-accent: #ff7a1a;
+    --color-border: #2a3542;
+    --glow-red: #ff3c14;
+    --glow-orange: #ff7a1a;
+    --glow-yellow: #ffd23f;
+    background: var(--color-bg);
+    min-height: 100vh;
+  }
+
   .version {
     padding-block: 0.75rem 0;
     color: var(--color-text-muted);
@@ -17,15 +38,17 @@ import Footer from "../components/Footer.astro";
   title="7 Beacons"
   description="7 Beacons."
 >
-  <Header siteName="7 Beacons" />
-  <p class="container version">Stable version: 1.0</p>
-  <Hero
-    eyebrow="Coming soon"
-    title="7 Beacons is on its way."
-    subtitle="Something new is on the way. Get in touch if you'd like to hear more."
-    ctaLabel="Get in touch"
-    ctaHref="mailto:hello@7beacons.com"
-  />
-  <Footer />
+  <div class="landing-theme">
+    <Header siteName="7 Beacons" />
+    <p class="container version">Stable version: 1.0</p>
+    <Hero
+      eyebrow="Coming soon"
+      title="7 Beacons is on its way."
+      subtitle="Something new is on the way. Get in touch if you'd like to hear more."
+      ctaLabel="Get in touch"
+      ctaHref="mailto:hello@7beacons.com"
+    />
+    <Footer />
+  </div>
 </Layout>
 
