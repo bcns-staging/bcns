@@ -18,7 +18,9 @@ const {
 
 <style>
   section {
+    position: relative;
     padding-block: 6rem 5rem;
+    overflow: clip;
   }
 
   @media (max-width: 640px) {
@@ -27,13 +29,43 @@ const {
     }
   }
 
+  /* Ambient glow bleeding in from off-screen, like light spilling off the
+     reference image's neon conduit onto surrounding metal. */
+  section::before {
+    content: "";
+    position: absolute;
+    top: -12rem;
+    left: 50%;
+    translate: -50% 0;
+    width: 50rem;
+    height: 28rem;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--glow-orange, var(--color-accent)) 35%, transparent) 0%,
+      color-mix(in srgb, var(--glow-red, var(--color-accent)) 18%, transparent) 45%,
+      transparent 72%
+    );
+    filter: blur(50px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .eyebrow,
+  h1,
+  p,
+  .cta {
+    position: relative;
+    z-index: 1;
+  }
+
   .eyebrow {
-    color: var(--color-accent);
+    color: var(--glow-orange, var(--color-accent));
     font-weight: 600;
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0 0 1rem;
+    text-shadow: 0 0 16px color-mix(in srgb, var(--glow-orange, var(--color-accent)) 55%, transparent);
   }
 
   h1 {
@@ -42,6 +74,15 @@ const {
     letter-spacing: -0.02em;
     margin: 0 0 1.25rem;
     max-width: 40ch;
+    background: linear-gradient(
+      100deg,
+      var(--glow-red, var(--color-accent)) 0%,
+      var(--glow-orange, var(--color-accent)) 50%,
+      var(--glow-yellow, var(--color-accent)) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
 
   p {
@@ -53,12 +94,19 @@ const {
 
   .cta {
     display: inline-block;
-    background: var(--color-accent);
-    color: #101418;
+    background: linear-gradient(100deg, var(--glow-orange, var(--color-accent)), var(--glow-yellow, var(--color-accent)));
+    color: #12161c;
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     text-decoration: none;
+    box-shadow: 0 0 28px color-mix(in srgb, var(--glow-orange, var(--color-accent)) 45%, transparent);
+    transition: box-shadow 0.2s ease, translate 0.2s ease;
+  }
+
+  .cta:hover {
+    box-shadow: 0 0 36px color-mix(in srgb, var(--glow-orange, var(--color-accent)) 65%, transparent);
+    translate: 0 -1px;
   }
 </style>
 
