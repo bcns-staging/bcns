@@ -17,6 +17,8 @@ export default defineConfig({
         // and tiles.openfreemap.org connect-src are for the /map page.
         "img-src 'self' data: blob: https://i.pravatar.cc",
         "worker-src blob:",
+        // YouTube Live embed for /project-4's public wildlife cam.
+        "frame-src https://www.youtube.com",
         "child-src blob:",
         "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app http://localhost:4000",
         "form-action 'self'",

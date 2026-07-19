@@ -1,0 +1,60 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 1.5rem;
+  }
+
+  .camera-wrap {
+    max-width: 40rem;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .camera-wrap iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+</style>
+
+<Layout title="Project 4 | 7 Beacons">
+  <Header />
+  <main>
+    <section class="container">
+      <h1>Project 4: Live public camera</h1>
+      <p class="intro">
+        A genuine continuous live feed — Explore.org's Africa wildlife cam,
+        streamed via YouTube Live. Real 24/7 video, not a refreshed
+        snapshot or a looping clip.
+      </p>
+      <div class="camera-wrap">
+        <iframe
+          src="https://www.youtube.com/embed/live_stream?channel=UCiGOIXjFqy5_mUNxQNOMfHw&autoplay=1&mute=1"
+          title="Explore Africa live cam"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
