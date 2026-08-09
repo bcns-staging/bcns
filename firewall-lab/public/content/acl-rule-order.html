@@ -1,0 +1,22 @@
+<p>A firewall's <b>rule base</b> (also called an ACL or security policy) is
+an <i>ordered</i> list. Each rule specifies zones, IPs, and a service, plus
+an action. Traffic is checked against the list <b>top to bottom</b>, and
+the <b>first</b> rule that matches wins -- every rule after it is never
+even considered for that connection. If nothing matches, an
+<b>implicit deny</b> at the very bottom drops the traffic.</p>
+<div class="diagram">
+  <div class="diagram-label">First-match-wins</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Rule 1</div><div class="step-sub">no match</div></div>
+    <div class="diagram-arrow">↓</div>
+    <div class="diagram-step"><div class="step-title">Rule 2</div><div class="step-sub">no match</div></div>
+    <div class="diagram-arrow">↓</div>
+    <div class="diagram-step good"><div class="step-title">Rule 3</div><div class="step-sub">matches -- stop here</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">action applied</div></div>
+  </div>
+</div>
+<p>This ordering dependency is the single most common source of firewall
+misconfiguration -- a broad rule placed too early silently swallows every
+narrower rule below it. See <a href="#/shadowed-rules">Shadowed & Redundant
+Rules</a> for exactly that failure mode.</p>

@@ -1,0 +1,23 @@
+<p>Internal hosts almost always use private (RFC1918) addresses that aren't
+routable on the internet. <b>Source NAT</b> rewrites the source address as
+traffic leaves the firewall so the rest of the world can reply to it.</p>
+<ul>
+  <li><b>Dynamic PAT ("masquerade")</b> -- every internal host sharing a
+  single public IP, distinguished by port number. This is what almost every
+  home router and most enterprise egress does.</li>
+  <li><b>Static NAT</b> -- a fixed 1:1 mapping between one internal IP and
+  one public IP, used when a specific internal host needs a consistent,
+  predictable public identity (e.g. a server that itself makes outbound
+  connections others need to recognize).</li>
+</ul>
+<div class="diagram">
+  <div class="diagram-label">Dynamic PAT: many internal hosts, one public IP</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">10.0.0.50:51000</div></div>
+      <div class="diagram-step"><div class="step-title">10.0.0.51:52000</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">203.0.113.1:dynamic</div><div class="step-sub">same public IP, different ports</div></div>
+  </div>
+</div>

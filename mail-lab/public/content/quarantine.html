@@ -1,0 +1,22 @@
+<p>When any check in the pipeline decides a message shouldn't go straight to
+the inbox -- a failed DMARC policy, a malicious attachment, a high BEC score
+-- it doesn't just vanish. It lands in a <b>quarantine queue</b> for a human
+(usually an IT admin, sometimes the recipient themselves via a daily digest
+email) to review, release, or permanently deny.</p>
+<div class="flow-diagram">
+  <div class="flow-step bad"><div class="flow-icon">🚫</div><div class="flow-title">Check Fails</div><div class="flow-desc">DMARC reject, malicious attachment, high BEC score...</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step warn"><div class="flow-icon">📥</div><div class="flow-title">Held in Quarantine</div><div class="flow-desc">Not delivered, not deleted — waiting for review</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step accent"><div class="flow-icon">👤</div><div class="flow-title">Admin Reviews</div><div class="flow-desc">Looks at why it was flagged</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:150px"><div class="flow-title">Release</div><div class="flow-desc">False positive — deliver it</div></div>
+    <div class="flow-step bad" style="width:150px"><div class="flow-title">Deny</div><div class="flow-desc">Confirmed bad — discard</div></div>
+  </div>
+</div>
+<p>This console mirrors that admin experience: every held message shows why
+it was held, and you can release it (deliver it after all -- useful for false
+positives) or deny it (confirm the block). Send messages from the Compose
+page or Attack Simulator that trip DMARC or a gateway check to see them
+appear here.</p>

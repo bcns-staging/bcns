@@ -1,0 +1,30 @@
+<p><b>Pattern matching</b> is the oldest and still most heavily used DLP
+detection technique: a regular expression looks for a shape (16 digits, a
+9-digit number with dashes, a specific prefix), and where possible, a
+<b>checksum</b> confirms the match is structurally valid data rather than a
+coincidental string of digits.</p>
+<h2>Why checksums matter</h2>
+<p>A regex for "16 digits" alone would flag phone numbers, order IDs, and
+random data constantly. Real card numbers, however, satisfy the
+<b>Luhn algorithm</b> -- a simple checksum built into the numbering scheme
+itself. Similarly, IBANs use a <b>mod-97 checksum</b> across a rearranged
+version of the number. Validating these turns a noisy regex into a
+high-confidence signal.</p>
+<p>Try the invalid examples below -- notice they're correctly ignored, not
+just flagged with lower confidence. That's the difference between "shape
+matches" and "shape <i>and</i> checksum match."</p>
+<div class="diagram">
+  <div class="diagram-label">Match pipeline</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Raw text</div><div class="step-sub">"4111 1111 1111 1111"</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Regex shape</div><div class="step-sub">16 digits, grouped</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Checksum</div><div class="step-sub">Luhn / mod-97</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step good"><div class="step-title">✓ Valid</div><div class="step-sub">high-confidence match</div></div>
+      <div class="diagram-step bad"><div class="step-title">✗ Invalid</div><div class="step-sub">discarded, not just downgraded</div></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<p><b>Document/Indexed Document Matching (IDM)</b> answers a question EDM
+can't: "does this content contain a piece of one of our confidential
+<i>documents</i>," even if it's just a paragraph pasted into an email, not
+the whole file.</p>
+<h2>How it works: shingling</h2>
+<p>The reference document is broken into overlapping chunks of a fixed
+number of words (a technique called <b>shingling</b>) -- this lab uses
+8-word windows sliding one word at a time. Each chunk is hashed. That
+produces a "fingerprint": a set of hashes representing every 8-word
+sequence in the document.</p>
+<div class="diagram">
+  <div class="diagram-label">Shingling, simplified to a 3-word window (the lab uses 8)</div>
+  <div class="shingle-demo">
+    <div class="shingle-row">
+      <span class="word hit">the</span><span class="word hit">quick</span><span class="word hit">brown</span><span class="word">fox</span><span class="word">jumps</span>
+      <span class="diagram-arrow">→</span><span class="tag">hash 0x9f2a…</span>
+    </div>
+    <div class="shingle-row">
+      <span class="word">the</span><span class="word hit">quick</span><span class="word hit">brown</span><span class="word hit">fox</span><span class="word">jumps</span>
+      <span class="diagram-arrow">→</span><span class="tag">hash 0x51c4…</span>
+    </div>
+    <div class="shingle-row">
+      <span class="word">the</span><span class="word">quick</span><span class="word hit">brown</span><span class="word hit">fox</span><span class="word hit">jumps</span>
+      <span class="diagram-arrow">→</span><span class="tag">hash 0x7de0…</span>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:10px; font-size:0.85rem;">Every sliding window becomes one hash. The full hash set is the document's fingerprint; a scan counts how many of those hashes reappear in new content.</p>
+</div>
+<p>To check new content, the same shingling process runs over it, and the
+lab counts what fraction of the <i>original document's</i> chunks reappear.
+Copy even a few sentences into an otherwise unrelated document, and a
+meaningful percentage of the reference fingerprint will show up --
+generally without needing to store or compare the raw document text at
+scan time.</p>
+<p>This is conceptually the same idea (much simplified) behind techniques
+like MinHash and the document fingerprinting features in commercial DLP and
+plagiarism-detection tools alike.</p>

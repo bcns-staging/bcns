@@ -1,0 +1,26 @@
+<p><b>RBLs / DNSBLs (Realtime Blackhole Lists / DNS-based Blackhole Lists)</b>
+are shared databases of IP addresses (and sometimes domains) known to send
+spam or malware, queried in real time during the SMTP conversation. The
+clever part is the query mechanism: rather than a special protocol, DNSBLs
+reuse plain DNS. To check IP <code>1.2.3.4</code> against a list
+<code>zen.spamhaus.org</code>, a server queries the reversed octets:
+<code>4.3.2.1.zen.spamhaus.org</code>. An A-record response means "listed";
+NXDOMAIN means "clean."</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">📡</div><div class="flow-title">Connecting IP</div><div class="flow-desc">1.2.3.4 wants to deliver mail</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔄</div><div class="flow-title">Reverse Octets</div><div class="flow-desc">Build 4.3.2.1.bl.domain</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">DNS Query</div><div class="flow-desc">Ask the blocklist zone</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step bad" style="width:150px"><div class="flow-title">Listed</div><div class="flow-desc">A-record returned — reject</div></div>
+    <div class="flow-step good" style="width:150px"><div class="flow-title">Not Listed</div><div class="flow-desc">NXDOMAIN — continue</div></div>
+  </div>
+</div>
+<p>This lab reproduces that exact query shape against a local,
+learner-maintained list instead of a real internet blocklist (querying real
+DNSBLs from an automated tool can itself look abusive and get you
+rate-limited, so a real list is deliberately out of scope here). Add some
+"known bad" IPs and domains and see how the reputation check plugs into the
+Compose pipeline's gateway stage.</p>

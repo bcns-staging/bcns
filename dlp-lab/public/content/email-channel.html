@@ -1,0 +1,16 @@
+<p>Email is the original DLP channel and still one of the most heavily
+monitored -- it's the easiest way to move a file outside an organization's
+boundary, intentionally or not. This page runs a composed message through
+whatever policies you've tagged with the "email" channel in the Policy
+Builder, exactly like a mail gateway scanning outbound traffic before it
+leaves.</p>
+<div class="diagram">
+  <div class="diagram-label">Outbound mail gateway, simulated</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Composed message</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Policies tagged "email"</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Allow / block / redact…</div><div class="step-sub">before it leaves</div></div>
+  </div>
+</div>

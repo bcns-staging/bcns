@@ -1,0 +1,25 @@
+<p>Every rule you write later references these objects instead of raw IPs
+typed inline -- <b>zones</b> group interfaces by trust level (Trust,
+Untrust, DMZ), <b>interfaces</b> are the physical ports traffic actually
+arrives on, <b>hosts</b> are named endpoints, and <b>services</b> are named
+protocol/port combinations. This mirrors how every real firewall platform
+organizes policy -- nobody writes "allow 10.0.0.0/24 to 0.0.0.0/0 tcp/443"
+by hand at scale.</p>
+<p>A small starter environment is already seeded below: a <b>Trust</b> zone
+for internal workstations, an <b>Untrust</b> zone for the internet, and a
+<b>DMZ</b> for the one published web server -- the three-zone layout most
+of this lab's examples and preset scenarios assume. Edit or extend it
+freely; every other page reads live from what's here.</p>
+<div class="diagram">
+  <div class="diagram-label">The seeded topology</div>
+  <div class="diagram-flow">
+    <div class="diagram-step good"><div class="step-title">Trust</div><div class="step-sub">eth1 — 10.0.0.0/24<br>workstations</div></div>
+    <div class="diagram-arrow">↔</div>
+    <div class="diagram-step accent"><div class="step-title">Firewall</div></div>
+    <div class="diagram-arrow">↔</div>
+    <div class="diagram-step bad"><div class="step-title">Untrust</div><div class="step-sub">eth0 — 203.0.113.0/30<br>the internet</div></div>
+  </div>
+  <div class="diagram-flow" style="margin-top:8px;">
+    <div class="diagram-step warn"><div class="step-title">DMZ</div><div class="step-sub">eth2 — 192.168.50.0/24<br>published web server</div></div>
+  </div>
+</div>

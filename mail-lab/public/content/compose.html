@@ -1,0 +1,36 @@
+<p>This is the flagship lab: compose a real message, choose how it's sent, and
+watch it go through the same authentication pipeline a real mail server
+would run -- SPF against the envelope sender's IP, DKIM verification, DMARC
+alignment, and (optionally) an ARC-sealed forwarding hop.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">📝</div><div class="flow-title">Compose</div><div class="flow-desc">Envelope-from, header-From, sending IP, DKIM options</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">1️⃣</div><div class="flow-title">SPF Check</div><div class="flow-desc">Envelope IP vs. envelope domain's record</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">2️⃣</div><div class="flow-title">DKIM Verify</div><div class="flow-desc">Signature valid? Body/headers unchanged?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">3️⃣</div><div class="flow-title">DMARC Align</div><div class="flow-desc">Does SPF or DKIM's domain match header-From?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step warn"><div class="flow-icon">4️⃣</div><div class="flow-title">Gateway Checks</div><div class="flow-desc">Spoofing, links, attachments, spam/BEC scoring</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">📬</div><div class="flow-title">Disposition</div><div class="flow-desc">Deliver / Quarantine / Reject</div></div>
+</div>
+<p>Try these experiments once you've set up a domain in the DNS Zone Manager:</p>
+<ul>
+  <li><b>Legitimate send:</b> set the envelope-from and header-from to the
+  same domain you configured SPF/DKIM/DMARC for, use the sending IP your SPF
+  record allows, and sign with DKIM. Should pass cleanly.</li>
+  <li><b>Spoofing attempt:</b> set the header-From to your configured domain
+  but send from an unauthorized IP with no DKIM signature. Watch SPF fail and
+  DMARC reject it.</li>
+  <li><b>Envelope/header mismatch:</b> use a different domain for the
+  envelope-from than the header-From. Notice SPF can technically "pass" for
+  the envelope domain, yet DMARC still fails because that domain isn't
+  aligned with what the recipient sees.</li>
+  <li><b>Forwarding:</b> tick "simulate mailing list forward" and watch ARC
+  preserve the original trust decision even after the message is modified
+  downstream.</li>
+</ul>
+<p>The result panel shows the exact <code>Authentication-Results</code> and
+<code>Received</code> headers a real mail client's "Show Original" view would
+display.</p>

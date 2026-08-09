@@ -1,0 +1,24 @@
+<p>Every doctrine note attached to every choice in every scenario ties back
+to one of four phases defined in <b>NIST Special Publication 800-61</b>,
+the U.S. government's standard incident-handling framework. It's not a
+checklist you follow once — it's a cycle: what you learn in the last phase
+feeds back into the first phase for the next incident.</p>
+<div class="diagram">
+  <div class="diagram-label">The NIST SP 800-61 lifecycle</div>
+  <div class="diagram-flow">
+    <div class="diagram-step accent"><div class="step-title">1. Preparation</div><div class="step-sub">policies, tooling, tabletop exercises, pre-authorized containment authority</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">2. Detection & Analysis</div><div class="step-sub">confirm scope before acting, but don't let confirming replace acting</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">3. Containment, Eradication & Recovery</div><div class="step-sub">stop the bleeding, confirm the door is actually closed, restore from verified-clean state</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">4. Post-Incident Activity</div><div class="step-sub">blameless postmortem, feed lessons back into Preparation</div></div>
+  </div>
+</div>
+<h2>Why this shows up in every scenario</h2>
+<ul>
+  <li><b>Preparation</b> is almost always invisible in the moment — it's the pre-authorized decision-making authority, the retained IR firm on speed-dial, the written callback-verification policy that makes a stressed employee's judgment call unnecessary. Every scenario has at least one ending that's worse specifically because something wasn't prepared in advance.</li>
+  <li><b>Detection &amp; Analysis</b> is a genuine trap: waiting for full certainty before acting is itself a costly decision, since the incident keeps developing while you build confidence. Good response confirms enough to act, then keeps confirming in parallel with acting.</li>
+  <li><b>Containment, Eradication &amp; Recovery</b> is where most of a scenario's decision points live — and where "fast" and "correct" are both necessary, not a tradeoff to pick one of. Stopping the immediate threat without confirming the door is actually closed (a clean backup, a fully-scoped mailbox compromise, a properly preserved chain of custody) just delays the same incident.</li>
+  <li><b>Post-Incident Activity</b> is the phase real organizations skip most often under time pressure, and the one every scenario's best ending explicitly includes: a documented policy change, a filed civil claim, a completed forensic sweep — something that makes the next incident's Preparation phase stronger because of what was learned here.</li>
+</ul>

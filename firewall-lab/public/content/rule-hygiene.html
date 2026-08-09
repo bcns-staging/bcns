@@ -1,0 +1,17 @@
+<p>Rule bases only grow over time -- rules get added under deadline
+pressure and rarely get removed, since nobody wants to be the one who
+deletes something and breaks production. A recurring audit catches three
+things a security engineer should clean up:</p>
+<ul>
+  <li><b>Shadowed rules</b> -- a broader, earlier rule makes a later one
+  unreachable (see <a href="#/shadowed-rules">Shadowed & Redundant
+  Rules</a>).</li>
+  <li><b>Zero-hit rules</b> -- rules that have never matched any traffic
+  this lab has evaluated. In production this is measured over months, but
+  the idea is the same: a rule nobody's traffic ever uses is a candidate
+  for removal (after confirming it's truly unused, not just rarely hit).</li>
+  <li><b>Overly permissive rules</b> -- an allow rule with no restriction
+  on protocol or port and no logging enabled. Even if it's scoped to
+  specific zones, an unrestricted service on an unlogged allow rule is a
+  standing risk and an audit blind spot.</li>
+</ul>

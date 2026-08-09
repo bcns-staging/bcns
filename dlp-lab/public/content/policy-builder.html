@@ -1,0 +1,42 @@
+<p>Detectors on their own don't do anything -- a <b>policy</b> is what turns
+a detection into a decision. This is where every technique from the pages
+above gets combined: pick which detectors matter for a given policy, weight
+them by how much you trust each one, set a threshold, and choose what
+happens when content crosses it.</p>
+<h2>How the score works</h2>
+<p>Each selected detector reports its own confidence (0-1) for a piece of
+content. The policy's score is the <b>weighted average</b> of those
+confidences -- so a policy can lean heavily on, say, Exact Data Match (very
+precise, so weight it high) while barely counting the statistical
+classifier (broader but noisier, weight it low).</p>
+<div class="diagram">
+  <div class="diagram-label">Weighted score → action</div>
+  <div class="bar-chart">
+    <div class="bar-row"><div class="bar-label">EDM (weight 0.9)</div><div class="bar-track"><div class="bar-fill bad" style="width:95%"></div></div><div class="bar-value">0.95</div></div>
+    <div class="bar-row"><div class="bar-label">Pattern match (0.6)</div><div class="bar-track"><div class="bar-fill warn" style="width:70%"></div></div><div class="bar-value">0.70</div></div>
+    <div class="bar-row"><div class="bar-label">Classifier (0.3)</div><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><div class="bar-value">0.40</div></div>
+  </div>
+  <div class="diagram-flow" style="margin-top:14px;">
+    <div class="diagram-step accent"><div class="step-title">Weighted average</div><div class="step-sub">Σ(score × weight) / Σ weight</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">vs. threshold</div><div class="step-sub">e.g. 0.65</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Action</div><div class="step-sub">alert / redact / encrypt / quarantine / block</div></div>
+  </div>
+</div>
+<h2>Actions, modes, and exceptions</h2>
+<ul>
+  <li><b>Actions:</b> <code>alert</code> (log only), <code>redact</code>
+  (mask matched spans in place), <code>encrypt</code> (wrap the content in a
+  real AES-256-GCM envelope), <code>quarantine</code>, <code>block</code>,
+  or <code>allow</code>.</li>
+  <li><b>Monitor mode</b> always allows the content through, but records
+  what the policy <i>would</i> have done -- the safe way to test a new
+  policy before enforcing it.</li>
+  <li><b>Require justification</b> turns a block into a "policy tip":
+  instead of silently blocking, the end user sees why it was flagged and can
+  type a business justification to send anyway -- logged for later audit
+  rather than blocked outright.</li>
+  <li><b>Exceptions</b> let specific recipients or users bypass a policy
+  entirely, for known-safe destinations or approved workflows.</li>
+</ul>

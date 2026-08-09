@@ -1,0 +1,20 @@
+<p><b>Threat intelligence feeds</b> are curated lists of IPs and domains
+known to be malicious -- command-and-control servers, phishing
+infrastructure, scanning hosts -- contributed by security vendors and
+researchers. Checking every connection's destination against a feed catches
+threats no signature or content inspection would recognize, because
+the indicator itself is what's bad, independent of what the traffic
+actually contains.</p>
+<div class="diagram">
+  <div class="diagram-label">Reputation lookup</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Destination</div><div class="step-sub">IP or domain</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Threat intel feed</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step bad"><div class="step-title">Listed</div><div class="step-sub">blocked regardless of the rule's own action</div></div>
+      <div class="diagram-step good"><div class="step-title">Not listed</div><div class="step-sub">no reputation signal either way</div></div>
+    </div>
+  </div>
+</div>

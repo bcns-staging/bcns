@@ -1,0 +1,34 @@
+<p><b>Keyword matching</b> looks for specific words or phrases -- legal
+markings, project codenames, "do not distribute" style language. It's
+simple, fast, and catches things regex fundamentally can't (there's no
+"shape" to a sentence like "this is privileged and confidential").</p>
+<p><b>Proximity (context-aware) matching</b> solves a different problem:
+data that's sensitive but not distinctively formatted. A bare 9-digit
+number could be an SSN, a tracking number, or a phone extension with the
+area code squashed in -- there's no way to tell from the number alone. The
+fix real DLP engines use is <b>requiring supporting context nearby</b>: if
+"SSN" or "social security" appears within a short window of the number,
+confidence goes up; if there's no such context, the match is suppressed
+entirely rather than generating noise.</p>
+<p>This is a genuine trade-off: proximity matching will miss a bare SSN with
+zero surrounding context, but it will also generate far fewer false
+positives than flagging every 9-digit number in every document.</p>
+<div class="diagram">
+  <div class="diagram-label">Two detectors, two jobs</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">"do not distribute"</div><div class="step-sub">exact phrase</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Keyword match</div><div class="step-sub">direct hit, no shape needed</div></div>
+  </div>
+  <hr class="sep" />
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">555-12-3456</div><div class="step-sub">bare 9-digit shape</div></div>
+    <div class="diagram-arrow">+</div>
+    <div class="diagram-step warn"><div class="step-title">"social security" nearby?</div><div class="step-sub">within N-word window</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step good"><div class="step-title">✓ context found</div><div class="step-sub">confidence up</div></div>
+      <div class="diagram-step bad"><div class="step-title">✗ no context</div><div class="step-sub">suppressed, not just lowered</div></div>
+    </div>
+  </div>
+</div>

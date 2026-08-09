@@ -1,0 +1,26 @@
+<p>A <b>site-to-site VPN</b> links two networks over the public internet as
+if they were directly connected, using <b>IPSec</b> to encrypt everything
+in between. Setting one up has two phases:</p>
+<ul>
+  <li><b>Phase 1 (IKE)</b> -- the two firewalls authenticate each other and
+  negotiate a secure channel used only to set up Phase 2.</li>
+  <li><b>Phase 2 (IPSec SA)</b> -- the actual encryption parameters for the
+  data itself, plus the <b>proxy-IDs / remote domain</b>: which specific
+  subnets on each side are allowed to talk through this tunnel.</li>
+</ul>
+<p>That remote domain is what decides routing: traffic destined for an
+address inside it gets encrypted and sent through the tunnel; everything
+else takes the normal default path.</p>
+<div class="diagram">
+  <div class="diagram-label">Routing decision</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Destination IP</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Inside tunnel's remote domain?</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step accent"><div class="step-title">Yes</div><div class="step-sub">encrypted, sent through the IPSec tunnel</div></div>
+      <div class="diagram-step"><div class="step-title">No</div><div class="step-sub">normal default route</div></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<p>Even with perfect SPF/DKIM/DMARC, an attacker can register their <b>own</b>
+domain and pass every check -- as long as that domain looks close enough to
+yours at a glance that the recipient doesn't notice. This is a
+<b>lookalike</b> or <b>cousin domain</b> attack.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🌐</div><div class="flow-title">Sender Domain</div><div class="flow-desc">e.g. rnycompany.local</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔤</div><div class="flow-title">Normalize</div><div class="flow-desc">rn → m, 0 → o, strip lookalike Unicode</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📏</div><div class="flow-title">Edit Distance</div><div class="flow-desc">Compare to your protected brand domains</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">Close but not exact</div><div class="flow-desc">Flagged as lookalike</div></div>
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Exact match</div><div class="flow-desc">It's actually your domain — not an attack</div></div>
+  </div>
+</div>
+<h2>Common tricks</h2>
+<ul>
+  <li><b>Typosquatting:</b> <code>mycompanny.local</code>, missing/extra/swapped letters.</li>
+  <li><b>Homoglyphs:</b> characters that render almost identically --
+  <code>rn</code> instead of <code>m</code>, <code>vv</code> instead of
+  <code>w</code>, <code>0</code> instead of <code>o</code>, or entirely
+  different Unicode characters from other alphabets (Cyrillic <code>а</code>
+  looks identical to Latin <code>a</code> in most fonts).</li>
+  <li><b>Subdomain tricks:</b> <code>mycompany.local.attacker-domain.com</code>
+  -- the real domain is <code>attacker-domain.com</code>; everything before
+  it is just a subdomain label the attacker controls.</li>
+</ul>
+<p>This lab flags candidates using edit-distance (Levenshtein) on both the raw
+domain and a version with common confusable sequences normalized -- the same
+basic technique real anti-phishing engines use, extended in production with
+much larger confusable-character tables and visual similarity models.</p>

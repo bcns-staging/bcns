@@ -1,0 +1,35 @@
+<p>Almost every advanced DLP technique needs a source of truth to compare
+against: a list of forbidden phrases, a set of known-sensitive records, or a
+reference document you don't want copied elsewhere. This page is where you
+define all three -- everything else in the lab reads from here.</p>
+<ul>
+  <li><b>Keyword lists</b> feed the Keyword &amp; Proximity detector directly.</li>
+  <li><b>EDM record sets</b> feed the Exact Data Match detector -- your raw
+  values are only ever turned into salted hashes at match time, never
+  compared or stored in plaintext, which is exactly how production EDM
+  systems avoid becoming a new source of the very leak they're meant to
+  prevent.</li>
+  <li><b>Reference documents</b> feed the Document Fingerprinting detector,
+  which can recognize a paragraph lifted from one of these documents even if
+  the rest of the surrounding text is completely different.</li>
+</ul>
+<div class="diagram">
+  <div class="diagram-label">Everything else reads from here</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">Keyword lists</div></div>
+      <div class="diagram-step"><div class="step-title">EDM record sets</div><div class="step-sub">stored as salted hashes</div></div>
+      <div class="diagram-step"><div class="step-title">Reference documents</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step accent"><div class="step-title">Keyword &amp; Proximity</div></div>
+      <div class="diagram-step accent"><div class="step-title">Exact Data Match</div></div>
+      <div class="diagram-step accent"><div class="step-title">Document Fingerprinting</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Scan Playground</div></div>
+  </div>
+</div>
+<p>Set up at least one of each here, then head to the Scan Playground to see
+them all fire against real content.</p>

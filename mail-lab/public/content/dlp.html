@@ -1,0 +1,27 @@
+<p><b>Data Loss Prevention (DLP)</b> scans <i>outbound</i> mail -- content your
+own organization is about to send -- for patterns that look like sensitive
+data, and blocks or redacts it before it leaves. This protects against
+accidental leaks (pasting the wrong spreadsheet) as much as intentional
+exfiltration.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">📤</div><div class="flow-title">Outbound Message</div><div class="flow-desc">About to leave your organization</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔎</div><div class="flow-title">Scan Content</div><div class="flow-desc">SSNs, card numbers (Luhn-checked), API keys</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">Match Found</div><div class="flow-desc">Block or redact before sending</div></div>
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Clean</div><div class="flow-desc">Sent normally</div></div>
+  </div>
+</div>
+<p>This lab checks for a few classic, still extremely common patterns:</p>
+<ul>
+  <li>US Social Security Numbers (<code>123-45-6789</code> format)</li>
+  <li>Credit card numbers -- validated with the <b>Luhn algorithm</b> so
+  random 16-digit numbers don't false-positive as often</li>
+  <li>Cloud provider API keys (AWS access key IDs, generic
+  <code>sk-</code>/<code>pk-</code> style secret prefixes)</li>
+</ul>
+<p>Real DLP systems add far more pattern types (passport numbers, health
+record identifiers, custom regex per organization) and often score contextual
+signals rather than matching patterns alone -- but the core mechanism is the
+same one shown here.</p>

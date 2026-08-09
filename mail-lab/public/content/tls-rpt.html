@@ -1,0 +1,18 @@
+<p><b>TLS-RPT (RFC 8460)</b> is the feedback loop for MTA-STS and DANE: it lets
+a domain owner ask senders to email back a daily JSON summary of how many
+delivery attempts succeeded or failed TLS validation, and why.</p>
+<div class="flow-diagram">
+  <div class="flow-step"><div class="flow-icon">📤</div><div class="flow-title">Delivery Attempts</div><div class="flow-desc">Many senders try delivering to your domain over time</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step accent"><div class="flow-icon">📊</div><div class="flow-title">Successes + Failures Tallied</div><div class="flow-desc">Each attempt logged as success or failure, with a reason</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">📧</div><div class="flow-title">Daily JSON Report</div><div class="flow-desc">Sent to the rua= address in your TLS-RPT record</div></div>
+</div>
+<p>Without TLS-RPT, a domain that misconfigures its MTA-STS or DANE setup
+(e.g. an expired certificate, or an MX host that no longer matches the
+policy) would have <b>no visibility</b> that mail is silently failing to
+deliver -- senders don't bounce these failures back to the sender in any
+obvious way. Publishing <code>rua=mailto:...</code> in a
+<code>_smtp._tls.yourdomain.com</code> TXT record gets you those reports.</p>
+<p>Simulate a few delivery attempts below (some successful, some not) and
+generate a report to see the format real reports use.</p>

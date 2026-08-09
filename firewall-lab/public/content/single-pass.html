@@ -1,0 +1,36 @@
+<p>Before NGFWs, getting App-ID-like awareness meant bolting a stack of
+separate single-purpose boxes together -- a proxy for URL filtering, a
+separate IPS appliance, a separate AV gateway -- each re-parsing the same
+traffic from scratch, in sequence, adding latency at every hop. This
+architecture is usually called <b>UTM (Unified Threat Management)</b> when
+it's consolidated into one box that still runs each engine as a distinct
+sequential pass.</p>
+<p>A true NGFW's <b>single-pass architecture</b> instead classifies the
+application, the user, and the content's threats all in <i>one</i> pass
+over the traffic -- App-ID, User-ID, and Content-ID working from the same
+parsed stream simultaneously, not as independent bolt-on scans.</p>
+<div class="diagram">
+  <div class="diagram-label">Sequential bolt-ons vs. single-pass</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Traffic</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">URL proxy</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">IPS box</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">AV gateway</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step"><div class="step-title">verdict</div><div class="step-sub">re-parsed 3 times</div></div>
+  </div>
+  <hr class="sep" />
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Traffic</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">App-ID + User-ID + Content-ID</div><div class="step-sub">one parsed stream, one pass</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">verdict</div></div>
+  </div>
+</div>
+<p>This lab's own engine mirrors that idea structurally: every NGFW
+signal below runs from the same evaluated connection in a single API call,
+not as separate round-trips to different services.</p>

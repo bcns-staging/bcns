@@ -1,0 +1,23 @@
+<p>This is the flagship lab: paste any content and every detection technique
+built so far runs against it at once, exactly like a real DLP engine
+evaluates content through multiple detectors in a single pass. As you build
+out more detectors in the pages ahead, they'll all show up here too.</p>
+<p>The "overall confidence" is simply the highest individual detector's
+confidence -- in the full Policy Builder later, you'll see a more realistic
+model where multiple weighted detectors combine into one score.</p>
+<div class="diagram">
+  <div class="diagram-label">One pass, every detector</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Pasted content</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">Pattern match</div></div>
+      <div class="diagram-step"><div class="step-title">Keyword/proximity</div></div>
+      <div class="diagram-step"><div class="step-title">EDM</div></div>
+      <div class="diagram-step"><div class="step-title">Fingerprint</div></div>
+      <div class="diagram-step"><div class="step-title">Classifier…</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Overall confidence</div><div class="step-sub">= highest individual score</div></div>
+  </div>
+</div>

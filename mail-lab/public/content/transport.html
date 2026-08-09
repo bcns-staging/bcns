@@ -1,0 +1,20 @@
+<p>SMTP was not designed with encryption in mind. <b>STARTTLS</b> retrofits it:
+a sending server connects in plaintext, then upgrades the connection to TLS
+mid-conversation before any message content is sent.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">👋</div><div class="flow-title">EHLO</div><div class="flow-desc">Sender greets the receiving server</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📋</div><div class="flow-title">Server Offers STARTTLS</div><div class="flow-desc">Advertises TLS support (or an attacker strips this line)</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:170px"><div class="flow-title">Upgrade to TLS</div><div class="flow-desc">Rest of the conversation is encrypted</div></div>
+    <div class="flow-step bad" style="width:170px"><div class="flow-title">No STARTTLS</div><div class="flow-desc">Silently continues in plaintext — no warning</div></div>
+  </div>
+</div>
+<p>The problem is that STARTTLS is <b>opportunistic</b> -- if the receiving
+server doesn't advertise it, or an on-path attacker simply deletes the
+"250-STARTTLS" line from the server's response (a "STRIPTLS" attack), the
+sending server just... continues in plaintext. No error, no warning, no
+retry. Run the simulation below both ways and compare.</p>
+<p>This exact weakness is why MTA-STS and DANE exist: both make TLS
+<i>mandatory</i> for a domain instead of best-effort.</p>

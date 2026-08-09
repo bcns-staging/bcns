@@ -1,0 +1,19 @@
+<p><b>URL filtering</b> categorizes web destinations (gambling, malware,
+news, business apps...) and lets policy act on the category -- independent
+of App-ID. The same "generic-tls" web-browsing app can lead to a business
+tool or a gambling site; App-ID alone can't tell them apart, only the
+destination's category can.</p>
+<p>Because it's a separate signal, a rule can allow the <i>application</i>
+(web browsing) while still blocking specific <i>categories</i> within it --
+exactly what the seeded "Allow Inspected Web Browsing" rule's content
+inspection does for the <code>malware</code> and <code>gambling</code>
+categories, overriding the rule's own "allow" action when it sees them.</p>
+<div class="diagram">
+  <div class="diagram-label">Two independent signals</div>
+  <div class="diagram-flow">
+    <div class="diagram-step good"><div class="step-title">App-ID: generic-tls</div><div class="step-sub">"it's web browsing"</div></div>
+    <div class="diagram-step warn"><div class="step-title">URL category: gambling</div><div class="step-sub">"but to where"</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Blocked on category</div><div class="step-sub">even though the app itself is allowed</div></div>
+  </div>
+</div>

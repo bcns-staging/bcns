@@ -1,0 +1,35 @@
+<p><b>Exact Data Match (EDM)</b> is the technique enterprises use when they
+know exactly which records are sensitive -- an actual customer database, an
+employee roster -- rather than relying on a value merely <i>looking</i>
+sensitive. Instead of "does this look like an SSN," EDM asks "is this the
+exact SSN of a real person in our database."</p>
+<h2>Why hashing, not plaintext</h2>
+<p>A naive implementation would upload the sensitive database to the DLP
+tool as-is -- creating a second copy of the exact data you're trying to
+protect. Real EDM systems instead compute a <b>salted one-way hash</b> of
+each (normalized) value and only ever store and compare hashes. Content
+being scanned is normalized and hashed the same way; if the hashes match,
+you know the original values matched too, without either side ever needing
+the plaintext again.</p>
+<div class="diagram">
+  <div class="diagram-label">Both sides hash the same way -- plaintext never leaves either one</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">Customer DB</div><div class="step-sub">real SSNs, names</div></div>
+      <div class="diagram-step"><div class="step-title">Scanned content</div><div class="step-sub">email, upload, etc.</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step accent"><div class="step-title">Normalize + salted hash</div></div>
+      <div class="diagram-step accent"><div class="step-title">Normalize + salted hash</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Hash comparison</div><div class="step-sub">match ⇒ values matched</div></div>
+  </div>
+</div>
+<h2>Composite vs. single-field matches</h2>
+<p>Matching just a name, or just a number, in isolation is weak evidence --
+common names and account-number-shaped numbers appear all the time by
+coincidence. Matching <b>multiple fields from the same record together</b>
+(a name <i>and</i> its SSN, appearing near each other) is much stronger
+evidence, and is scored accordingly here.</p>

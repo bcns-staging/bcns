@@ -1,0 +1,21 @@
+<p>Every DLP technique so far has been about data <b>in motion</b> --
+something happening right now (a send, an upload, a copy). <b>Data at
+rest</b> is different: files that have been sitting on a network share or
+in cloud storage for months, possibly never scanned when they were first
+created, possibly containing sensitive data nobody flagged at the time.</p>
+<p>Real DLP programs run periodic <b>discovery scans</b> across storage to
+catch exactly this -- old exports, forgotten backups, a spreadsheet someone
+saved to a shared drive years ago. This page models that: populate a
+virtual file share (each file carries a sensitivity label, just like a real
+document management system), then run a scan and watch policies evaluate
+every file at once.</p>
+<div class="diagram">
+  <div class="diagram-label">In motion vs. at rest</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Virtual file share</div><div class="step-sub">files sitting for months, each labeled</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Periodic discovery scan</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Every file evaluated at once</div><div class="step-sub">not triggered by a live event</div></div>
+  </div>
+</div>

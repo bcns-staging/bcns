@@ -1,0 +1,29 @@
+<p>A firewall's job has stayed the same since the first packet filters
+shipped: decide, for every connection that wants to cross a boundary,
+whether it's allowed. What's changed dramatically over time is <b>what
+information that decision gets to use.</b></p>
+<p>This lab is split into two halves that mirror that history. <b>Part 1
+(Traditional Firewall)</b> covers the stateful, port-and-IP-based model
+that's still the backbone of every firewall's fast path today. <b>Part 2
+(NGFW)</b> covers what got layered on top: identifying the real
+application and user regardless of port, and inspecting content -- even
+encrypted content -- before deciding.</p>
+<div class="diagram">
+  <div class="diagram-label">What each generation gets to see</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Traditional</div><div class="step-sub">protocol, src/dst IP, src/dst port</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">allow / deny</div></div>
+  </div>
+  <hr class="sep" />
+  <div class="diagram-flow">
+    <div class="diagram-step accent"><div class="step-title">NGFW</div><div class="step-sub">everything Traditional sees, plus: real application (App-ID), real user/group (User-ID), decrypted content (SSL decrypt), threat intel, IPS, URL category, files</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">allow / deny</div><div class="step-sub">a much more informed decision</div></div>
+  </div>
+</div>
+<p>Every page runs against a small seeded environment (three zones, a
+handful of hosts, two independent rulebases) so you can test real traffic
+immediately -- though every object is fully editable on the
+<a href="#/network-objects">Network Objects</a> and
+<a href="#/rule-builder">Rule Builder</a> pages.</p>

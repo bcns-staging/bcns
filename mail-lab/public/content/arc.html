@@ -1,0 +1,35 @@
+<p>SPF breaks on forwarding (the forwarder's IP isn't authorized). DKIM breaks
+if the forwarder modifies the body or headers at all -- and many legitimate
+services do: mailing lists add footers or subject tags, some forwarders
+rewrite headers. That means a perfectly legitimate message can fail DMARC
+entirely by the time it reaches its final destination, through no fault of
+the original sender.</p>
+<p><b>ARC (Authenticated Received Chain)</b> solves this by having each
+intermediary cryptographically attest: "here's what SPF/DKIM/DMARC looked
+like when I received this, and here's my signature over what I'm now sending
+you." A receiver can then trust that attestation even if the message's own
+authentication has since broken.</p>
+<div class="flow-diagram">
+  <div class="flow-step good"><div class="flow-icon">✅</div><div class="flow-title">1. Original Send</div><div class="flow-desc">SPF + DKIM + DMARC all PASS at the mailing list</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step accent"><div class="flow-icon">🔏</div><div class="flow-title">2. List Seals It</div><div class="flow-desc">Records the PASS results in an ARC set before modifying the message</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step warn"><div class="flow-icon">📝</div><div class="flow-title">3. List Modifies</div><div class="flow-desc">Adds a footer + resends from its own IP — breaks native SPF/DKIM</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step bad"><div class="flow-icon">❌</div><div class="flow-title">4. Native Check Fails</div><div class="flow-desc">Final recipient's own DMARC check now fails</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">🔗</div><div class="flow-title">5. ARC Saves It</div><div class="flow-desc">ARC chain still validates — original PASS is trusted anyway</div></div>
+</div>
+<h2>The three ARC headers</h2>
+<table>
+  <tr><th>Header</th><th>Purpose</th></tr>
+  <tr><td><code>ARC-Authentication-Results</code></td><td>Records what SPF/DKIM/DMARC evaluated to <i>at that hop</i></td></tr>
+  <tr><td><code>ARC-Message-Signature</code></td><td>A DKIM-style signature over the message as it's being sent onward</td></tr>
+  <tr><td><code>ARC-Seal</code></td><td>Signs the whole ARC set (and any earlier ones), chaining hops together</td></tr>
+</table>
+<p>Each hop increments an instance number (<code>i=1</code>, <code>i=2</code>,
+...). This lab simulates exactly one intermediary hop, which is enough to see
+the full lesson: run the demo below and compare the "native" DMARC result at
+the final hop (which fails, because the forwarder's footer broke DKIM and its
+IP broke SPF) against the ARC chain, which still validates and lets a
+downstream receiver recover the original trust decision.</p>

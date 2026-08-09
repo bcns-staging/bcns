@@ -1,0 +1,16 @@
+<p>A rule is <b>shadowed</b> when an earlier rule already matches every
+connection it would ever match. Because of first-match-wins, the shadowed
+rule can never fire -- it's dead weight at best, and a real security gap at
+worst if the two rules don't share the same action.</p>
+<div class="diagram">
+  <div class="diagram-label">Two ways this bites you</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step warn"><div class="step-title">Same action</div><div class="step-sub">just redundant -- safe to delete</div></div>
+      <div class="diagram-step bad"><div class="step-title">Different action</div><div class="step-sub">a real gap: the narrower, more-intended rule never gets a chance to run</div></div>
+    </div>
+  </div>
+</div>
+<p>This is a real, common finding in production rule-base audits --
+especially after years of rules being added to the top "just to be safe"
+without anyone checking what's already covered further down.</p>
