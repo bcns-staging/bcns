@@ -1,0 +1,27 @@
+<p>Everything in this lab is a separate tool you configure by hand -- the
+real test of whether it all adds up to a working defense is to actually
+attack your own configuration and see what happens. That's what this page
+does: pre-built scenarios modeled on real attack patterns, run against
+whichever domain you've set up.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🎯</div><div class="flow-title">Pick a Scenario</div><div class="flow-desc">Domain spoof, cousin-domain BEC, malicious attachment, or legit forward</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📝</div><div class="flow-title">Auto-Filled Compose</div><div class="flow-desc">Realistic attack (or benign control case) built for you</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">⚙️</div><div class="flow-title">Runs the Full Pipeline</div><div class="flow-desc">Same SPF/DKIM/DMARC/gateway checks as Compose</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Caught</div><div class="flow-desc">Your defenses worked</div></div>
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">Not Caught</div><div class="flow-desc">Configure more defenses and retry</div></div>
+  </div>
+</div>
+<p>Three of the four scenarios are genuine attacks -- a "caught" result means
+your configuration correctly blocked or quarantined them. The fourth
+(legitimate mailing-list forwarding) is a deliberate control case: it's
+<i>not</i> an attack, and a well-configured defense (specifically, ARC)
+should let it through despite its native SPF/DKIM breaking. A gateway that
+can't tell the difference between "attack" and "legitimate but
+authentication-breaking" isn't actually useful -- it just blocks everything.</p>
+<p>Try running each scenario before configuring any defenses, then again
+after setting up SPF/DKIM/DMARC, known contacts, and protected domains, to
+see the difference your configuration makes.</p>

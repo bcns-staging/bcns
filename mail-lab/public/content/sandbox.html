@@ -1,0 +1,30 @@
+<p>Real attachment sandboxing detonates a file in an isolated virtual machine
+and watches what it actually does -- does it spawn a shell, reach out to a
+command-and-control server, encrypt files? That requires real execution
+infrastructure this local lab intentionally does not provide (running
+arbitrary uploaded files would defeat the entire point of a safe learning
+environment).</p>
+<p>What we do simulate is the <b>static triage</b> a real gateway performs
+<i>before</i> deciding whether dynamic detonation is even necessary:</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">📎</div><div class="flow-title">Attachment Received</div><div class="flow-desc">e.g. invoice.pdf.exe</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🏷️</div><div class="flow-title">Check Extension</div><div class="flow-desc">Dangerous type? Double extension?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📑</div><div class="flow-title">Check File Type</div><div class="flow-desc">Macro-enabled document?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔢</div><div class="flow-title">Hash Lookup</div><div class="flow-desc">Matches a known-bad file hash?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step bad"><div class="flow-icon">⚠️</div><div class="flow-title">Verdict</div><div class="flow-desc">Benign / Suspicious / Malicious</div></div>
+</div>
+<ul>
+  <li>Dangerous file extensions (<code>.exe</code>, <code>.scr</code>,
+  <code>.js</code>, <code>.vbs</code>, ...)</li>
+  <li>Double extensions used to disguise the real file type
+  (<code>invoice.pdf.exe</code>)</li>
+  <li>Macro-enabled Office documents (<code>.docm</code>, <code>.xlsm</code>)
+  -- still one of the most common real-world malware delivery methods</li>
+  <li>File hash lookups against a known-bad-hash list</li>
+</ul>
+<p>Upload any file (nothing is executed or stored beyond this request) and see
+which heuristics fire.</p>

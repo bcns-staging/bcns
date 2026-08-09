@@ -1,0 +1,22 @@
+<p><b>IP spoofing</b> means putting a false source address on a packet --
+usually to impersonate a trusted internal host so IP-based rules let it
+through. <b>Anti-spoofing</b> (also called ingress/egress filtering) is the
+firewall refusing to believe certain source addresses could plausibly have
+arrived on a given interface, and dropping them before any security rule
+even runs.</p>
+<ul>
+  <li>An <b>RFC1918 private address</b> (10.0.0.0/8, 172.16.0.0/12,
+  192.168.0.0/16) arriving on an external/internet-facing interface is
+  almost certainly spoofed -- your own internal addresses should never be
+  arriving <i>from</i> the internet.</li>
+  <li>A <b>bogon</b> address (0.0.0.0/8, 127.0.0.0/8, reserved/unallocated
+  ranges) is never a legitimate source at all, on any interface.</li>
+</ul>
+<div class="diagram">
+  <div class="diagram-label">Checked before any rule runs</div>
+  <div class="diagram-flow">
+    <div class="diagram-step bad"><div class="step-title">src 10.0.0.99</div><div class="step-sub">arriving on the Untrust interface</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Anti-Spoofing: DROP</div><div class="step-sub">never reaches the rule base</div></div>
+  </div>
+</div>

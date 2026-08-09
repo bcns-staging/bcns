@@ -1,0 +1,14 @@
+{
+  "name": "incident-response-game",
+  "version": "1.0.0",
+  "description": "A branching, consequence-driven incident response game -- play the Incident Commander across security, IT, legal, PR, HR, and executive decisions.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^8.6.0",
+    "express": "^4.19.2"
+  }
+}

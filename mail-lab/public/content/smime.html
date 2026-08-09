@@ -1,0 +1,32 @@
+<p><b>S/MIME</b> secures message <i>content</i> rather than transport or
+sender identity checks: it signs and/or encrypts the message body itself
+using X.509 certificates -- the same certificate technology used for HTTPS.
+A signed message proves the content hasn't been altered and came from
+whoever holds the matching private key; an encrypted message can only be
+read by whoever holds the matching private key.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🪪</div><div class="flow-title">Generate Certificate</div><div class="flow-desc">Self-signed X.509 cert + keypair</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">✍️</div><div class="flow-title">Sign Message</div><div class="flow-desc">RSA-SHA256 signature with private key</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📨</div><div class="flow-title">Send Cert + Signature</div><div class="flow-desc">Both travel with the message</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">Recipient Verifies</div><div class="flow-desc">Checks signature + certificate validity</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:140px"><div class="flow-title">Valid</div></div>
+    <div class="flow-step bad" style="width:140px"><div class="flow-title">Invalid</div></div>
+  </div>
+</div>
+<p>In production, S/MIME certificates are usually issued by a trusted
+Certificate Authority (the same CAs that issue HTTPS certificates), so a
+recipient's mail client can validate the chain of trust automatically. This
+lab uses <b>self-signed</b> certificates instead -- real crypto, but you're
+your own CA, exactly like the "this connection is not private" warning you'd
+get visiting a site with a self-signed HTTPS cert.</p>
+<p><i>Simplification note: real S/MIME wraps the signature in a full
+CMS/PKCS#7 ASN.1 structure carrying the certificate chain. This lab performs
+the same certificate generation and RSA-SHA256 signing/verification with
+real cryptography, presented in the same <code>multipart/signed</code> MIME
+shape, but without the full ASN.1 encoding -- the concepts and trust
+mechanics are identical.</i></p>

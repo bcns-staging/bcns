@@ -1,0 +1,26 @@
+<p>Detection plus policy gets you a decision; the <b>incident console</b> is
+where a human closes the loop. Every policy match that isn't a clean
+"allow" -- a block, a quarantine, a redaction, an encryption, or even a
+justification prompt -- lands here as a case to review.</p>
+<p>This is also your <b>cross-channel view</b>: filter by user to see
+everything one person has triggered across email, cloud uploads, endpoint
+actions, and file-share scans in one place -- exactly the correlation a real
+security team relies on to notice a pattern that no single channel would
+reveal on its own (e.g., the same user hitting a block on email right
+after a near-miss on a cloud upload).</p>
+<p>Every case gets a status: <b>open</b> (needs review), <b>in review</b>,
+<b>resolved</b> (confirmed and handled), or <b>false positive</b> (the
+policy was wrong to flag it -- useful signal for tuning thresholds later).</p>
+<div class="diagram">
+  <div class="diagram-label">Case lifecycle</div>
+  <div class="diagram-flow">
+    <div class="diagram-step warn"><div class="step-title">Open</div><div class="step-sub">needs review</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">In review</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step good"><div class="step-title">Resolved</div><div class="step-sub">confirmed &amp; handled</div></div>
+      <div class="diagram-step"><div class="step-title">False positive</div><div class="step-sub">tunes future thresholds</div></div>
+    </div>
+  </div>
+</div>

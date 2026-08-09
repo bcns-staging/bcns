@@ -1,0 +1,26 @@
+<p>Secure email gateways like Proofpoint's URL Defense or Mimecast's URL
+Protection rewrite every link in a message to point at their own service
+first. This buys two things a one-time send-time scan can't:</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🔗</div><div class="flow-title">Original Link</div><div class="flow-desc">http://example.com/reset in the message body</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">✏️</div><div class="flow-title">Rewritten</div><div class="flow-desc">Replaced with a signed /url-defense?u=...&sig=... link</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🖱️</div><div class="flow-title">User Clicks (later)</div><div class="flow-desc">Gateway re-checks the real destination right now</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:150px"><div class="flow-title">Benign</div><div class="flow-desc">Redirect through</div></div>
+    <div class="flow-step bad" style="width:150px"><div class="flow-title">Malicious</div><div class="flow-desc">Block with a warning page</div></div>
+  </div>
+</div>
+<ul>
+  <li><b>Click-time re-checking:</b> a domain that was clean when the email
+  arrived can turn malicious hours or days later (attackers often register
+  domains and let them "age" before weaponizing them). Rewriting means the
+  link is re-scanned every time someone actually clicks it.</li>
+  <li><b>Visibility:</b> the gateway logs who clicked what and when, useful
+  for incident response after a phishing campaign is discovered.</li>
+</ul>
+<p>The wrapped link here is HMAC-signed so it can't be tampered with in
+transit -- try changing a character in a rewritten link and notice the click
+handler rejects it as invalid rather than silently redirecting anywhere.</p>

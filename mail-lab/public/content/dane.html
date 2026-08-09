@@ -1,0 +1,27 @@
+<p><b>DANE (DNS-based Authentication of Named Entities)</b> takes a different
+approach than MTA-STS: instead of trusting the public Certificate Authority
+system at all, it publishes the mail server's certificate fingerprint
+directly in DNS as a <code>TLSA</code> record, secured by DNSSEC. A
+connecting server compares the certificate actually presented during the TLS
+handshake against the pinned fingerprint.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">📌</div><div class="flow-title">Publish TLSA</div><div class="flow-desc">Certificate fingerprint pinned in DNS</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🤝</div><div class="flow-title">TLS Handshake</div><div class="flow-desc">MX host presents its current certificate</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔬</div><div class="flow-title">Compare Fingerprints</div><div class="flow-desc">Presented cert vs. the pinned TLSA record</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Match</div><div class="flow-desc">Trusted — deliver</div></div>
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">Mismatch</div><div class="flow-desc">Refuse — cert rotated without updating DNS, or a possible attack</div></div>
+  </div>
+</div>
+<p>This is powerful but operationally sharp-edged: if you rotate your TLS
+certificate (which you should do periodically) without also updating the
+TLSA record, every DANE-validating sender will suddenly refuse to deliver to
+you -- correctly treating the mismatch as a possible attack. This lab lets
+you reproduce that exact failure mode on purpose.</p>
+<p><i>Note: real DANE depends on DNSSEC to prevent an attacker from forging
+both the fake certificate and a fake TLSA record. This simulation focuses on
+the certificate-pinning mechanism itself; DNSSEC's role is assumed rather
+than modeled.</i></p>

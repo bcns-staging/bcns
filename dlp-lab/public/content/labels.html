@@ -1,0 +1,23 @@
+<p><b>Sensitivity labels</b> are metadata, not detection -- a human (or an
+automated classifier) tags a document as Public, Internal, Confidential, or
+Restricted, and that tag travels with the document independent of whether
+any pattern or keyword actually matches its content.</p>
+<p>Labels are useful precisely because content inspection can miss things:
+a document might not contain any SSNs or credit card numbers and still be
+extremely sensitive (an unreleased product roadmap, merger discussions).
+Labeling lets policy react to <i>classification</i> as a first-class signal
+-- e.g., "block any Restricted-labeled document from being uploaded to an
+unsanctioned cloud app," regardless of what content scanning finds.</p>
+<div class="diagram">
+  <div class="diagram-label">Metadata, not detection</div>
+  <div class="diagram-flow">
+    <div class="diagram-step accent"><div class="step-title">🏷 Restricted</div><div class="step-sub">tagged once, by a human or classifier</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step"><div class="step-title">Email</div></div>
+    <div class="diagram-arrow">/</div>
+    <div class="diagram-step"><div class="step-title">Cloud upload</div></div>
+    <div class="diagram-arrow">/</div>
+    <div class="diagram-step"><div class="step-title">Endpoint</div></div>
+  </div>
+  <p class="muted" style="margin-top:10px; font-size:0.85rem;">The label travels with the document across every channel -- policy can act on it even when content scanning finds nothing to flag.</p>
+</div>

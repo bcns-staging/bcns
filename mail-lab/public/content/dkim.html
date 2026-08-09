@@ -1,0 +1,40 @@
+<p><b>DKIM (DomainKeys Identified Mail)</b> answers a different question than
+SPF: "has this message's content been tampered with since it left the
+claimed domain, and did that domain actually vouch for it?" It does this
+with real public-key cryptography, not IP allowlists -- which is why it
+survives forwarding (as long as the forwarder doesn't modify the signed
+parts of the message).</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🔑</div><div class="flow-title">Generate Keypair</div><div class="flow-desc">Public key published in DNS, private key kept secret</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">✍️</div><div class="flow-title">Sign Message</div><div class="flow-desc">Hash headers + body, sign with private key, add DKIM-Signature header</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📨</div><div class="flow-title">Message Delivered</div><div class="flow-desc">Signature travels along with the message</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">Receiver Verifies</div><div class="flow-desc">Fetches public key from DNS using d= and s= tags</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:150px"><div class="flow-title">VALID</div><div class="flow-desc">Nothing changed since signing</div></div>
+    <div class="flow-step bad" style="width:150px"><div class="flow-title">INVALID</div><div class="flow-desc">Even one changed character breaks it</div></div>
+  </div>
+</div>
+<h2>How it works</h2>
+<ol>
+  <li>The sending domain generates an RSA keypair and publishes the
+  <b>public</b> key in DNS at <code>selector._domainkey.domain</code>.</li>
+  <li>Before sending, the mail server computes a hash of the (canonicalized)
+  body and a chosen set of headers, signs it with the <b>private</b> key, and
+  attaches the result as a <code>DKIM-Signature</code> header.</li>
+  <li>The receiving server fetches the public key from DNS using the
+  <code>d=</code> (domain) and <code>s=</code> (selector) tags in the
+  signature, and verifies the signature matches.</li>
+</ol>
+<p>Try it below: generate a key, sign a message, then look at the exact bytes
+that got signed. If you change so much as one character of a signed header
+or the body afterward, verification fails -- that's the whole point.</p>
+<h2>Canonicalization</h2>
+<p>Mail servers sometimes make trivial formatting changes in transit (line
+wrapping, whitespace). DKIM's <code>c=</code> tag chooses how tolerant the
+hash is of that: <code>simple</code> (byte-exact) or <code>relaxed</code>
+(normalizes whitespace). This lab uses <code>relaxed/relaxed</code>, the most
+common real-world choice.</p>

@@ -1,0 +1,20 @@
+<p>Real rule bases aren't written IP-by-IP -- they're written
+<b>zone-to-zone</b> (Trust -> Untrust, Untrust -> DMZ, and so on). A rule
+scoped to one zone pair simply doesn't apply to traffic between a
+different pair, even if the source IP is identical and the destination is
+technically reachable.</p>
+<p>The seeded traditional rule base has an "Allow Trust Outbound" rule
+scoped specifically to <b>Trust -> Untrust</b>. The same source host
+sending to a destination in the <b>DMZ</b> zone instead doesn't match that
+rule at all -- zone pairing, not just IP connectivity, decides.</p>
+<div class="diagram">
+  <div class="diagram-label">Same source, different destination zone</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">10.0.0.50 (Trust)</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step good"><div class="step-title">-> Untrust host</div><div class="step-sub">matches "Allow Trust Outbound"</div></div>
+      <div class="diagram-step bad"><div class="step-title">-> DMZ host</div><div class="step-sub">no Trust->DMZ rule exists -- falls to Deny All</div></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<p><b>PGP (Pretty Good Privacy)</b> / <b>OpenPGP</b> solves the same problem as
+S/MIME -- content confidentiality and integrity -- with a completely
+different trust model: there is no Certificate Authority at all. Instead,
+you exchange public keys directly with people you communicate with (or rely
+on a "web of trust" of others vouching for a key), and encrypt/sign using
+those keys directly.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">✍️</div><div class="flow-title">Alice Signs</div><div class="flow-desc">With her own private key</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔒</div><div class="flow-title">Alice Encrypts</div><div class="flow-desc">With Bob's public key</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📨</div><div class="flow-title">Send</div><div class="flow-desc">Only Bob can unlock it</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔓</div><div class="flow-title">Bob Decrypts</div><div class="flow-desc">With his own private key</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">✅</div><div class="flow-title">Bob Verifies</div><div class="flow-desc">Signature checked against Alice's public key</div></div>
+</div>
+<h2>What's actually happening</h2>
+<ul>
+  <li><b>Encryption</b> uses <i>hybrid</i> cryptography: the message is
+  encrypted with a fast symmetric key, and that symmetric key is itself
+  encrypted with the recipient's RSA public key -- only their private key can
+  unwrap it.</li>
+  <li><b>Signing</b> lets a recipient verify the message came from you and
+  wasn't altered, using your private key to sign and your public key to
+  verify -- independent of encryption (you can sign without encrypting, or
+  do both).</li>
+</ul>
+<p>This lab generates two real keypairs (Alice and Bob) so you can run a full
+round trip: Alice encrypts and signs a message using Bob's public key and her
+own private key; Bob decrypts it with his private key and verifies Alice's
+signature with her public key.</p>

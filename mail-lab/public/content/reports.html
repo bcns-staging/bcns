@@ -1,0 +1,24 @@
+<p>DMARC's <code>rua=</code> and <code>ruf=</code> tags ask receivers to report
+back on what they saw, closing the feedback loop that makes it safe to
+tighten a policy without flying blind:</p>
+<div class="flow-diagram">
+  <div class="flow-step"><div class="flow-icon">✉️</div><div class="flow-title">Messages Sent</div><div class="flow-desc">Many sends, from Compose or Attack Simulator</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step accent"><div class="flow-icon">📝</div><div class="flow-title">Every Result Logged</div><div class="flow-desc">Sending IP, SPF/DKIM/DMARC result, disposition</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📊</div><div class="flow-title">Grouped &amp; Summarized</div><div class="flow-desc">By sending IP and result</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">📄</div><div class="flow-title">RUA XML Report</div><div class="flow-desc">Sent to the domain owner's rua= address</div></div>
+</div>
+<ul>
+  <li><b>Aggregate reports (RUA)</b> arrive roughly daily as XML, summarizing
+  pass/fail counts grouped by sending IP -- exactly the format generated
+  here, per RFC 7489 Appendix C. Domain owners use these to spot legitimate
+  senders they forgot to authorize before moving to <code>p=reject</code>.</li>
+  <li><b>Forensic reports (RUF)</b> are sent per-failure, with more detail
+  about the specific message (subject to privacy redaction in the real
+  world -- this simulation shows full detail since there's no real user data
+  involved).</li>
+</ul>
+<p>Send a few messages from Compose or the Attack Simulator with a domain
+that has SPF/DMARC configured, then come back here to see them summarized.</p>

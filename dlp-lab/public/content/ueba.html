@@ -1,0 +1,23 @@
+<p>Every technique so far inspects a single event in isolation: is this
+message, this file, this upload sensitive? <b>UEBA (User &amp; Entity
+Behavior Analytics)</b> asks a different question entirely: is this
+<i>behavior</i> normal for this person? A single file upload that contains
+no detectable sensitive content at all can still be part of a slow,
+deliberate exfiltration -- or a compromised account suddenly moving far
+more data than usual.</p>
+<h2>How this lab's baseline works</h2>
+<p>For each user, a rolling average of past event sizes acts as a personal
+baseline. A new event is compared against it as a ratio -- this lab flags
+anything <b>3x or more</b> above baseline as anomalous. Real systems build
+far richer baselines (time of day, peer group norms, typical destinations),
+but the core mechanic -- compare against a person's own normal, not a
+global threshold -- is the same idea that makes UEBA catch things
+content-based detection structurally cannot.</p>
+<div class="diagram">
+  <div class="diagram-label">Compared to their own normal, not a global threshold</div>
+  <div class="bar-chart">
+    <div class="bar-row"><div class="bar-label">Rolling baseline</div><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><div class="bar-value">~40 MB</div></div>
+    <div class="bar-row"><div class="bar-label">Today's upload</div><div class="bar-track"><div class="bar-fill bad" style="width:95%"></div></div><div class="bar-value">~160 MB</div></div>
+  </div>
+  <p class="muted" style="margin-top:10px; font-size:0.85rem;">4x baseline -- flagged. The same 160 MB upload could be routine for someone whose baseline is already 200 MB.</p>
+</div>

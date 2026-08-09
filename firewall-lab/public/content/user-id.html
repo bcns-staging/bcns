@@ -1,0 +1,19 @@
+<p>Writing policy against IP addresses breaks down fast: laptops move
+between subnets, DHCP leases change, and "10.0.0.50" tells you nothing
+about who's actually using it. <b>User-ID</b> solves this by mapping IP
+addresses to real identities -- typically fed by Active Directory login
+events, a captive portal, or an agent on the endpoint -- so policy can be
+written against <b>users and groups</b> instead.</p>
+<p>This is what makes a rule like "the finance group can reach the finance
+SaaS app, nobody else can" possible without maintaining a brittle,
+constantly-stale list of finance team members' current IP addresses.</p>
+<div class="diagram">
+  <div class="diagram-label">IP -> identity</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">10.0.0.50</div><div class="step-sub">just a number</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">User-ID lookup</div><div class="step-sub">AD login events, agent, portal</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">jsmith (finance, all-employees)</div><div class="step-sub">policy can now use group membership</div></div>
+  </div>
+</div>

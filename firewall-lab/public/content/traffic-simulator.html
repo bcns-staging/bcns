@@ -1,0 +1,25 @@
+<p>This is the flagship lab: build one connection and run it through
+either rulebase, or both at once. In <b>Side-by-side</b> mode, the exact
+same connection is evaluated by the Traditional and NGFW engines
+independently, and any place they disagree is called out explicitly --
+this is the clearest possible demonstration of what an NGFW actually buys
+you over a traditional firewall.</p>
+<p>The three preset scenarios are the canonical stories: an application
+disguising itself on port 443, malware riding inside a session that looks
+completely ordinary at the IP/port level, and a URL-category violation on
+a destination that's technically allowed. In every case, Traditional
+allows the traffic (it looks like nothing more than "tcp/443 to an allowed
+zone") while NGFW catches the real story underneath.</p>
+<div class="diagram">
+  <div class="diagram-label">One connection, two verdicts</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Connection</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step warn"><div class="step-title">Traditional engine</div><div class="step-sub">5-tuple + zones only</div></div>
+      <div class="diagram-step accent"><div class="step-title">NGFW engine</div><div class="step-sub">+ App-ID, User-ID, Content-ID</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Divergence, if any, explained</div></div>
+  </div>
+</div>

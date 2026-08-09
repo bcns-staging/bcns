@@ -1,0 +1,20 @@
+<p>The majority of traffic today is encrypted, which means every
+content-based inspection engine -- URL filtering, IPS, anti-malware,
+threat intel -- is completely blind to it by default. <b>SSL/TLS
+decryption</b> (a "forward proxy" decrypt) solves this: the firewall
+terminates the TLS connection, inspects the plaintext with its normal
+content engines, then re-encrypts it on the way out. Without a decrypt
+profile attached to the matching rule, encrypted sessions simply skip every
+content-ID stage -- allowed or blocked on zone/IP/app alone, with whatever
+is actually inside completely unexamined.</p>
+<div class="diagram">
+  <div class="diagram-label">Decrypt profile: on vs. off</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Encrypted session</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step bad"><div class="step-title">No decrypt profile</div><div class="step-sub">URL filtering, IPS, anti-malware all skipped -- blind</div></div>
+      <div class="diagram-step good"><div class="step-title">Decrypt profile enabled</div><div class="step-sub">plaintext inspected, then re-encrypted</div></div>
+    </div>
+  </div>
+</div>

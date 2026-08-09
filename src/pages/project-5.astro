@@ -1,0 +1,104 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+const labs = [
+  {
+    name: "Email Security Lab",
+    href: "https://bcns-mail-lab-751371770492.us-central1.run.app",
+    description:
+      "SPF, DKIM, DMARC, MTA-STS, TLS-RPT, DANE, BIMI, impersonation and lookalike detection, URL defense, sandboxing, BEC, spam scoring, quarantine, S/MIME, and PGP — end to end email security, hands-on.",
+  },
+  {
+    name: "DLP Lab",
+    href: "https://bcns-dlp-lab-751371770492.us-central1.run.app",
+    description:
+      "Data loss prevention from the ground up: keyword lists, EDM datasets, document fingerprinting, classifiers, policies, labels, OCR-based scanning, and incident review.",
+  },
+  {
+    name: "Firewall Lab",
+    href: "https://bcns-firewall-lab-751371770492.us-central1.run.app",
+    description:
+      "Build a network from zones and interfaces up: traditional and next-gen rules, NAT, VPN tunnels, app signatures, IPS signatures, threat intel feeds, and live traffic/session inspection.",
+  },
+  {
+    name: "Incident Response Game",
+    href: "https://bcns-ir-lab-751371770492.us-central1.run.app",
+    description:
+      "Play through realistic incidents — ransomware, business email compromise, and more — balancing containment, compliance, reputation, and financial impact with every decision.",
+  },
+];
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 2rem;
+  }
+
+  .labs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+
+  .lab-card {
+    display: block;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  .lab-card:hover {
+    border-color: var(--color-accent);
+  }
+
+  .lab-card h2 {
+    font-size: 1.125rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .lab-card p {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+</style>
+
+<Layout title="Project 5 | 7 Beacons">
+  <Header />
+  <main>
+    <section class="container">
+      <h1>Project 5: Security labs</h1>
+      <p class="intro">
+        Four interactive, hands-on security labs — each a full standalone
+        app. Click through to explore any of them.
+      </p>
+      <div class="labs">
+        {
+          labs.map((lab) => (
+            <a class="lab-card" href={lab.href} target="_blank" rel="noopener noreferrer">
+              <h2>{lab.name}</h2>
+              <p>{lab.description}</p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

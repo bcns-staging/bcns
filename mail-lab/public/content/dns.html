@@ -1,0 +1,33 @@
+<p>Email authentication is built entirely on <b>DNS TXT records</b>. Before you can
+understand SPF, DKIM, or DMARC, you need a place to publish and read those
+records — that's what this page simulates.</p>
+<p>In real life you'd log into your domain registrar or DNS host and add TXT
+records under names like <code>_dmarc.yourdomain.com</code> or
+<code>selector1._domainkey.yourdomain.com</code>. Here, you create a "domain"
+(it can be anything, e.g. <code>mycompany.local</code>) and add records to a
+zone that only this app can see. Every other lab on this site — SPF, DKIM,
+DMARC, MTA-STS, BIMI — reads from this same simulated zone, exactly like a
+real mail server would query real DNS.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🖥️</div><div class="flow-title">Mail Server</div><div class="flow-desc">Needs to check a domain's SPF/DKIM/DMARC records before trusting a message</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">DNS Query</div><div class="flow-desc">Asks for a specific TXT record, e.g. <code>_dmarc.domain.com</code></div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step accent"><div class="flow-icon">🗂️</div><div class="flow-title">This Lab's DNS Zone</div><div class="flow-desc">A simulated zone you edit on this page — every other lab reads from it</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step good"><div class="flow-icon">📄</div><div class="flow-title">Record Returned</div><div class="flow-desc">Or "no record found" if you haven't published one yet</div></div>
+</div>
+<h2>Record types you'll use here</h2>
+<table>
+  <tr><th>Record name pattern</th><th>Type</th><th>Used by</th></tr>
+  <tr><td><code>yourdomain.com</code></td><td>TXT</td><td>SPF</td></tr>
+  <tr><td><code>selector._domainkey.yourdomain.com</code></td><td>TXT</td><td>DKIM</td></tr>
+  <tr><td><code>_dmarc.yourdomain.com</code></td><td>TXT</td><td>DMARC</td></tr>
+  <tr><td><code>_mta-sts.yourdomain.com</code></td><td>TXT</td><td>MTA-STS</td></tr>
+  <tr><td><code>_smtp._tls.yourdomain.com</code></td><td>TXT</td><td>TLS-RPT</td></tr>
+  <tr><td><code>default._bimi.yourdomain.com</code></td><td>TXT</td><td>BIMI</td></tr>
+  <tr><td><code>_25._tcp.mail.yourdomain.com</code></td><td>TLSA</td><td>DANE</td></tr>
+</table>
+<p>The "Resolver Tester" at the bottom lets you query the zone the same way a
+mail server does — pick a name and type, and you'll see the response
+formatted like real <code>dig</code> output.</p>

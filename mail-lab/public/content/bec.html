@@ -1,0 +1,30 @@
+<p><b>Business Email Compromise (BEC)</b> is consistently one of the
+costliest categories of email fraud, and it's also the hardest to catch
+technically: there's usually no malware, no bad link, and often the sending
+domain authenticates perfectly with SPF/DKIM/DMARC -- because the attacker
+registered their own domain and set it all up correctly. The attack is pure
+social engineering.</p>
+<div class="flow-diagram">
+  <div class="flow-step warn"><div class="flow-icon">🎭</div><div class="flow-title">Impersonation?</div><div class="flow-desc">+4 points</div></div>
+  <div class="flow-arrow">+</div>
+  <div class="flow-step warn"><div class="flow-icon">🌐</div><div class="flow-title">Lookalike domain?</div><div class="flow-desc">+3 points</div></div>
+  <div class="flow-arrow">+</div>
+  <div class="flow-step warn"><div class="flow-icon">↩️</div><div class="flow-title">Reply-To mismatch?</div><div class="flow-desc">+2 points</div></div>
+  <div class="flow-arrow">+</div>
+  <div class="flow-step warn"><div class="flow-icon">⏰</div><div class="flow-title">Urgency language?</div><div class="flow-desc">up to +3 points</div></div>
+  <div class="flow-arrow">=</div>
+  <div class="flow-step bad"><div class="flow-icon">🚨</div><div class="flow-title">Composite Score</div><div class="flow-desc">Low / Medium / High risk</div></div>
+</div>
+<p>Detection has to rely on softer signals, combined into a composite score:</p>
+<ul>
+  <li>Does the display name impersonate someone the organization trusts?</li>
+  <li>Does the sending domain look suspiciously close to a trusted brand
+  domain?</li>
+  <li>Does <code>Reply-To</code> quietly redirect responses to a different
+  domain than the one shown in <code>From</code>?</li>
+  <li>Does the language match known fraud patterns -- urgency, secrecy,
+  requests for money transfers, gift cards, or credential changes?</li>
+</ul>
+<p>No single signal is proof on its own (a legitimate email can be urgent
+too), which is why real systems score and combine multiple weak signals
+rather than hard-blocking on any one of them.</p>

@@ -1,0 +1,24 @@
+<p><b>Destination NAT</b> (port forwarding) publishes an internal server on
+a public IP: a connection to the firewall's public address on a given port
+gets silently rewritten to an internal IP/port before it's routed onward --
+the classic way a DMZ web server gets reached from the internet.</p>
+<h2>The gotcha: which address does the security rule see?</h2>
+<p>NAT and security-policy lookup are two separate steps, and vendors
+disagree about their order. Some evaluate the security rule against the
+<b>original ("pre-NAT")</b> destination -- the public IP you actually wrote
+the DNAT rule for. Others evaluate it against the <b>translated
+("post-NAT")</b> destination -- the real internal IP. If your rule base was
+written assuming one behavior and the platform actually does the other,
+traffic you expected to allow gets silently dropped -- a genuinely common,
+confusing real-world misconfiguration.</p>
+<div class="diagram">
+  <div class="diagram-label">Same DNAT rule, opposite outcomes</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Public: 203.0.113.1:443</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step warn"><div class="step-title">pre-NAT match</div><div class="step-sub">rule must reference the public IP</div></div>
+      <div class="diagram-step warn"><div class="step-title">post-NAT match</div><div class="step-sub">rule must reference the internal IP</div></div>
+    </div>
+  </div>
+</div>

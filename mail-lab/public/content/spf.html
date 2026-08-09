@@ -1,0 +1,38 @@
+<p><b>SPF (Sender Policy Framework)</b> answers one narrow question: "is this IP
+address allowed to send mail claiming to be from this domain?" It works by
+publishing a DNS TXT record listing authorized senders.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">✉️</div><div class="flow-title">Message Arrives</div><div class="flow-desc">From IP 203.0.113.10, envelope-from alice@domain.com</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">Look Up SPF</div><div class="flow-desc">Fetch TXT record for domain.com</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📋</div><div class="flow-title">Check Mechanisms</div><div class="flow-desc">Is 203.0.113.10 in the allowed list?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:150px"><div class="flow-title">PASS</div><div class="flow-desc">IP is authorized</div></div>
+    <div class="flow-step bad" style="width:150px"><div class="flow-title">FAIL / SOFTFAIL</div><div class="flow-desc">IP is not authorized</div></div>
+  </div>
+</div>
+<h2>How it's actually checked</h2>
+<p>When a mail server receives a message, it looks at the <b>envelope sender</b>
+(the <code>MAIL FROM</code> address used during the SMTP conversation --
+<i>not</i> necessarily the <code>From:</code> header the recipient sees), takes
+its domain, and fetches that domain's SPF TXT record. It then evaluates the
+listed mechanisms, in order, against the connecting IP address.</p>
+<table>
+  <tr><th>Mechanism</th><th>Meaning</th></tr>
+  <tr><td><code>ip4:1.2.3.4</code></td><td>Matches a specific IPv4 address or CIDR block</td></tr>
+  <tr><td><code>a</code></td><td>Matches any IP the domain's own A/AAAA record resolves to</td></tr>
+  <tr><td><code>mx</code></td><td>Matches any IP of the domain's mail servers (MX records)</td></tr>
+  <tr><td><code>include:otherdomain</code></td><td>Recursively evaluates another domain's SPF record (common for third-party senders like marketing tools)</td></tr>
+  <tr><td><code>all</code></td><td>Matches everything -- always placed last as the catch-all</td></tr>
+</table>
+<p>Each mechanism has a <b>qualifier</b>: <code>+</code> (pass, default),
+<code>-</code> (fail), <code>~</code> (softfail), <code>?</code> (neutral).
+Most real records end in <code>-all</code> (strict) or <code>~all</code>
+(lenient, still delivers but marks it).</p>
+<h2>Why SPF alone isn't enough</h2>
+<p>SPF checks the envelope sender, which the recipient never sees -- it
+checks nothing about the visible <code>From:</code> header, and it breaks
+completely when a message is forwarded (the forwarding server's IP isn't in
+the original sender's SPF record). That's exactly why DKIM and DMARC exist.</p>

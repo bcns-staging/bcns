@@ -1,0 +1,18 @@
+<p><b>Zero Trust</b> flips the default assumption of network security:
+instead of "anything inside the network perimeter is trusted," nothing is
+trusted by default, regardless of which zone it's in -- every connection
+must be explicitly justified by policy, using the most specific identity
+available: application, user, and content, not just IP and port.</p>
+<p>This is the capstone of everything in this lab's NGFW half: a deny-by-default
+rulebase built from App-ID, User-ID, and Content-ID together is what makes
+real micro-segmentation practical -- "the finance app, for the finance
+group, with content inspected" is a policy statement zone-and-IP rules
+alone can't express.</p>
+<div class="diagram">
+  <div class="diagram-label">Old model vs. Zero Trust</div>
+  <div class="diagram-flow">
+    <div class="diagram-step bad"><div class="step-title">Perimeter model</div><div class="step-sub">"inside Trust zone" = implicitly trusted</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Zero Trust</div><div class="step-sub">deny by default; every connection justified by app + user + content, zone included</div></div>
+  </div>
+</div>

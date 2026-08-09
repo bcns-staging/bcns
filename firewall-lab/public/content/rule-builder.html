@@ -1,0 +1,21 @@
+<p>Detectors and lookups on their own don't decide anything -- the
+<b>rule base</b> is what turns them into a decision. This page is where
+every technique from the pages above gets combined: pick a ruleset,
+arrange rules in the order they should be evaluated, and test traffic
+against them live.</p>
+<p>The <b>Traditional</b> ruleset only matches on zones, IPs, protocol, and
+port -- exactly the 5-tuple. The <b>NGFW</b> ruleset accepts everything
+Traditional does, plus application, user/group, and URL category, and lets
+you attach an inspection profile (IPS, anti-malware, URL filtering, threat
+intel, SSL decrypt) to each rule. Match fields left as <code>any</code>
+match everything for that field.</p>
+<div class="diagram">
+  <div class="diagram-label">NGFW rules are a superset, not a different engine</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Traditional rule</div><div class="step-sub">zone, IP, protocol, port</div></div>
+    <div class="diagram-arrow">+</div>
+    <div class="diagram-step accent"><div class="step-title">app, user, URL category, profile</div></div>
+    <div class="diagram-arrow">=</div>
+    <div class="diagram-step good"><div class="step-title">NGFW rule</div></div>
+  </div>
+</div>

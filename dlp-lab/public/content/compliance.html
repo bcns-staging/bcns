@@ -1,0 +1,30 @@
+<p>Building a DLP policy for a specific regulation from a blank page is slow
+and easy to get wrong. In practice, organizations start from a vendor- or
+industry-provided <b>rule pack</b> -- a pre-built bundle of keyword lists,
+detectors, and thresholds tuned for a specific framework -- and adjust from
+there rather than starting from zero.</p>
+<p>This lab includes four starter packs covering the regulations that drive
+the large majority of real-world DLP requirements:</p>
+<ul>
+  <li><b>GDPR</b> -- EU personal data, identity documents, data-subject-rights language.</li>
+  <li><b>HIPAA</b> -- US protected health information (PHI).</li>
+  <li><b>PCI-DSS</b> -- payment card data, leaning heavily on the checksum-validated card detector.</li>
+  <li><b>CCPA</b> -- California consumer privacy, structurally similar to GDPR.</li>
+</ul>
+<div class="diagram">
+  <div class="diagram-label">Rule pack → the same building blocks you'd make by hand</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">GDPR</div></div>
+      <div class="diagram-step"><div class="step-title">HIPAA</div></div>
+      <div class="diagram-step"><div class="step-title">PCI-DSS</div></div>
+      <div class="diagram-step"><div class="step-title">CCPA</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Keyword lists + policy</div><div class="step-sub">starts in monitor mode</div></div>
+  </div>
+</div>
+<p>Activating a pack doesn't do anything invisible -- it creates the exact
+same kind of keyword list and policy you could build by hand on the
+Sensitive Data Sets and Policy Builder pages, starting in monitor mode so
+you can see what it would catch before enforcing it.</p>

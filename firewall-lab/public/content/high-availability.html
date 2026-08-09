@@ -1,0 +1,19 @@
+<p>A firewall is a single point of failure by design -- every packet has to
+pass through it. Production deployments run an <b>active/passive HA
+pair</b>: a standby node continuously mirrors the active node's
+configuration and, via a heartbeat, takes over immediately if the active
+node fails.</p>
+<p>Configuration syncs easily. <b>Session state</b> is the harder problem:
+without <b>session synchronization</b>, the standby node has no idea which
+connections were already open when it suddenly becomes active -- every
+in-flight connection looks like unexpected, unmatched return traffic and
+gets dropped, even though the security policy would have allowed it. With
+sync enabled, the standby already has a live copy of the session table and
+failover is seamless.</p>
+<div class="diagram">
+  <div class="diagram-label">Failover, with and without session sync</div>
+  <div class="diagram-flow">
+    <div class="diagram-step bad"><div class="step-title">Sync off</div><div class="step-sub">standby has no session table -- every in-flight connection breaks</div></div>
+    <div class="diagram-step good"><div class="step-title">Sync on</div><div class="step-sub">standby already knows every open session -- seamless takeover</div></div>
+  </div>
+</div>

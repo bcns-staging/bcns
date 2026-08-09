@@ -1,0 +1,19 @@
+<p>A zip file is opaque to every text-based detector until something
+actually opens it. Real DLP content inspectors unpack archives (including
+office documents, which are just zip files internally) and run the same
+detection pipeline against every file inside -- recursively, since a zip can
+contain another zip.</p>
+<p>This obviously can't go on forever: a maliciously crafted archive can
+expand to gigabytes from a tiny file (a "zip bomb"), so this lab caps
+recursion depth, entry count, and total extracted bytes, exactly like a
+production content inspector would.</p>
+<div class="diagram">
+  <div class="diagram-label">Recursive unpack, with limits</div>
+  <div class="tree">
+    <div class="tree-item">report.zip</div>
+    <div class="tree-item depth-1">├─ summary.docx <span class="tag">(itself a zip)</span></div>
+    <div class="tree-item depth-2">│  └─ word/document.xml <span class="tag">← scanned</span></div>
+    <div class="tree-item depth-1">└─ nested.zip</div>
+    <div class="tree-item depth-2">└─ nested2.zip <span class="cap">depth cap hit → stop</span></div>
+  </div>
+</div>

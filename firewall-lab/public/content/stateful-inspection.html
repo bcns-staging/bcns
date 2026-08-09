@@ -1,0 +1,27 @@
+<p>A <b>stateless</b> packet filter checks every packet against the rule
+base independently -- including the return traffic of a connection you
+already allowed, which means you'd need a matching inbound rule too. A
+<b>stateful</b> firewall instead tracks open connections in a
+<b>session table</b>: once the first packet of a NEW connection is
+permitted, every subsequent packet in that same conversation -- in either
+direction -- is auto-permitted as <b>ESTABLISHED</b> traffic, without
+walking the rule base again.</p>
+<h2>RELATED traffic: the FTP problem</h2>
+<p>Some protocols open a second connection as a side effect of the first.
+Classic (active-mode) FTP is the textbook case: the client opens a control
+channel to the server on port 21, and the <i>server</i> then opens a
+<b>separate</b> data connection back to the client on a random port. That
+data channel arrives from the outside, to a port nobody wrote a rule for --
+a stateless filter would drop it. A stateful firewall instead recognizes it
+as <b>RELATED</b> to the already-open control session and permits it
+automatically.</p>
+<div class="diagram">
+  <div class="diagram-label">Two allowed connections, one rule</div>
+  <div class="diagram-flow">
+    <div class="diagram-step good"><div class="step-title">Control channel</div><div class="step-sub">client -> server, port 21<br>matched a real rule</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Session table</div><div class="step-sub">tracks the open session</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Data channel</div><div class="step-sub">server -> client, random port<br>allowed as RELATED, no rule needed</div></div>
+  </div>
+</div>

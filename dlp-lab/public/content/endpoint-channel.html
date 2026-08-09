@@ -1,0 +1,21 @@
+<p><b>Data in use</b> is the hardest DLP surface to cover, because none of it
+ever touches the network: copying sensitive text to the clipboard, pasting
+it into a chat app, saving it to a USB drive, or printing it. Email and web
+gateways are completely blind to all of this -- it requires an agent
+running directly on the endpoint.</p>
+<p><b>Removable media control</b> (blocking or restricting USB devices) is
+modeled here as just another endpoint action type -- from a policy's
+perspective it's the same evaluation, just with a different destination
+label.</p>
+<div class="diagram">
+  <div class="diagram-label">Same evaluation, different destination label</div>
+  <div class="diagram-flow">
+    <div class="diagram-branch">
+      <div class="diagram-step"><div class="step-title">Clipboard copy</div></div>
+      <div class="diagram-step"><div class="step-title">USB / removable media</div></div>
+      <div class="diagram-step"><div class="step-title">Print</div></div>
+    </div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Same policy evaluation</div></div>
+  </div>
+</div>

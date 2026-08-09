@@ -1,0 +1,30 @@
+<p><b>BIMI (Brand Indicators for Message Identification)</b> lets a verified
+brand's logo appear next to their emails in a supporting inbox. It's often
+mistaken for an authentication mechanism, but it isn't one -- it's a
+<i>reward</i> for having strong DMARC enforcement already in place.</p>
+<div class="flow-diagram">
+  <div class="flow-step"><div class="flow-icon">📄</div><div class="flow-title">BIMI Record Published?</div><div class="flow-desc">TXT record pointing to a logo</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">⚖️</div><div class="flow-title">DMARC Enforced?</div><div class="flow-desc">p=quarantine or p=reject, at pct=100</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Both True</div><div class="flow-desc">Logo displays in the inbox</div></div>
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">Either Missing</div><div class="flow-desc">No logo — DMARC isn't earning the reward yet</div></div>
+  </div>
+</div>
+<h2>Requirements to actually display</h2>
+<ul>
+  <li>A published BIMI TXT record at <code>default._bimi.yourdomain.com</code>
+  pointing to an SVG Tiny PS logo.</li>
+  <li>DMARC policy of <code>p=quarantine</code> or <code>p=reject</code> --
+  <code>p=none</code> is not enough, because BIMI would otherwise let a
+  domain gain brand recognition without actually blocking spoofed mail sent
+  in its name.</li>
+  <li><code>pct=100</code> -- if the policy only applies to a fraction of
+  mail, the logo doesn't display.</li>
+  <li>Some providers (Gmail) additionally require a Verified Mark Certificate
+  (VMC) from a certificate authority, asserted via the <code>a=</code> tag --
+  modeled here but not deeply validated.</li>
+</ul>
+<p>Try publishing a record with a weak DMARC policy first, then tighten it,
+and watch the evaluation flip from "will NOT display" to "will display."</p>

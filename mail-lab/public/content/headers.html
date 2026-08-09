@@ -1,0 +1,25 @@
+<p>Every mail server a message passes through prepends its own
+<code>Received:</code> header -- never removes or edits existing ones. That
+means the full header block, read bottom-to-top, is an append-only audit log
+of the message's actual path. It's also the single most useful thing to
+check by hand when investigating a suspicious email ("View Source" / "Show
+Original" in most mail clients).</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">💻</div><div class="flow-title">Hop 1: Sender</div><div class="flow-desc">Original message leaves the sender's machine</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🖥️</div><div class="flow-title">Hop 2: Relay Server</div><div class="flow-desc">Prepends its own Received header</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📬</div><div class="flow-title">Hop 3: Final Delivery</div><div class="flow-desc">Prepends one more Received header</div></div>
+</div>
+<div class="flow-caption">Read the actual header block bottom-to-top to trace the real path — newest hop is always on top</div>
+<p>Three more header fields are frequently confused, and attackers rely on
+that confusion:</p>
+<table>
+  <tr><th>Header</th><th>What it actually controls</th></tr>
+  <tr><td><code>From</code></td><td>What the recipient sees as the sender -- checked by DMARC alignment</td></tr>
+  <tr><td><code>Reply-To</code></td><td>Where a "Reply" actually goes -- not checked by any authentication mechanism</td></tr>
+  <tr><td><code>Return-Path</code> (envelope sender)</td><td>Where bounce/delivery-failure notices go -- checked by SPF</td></tr>
+</table>
+<p>A message can have a perfectly legitimate, DMARC-passing <code>From</code>
+and still redirect replies to an attacker via <code>Reply-To</code> -- this is
+a very common tactic in business email compromise.</p>

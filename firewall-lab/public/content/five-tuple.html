@@ -1,0 +1,22 @@
+<p>The original firewall model -- a <b>packet filter</b> -- decides using
+exactly five fields, together called the <b>5-tuple</b>: protocol,
+source IP, source port, destination IP, destination port. Nothing else
+about the traffic matters to it -- not what application generated it, not
+who's logged in, not what's inside the payload.</p>
+<div class="diagram">
+  <div class="diagram-label">The 5-tuple</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Protocol</div><div class="step-sub">tcp / udp / icmp</div></div>
+    <div class="diagram-step"><div class="step-title">Source IP</div></div>
+    <div class="diagram-step"><div class="step-title">Source port</div></div>
+    <div class="diagram-step"><div class="step-title">Dest. IP</div></div>
+    <div class="diagram-step"><div class="step-title">Dest. port</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">allow / deny</div></div>
+  </div>
+</div>
+<p>This is still exactly what every firewall's <i>fast path</i> uses for
+already-established connections (see
+<a href="#/stateful-inspection">Stateful Inspection</a>) -- the 5-tuple
+never went away, NGFW just adds more fields on top of it for the first
+packet of a new connection.</p>

@@ -1,0 +1,17 @@
+<p>Malware overwhelmingly relies on DNS to find its command-and-control
+infrastructure. <b>DNS security</b> intercepts resolution for known-bad
+domains and substitutes a <b>sinkhole</b> address instead of the real one
+-- the infected host's lookups still "succeed," but it ends up talking to a
+controlled, harmless destination instead of the real attacker, and the
+attempted resolution itself becomes a loud, unambiguous signal that
+something on that host needs investigating.</p>
+<div class="diagram">
+  <div class="diagram-label">Sinkholing</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">DNS query</div><div class="step-sub">c2-server.example</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">DNS blocklist</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Sinkhole IP</div><div class="step-sub">not the real attacker infrastructure</div></div>
+  </div>
+</div>

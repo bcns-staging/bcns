@@ -1,0 +1,24 @@
+<p>Before machine-learning classifiers, spam filtering was almost entirely
+rule-based: a list of heuristics, each worth some number of points, summed
+into a score and compared against a threshold. <b>SpamAssassin</b> is the
+best-known example, with hundreds of rules covering header oddities, content
+patterns, and reputation. This lab implements a small version of the same
+idea with a handful of rules: excessive capitalization, exclamation marks,
+link density, and known spam trigger phrases.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">✉️</div><div class="flow-title">Message</div><div class="flow-desc">"FREE MONEY WINNER!!! Click here click here"</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">➕</div><div class="flow-title">Apply Rules</div><div class="flow-desc">ALL CAPS +2, !!! +1, trigger phrases +2 each...</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🧮</div><div class="flow-title">Sum Points</div><div class="flow-desc">Total score, e.g. 13</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:130px"><div class="flow-title">Ham</div><div class="flow-desc">&lt; 2 pts</div></div>
+    <div class="flow-step warn" style="width:130px"><div class="flow-title">Suspicious</div><div class="flow-desc">2-4 pts</div></div>
+    <div class="flow-step bad" style="width:130px"><div class="flow-title">Spam</div><div class="flow-desc">5+ pts</div></div>
+  </div>
+</div>
+<p>Modern commercial filters layer Bayesian and neural classifiers on top of
+rules like these, but the rule layer never fully goes away -- it's cheap,
+explainable, and catches the crude, high-volume spam that doesn't justify
+spending ML compute on.</p>

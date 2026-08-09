@@ -1,0 +1,32 @@
+<p><b>MTA-STS (RFC 8461)</b> fixes STARTTLS's biggest weakness: it makes TLS
+mandatory rather than optional, and pins which mail servers are allowed to
+receive your domain's mail.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">🔍</div><div class="flow-title">DNS Lookup</div><div class="flow-desc">_mta-sts.domain TXT — "a policy exists"</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📄</div><div class="flow-title">Fetch Policy File</div><div class="flow-desc">mode, allowed MX hosts, max_age</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">✅</div><div class="flow-title">Check Connection</div><div class="flow-desc">Does the MX match? Is TLS available?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:160px"><div class="flow-title">Match + TLS</div><div class="flow-desc">Deliver over mandatory TLS</div></div>
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">No Match (enforce)</div><div class="flow-desc">Refuse delivery rather than fall back</div></div>
+  </div>
+</div>
+<h2>How discovery works</h2>
+<ol>
+  <li>A sender looks up <code>_mta-sts.yourdomain.com</code> TXT. Its only
+  job is to say "a policy exists, with this version id" -- it's not the
+  policy itself.</li>
+  <li>The sender then fetches the actual policy over HTTPS from
+  <code>https://mta-sts.yourdomain.com/.well-known/mta-sts.txt</code> (we
+  simulate that file locally here).</li>
+  <li>The policy lists <code>mode</code> (<code>enforce</code>,
+  <code>testing</code>, or <code>none</code>), the authorized <code>mx</code>
+  hosts, and how long to cache it (<code>max_age</code>).</li>
+</ol>
+<p>In <code>enforce</code> mode, if the connecting MX doesn't match the policy
+or TLS isn't available, the sender must <b>refuse to deliver</b> rather than
+fall back to an unprotected connection. <code>testing</code> mode logs what
+would have happened (via TLS-RPT) without actually blocking anything --
+useful for rolling out a policy safely.</p>

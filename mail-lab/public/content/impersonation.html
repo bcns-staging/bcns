@@ -1,0 +1,20 @@
+<p>None of SPF, DKIM, or DMARC check the <b>display name</b> a mail client
+shows -- only the underlying email address. That leaves a wide-open attack:
+send from any address you control, but set your display name to
+<code>"Jane CEO"</code>. On a phone, many mail apps show only the display
+name by default, so the recipient never even sees the real address.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">✉️</div><div class="flow-title">Inbound Mail</div><div class="flow-desc">Display name: "Jane CEO" &lt;random@attacker.com&gt;</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">📇</div><div class="flow-title">Check Known Contacts</div><div class="flow-desc">Is "Jane CEO" a name you trust?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔍</div><div class="flow-title">Compare Real Address</div><div class="flow-desc">jane@yourcompany.com vs. random@attacker.com</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step bad"><div class="flow-icon">🚩</div><div class="flow-title">Flagged</div><div class="flow-desc">Name matches, address doesn't — impersonation suspected</div></div>
+</div>
+<p>Secure email gateways address this the same way you can here: maintain a
+directory of known, trusted names and their real addresses, and flag any
+inbound mail where the display name matches someone trusted but the address
+doesn't. This catches CEO-fraud and vendor-impersonation attempts that sail
+right through SPF/DKIM/DMARC, because the attacker's own domain can be
+perfectly well-authenticated -- it's just not who it claims to be.</p>

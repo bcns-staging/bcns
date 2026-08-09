@@ -1,0 +1,23 @@
+<p>A screenshot of a spreadsheet full of SSNs is, to every text-based
+detector, just an opaque image -- none of the pattern, keyword, EDM, or
+fingerprinting techniques can see inside it. Screenshotting sensitive data
+to get around a text-based DLP filter is a real, common evasion technique.
+<b>OCR (Optical Character Recognition)</b> closes that gap by extracting
+whatever text is visible in an image, which then flows through the exact
+same detectors as any other content.</p>
+<p>This lab uses a real OCR engine (Tesseract, running as WebAssembly) --
+not a simulation. The trade-off is a real one too: on first use, it needs
+to download its trained language model over the network (a few megabytes),
+which is then cached locally for every run after that.</p>
+<div class="diagram">
+  <div class="diagram-label">Image → text → the same detectors as everything else</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Screenshot</div><div class="step-sub">opaque pixels</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">Tesseract OCR</div><div class="step-sub">WASM, in-browser</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step"><div class="step-title">Extracted text</div><div class="step-sub">"SSN: 123-45-6789…"</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step good"><div class="step-title">Pattern / EDM / keyword…</div><div class="step-sub">full detector pipeline</div></div>
+  </div>
+</div>

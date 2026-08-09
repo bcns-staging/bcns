@@ -1,0 +1,38 @@
+<p><b>DMARC</b> ties SPF and DKIM together and, crucially, checks them against
+the address a human actually sees: the <code>From:</code> header. Without
+DMARC, an attacker can pass SPF and even DKIM using their own throwaway
+domain while still displaying your CEO's name and address in the
+<code>From:</code> header the recipient reads.</p>
+<div class="flow-diagram">
+  <div class="flow-step accent"><div class="flow-icon">✉️</div><div class="flow-title">Message Arrives</div><div class="flow-desc">Header-From: alice@domain.com</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="flow-icon">🔗</div><div class="flow-title">Check Alignment</div><div class="flow-desc">Does the SPF or DKIM domain match header-From's domain?</div></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-branch">
+    <div class="flow-step good" style="width:160px"><div class="flow-title">ALIGNED → PASS</div><div class="flow-desc">Deliver normally</div></div>
+    <div class="flow-step bad" style="width:160px"><div class="flow-title">NOT ALIGNED → FAIL</div><div class="flow-desc">Apply the domain's p= policy</div></div>
+  </div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step warn"><div class="flow-icon">⚖️</div><div class="flow-title">p= Policy</div><div class="flow-desc">none / quarantine / reject (only reached on FAIL)</div></div>
+</div>
+<h2>Alignment: the key concept</h2>
+<p>DMARC doesn't just check "did SPF pass" or "did DKIM pass" -- it checks
+whether the domain that passed is the <b>same domain</b> (or organizationally
+related) as the header-From domain. This is called <b>alignment</b>:</p>
+<ul>
+  <li><b>Relaxed</b> (default): the organizational domain must match, e.g.
+  <code>mail.example.com</code> aligns with <code>example.com</code>.</li>
+  <li><b>Strict</b> (<code>adkim=s</code> / <code>aspf=s</code>): the exact
+  domain must match.</li>
+</ul>
+<p>DMARC passes if <b>either</b> SPF-aligned-pass <b>or</b> DKIM-aligned-pass
+is true -- it doesn't require both.</p>
+<h2>Policy and rollout</h2>
+<p>The <code>p=</code> tag tells receivers what to do with mail that fails:
+<code>none</code> (just report it), <code>quarantine</code> (spam folder), or
+<code>reject</code> (bounce it). <code>pct=</code> lets a domain roll out
+enforcement gradually -- e.g. <code>pct=50</code> applies the policy to only
+half of failing messages (chosen at random per message), letting a domain
+owner watch for breakage before going to 100%.</p>
+<p><code>rua=</code> is where receivers send aggregate XML reports summarizing
+pass/fail volumes -- see the DMARC Reports page.</p>

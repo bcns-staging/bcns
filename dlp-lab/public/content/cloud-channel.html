@@ -1,0 +1,24 @@
+<p>A <b>CASB (Cloud Access Security Broker)</b> sits between your
+organization and the cloud apps people actually use, and its central idea
+is that the <i>same</i> content can be perfectly fine or a serious incident
+depending entirely on <i>where</i> it's going. Uploading a customer export
+to your company's IT-approved storage is routine. Uploading the same file
+to a random file-sharing site is data loss.</p>
+<p>This is why the sanctioned-apps list matters more here than the policy's
+own configured action: an unsanctioned destination escalates any detected
+sensitivity straight to a block, on the theory that there's no acceptable
+outcome for sensitive data leaving through an unapproved channel -- even if
+the underlying policy was only configured to "alert."</p>
+<div class="diagram">
+  <div class="diagram-label">Same content, different destination</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">File upload</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step warn"><div class="step-title">Sanctioned app?</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step good"><div class="step-title">Yes</div><div class="step-sub">policy's configured action applies</div></div>
+      <div class="diagram-step bad"><div class="step-title">No</div><div class="step-sub">escalated straight to block, regardless of policy</div></div>
+    </div>
+  </div>
+</div>

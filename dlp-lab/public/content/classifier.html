@@ -1,0 +1,29 @@
+<p>Every technique so far looks for something specific: a pattern, a keyword,
+a known record, a known document. <b>Statistical classification</b> takes a
+fundamentally different approach: it learns, from examples, which words tend
+to co-occur with "sensitive" content in general, and scores new text by
+probability -- without needing to know in advance what specific words will
+appear.</p>
+<h2>Naive Bayes, briefly</h2>
+<p>This lab trains a real (deliberately small) <b>Naive Bayes</b> classifier:
+for each class ("sensitive" / "not-sensitive"), it counts how often each
+word appears across all training examples of that class. To classify new
+text, it multiplies together the probability of each word appearing given
+each class (using <b>Laplace smoothing</b> so unseen words don't zero out
+the whole calculation), and picks whichever class comes out more probable.</p>
+<p>This is "naive" because it assumes each word's presence is independent of
+the others, which isn't really true of language -- but it's a surprisingly
+effective, fast, and interpretable baseline, and it's genuinely how early
+spam filters (and some DLP content classifiers) worked. Watch the "most
+indicative words" for each class update as you add more examples -- that's
+the model's actual learned state, not a black box.</p>
+<div class="diagram">
+  <div class="diagram-label">Learned word weights (illustrative)</div>
+  <div class="bar-chart">
+    <div class="bar-row"><div class="bar-label">"confidential"</div><div class="bar-track"><div class="bar-fill bad" style="width:88%"></div></div><div class="bar-value">sensitive</div></div>
+    <div class="bar-row"><div class="bar-label">"salary"</div><div class="bar-track"><div class="bar-fill bad" style="width:74%"></div></div><div class="bar-value">sensitive</div></div>
+    <div class="bar-row"><div class="bar-label">"attached"</div><div class="bar-track"><div class="bar-fill warn" style="width:52%"></div></div><div class="bar-value">mixed</div></div>
+    <div class="bar-row"><div class="bar-label">"newsletter"</div><div class="bar-track"><div class="bar-fill good" style="width:20%"></div></div><div class="bar-value">not-sensitive</div></div>
+  </div>
+  <p class="muted" style="margin-top:10px; font-size:0.85rem;">Each bar is roughly P(word | class), learned from examples. Multiply a sentence's word probabilities together per class and keep whichever class comes out higher.</p>
+</div>

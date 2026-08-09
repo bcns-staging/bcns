@@ -1,0 +1,20 @@
+<p>File extensions are just a suggestion -- anyone can rename
+<code>malware.exe</code> to <code>invoice.pdf</code> and most naive systems
+will treat it accordingly. Every real file format instead begins with a
+distinctive sequence of bytes called a <b>magic number</b> (PDFs start with
+<code>%PDF</code>, PNGs with a fixed 8-byte signature, Windows executables
+with <code>MZ</code>). Reading those first few bytes tells you what a file
+<i>actually</i> is, independent of its name.</p>
+<p>This is the first thing most antivirus engines and DLP file inspectors do
+before deciding whether to bother with deeper (and more expensive)
+inspection.</p>
+<div class="diagram">
+  <div class="diagram-label">Extension lies, bytes don't</div>
+  <div class="diagram-flow">
+    <div class="diagram-step bad"><div class="step-title">invoice.pdf</div><div class="step-sub">renamed file</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step accent"><div class="step-title">First bytes</div><div class="step-sub">4D 5A ("MZ")</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-step bad"><div class="step-title">Actual type: EXE</div><div class="step-sub">not a PDF at all</div></div>
+  </div>
+</div>

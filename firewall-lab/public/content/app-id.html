@@ -1,0 +1,20 @@
+<p>A traditional rule can only ask "what port is this on." <b>App-ID</b>
+asks a fundamentally different question: "what application is this,
+regardless of port," by inspecting the traffic's actual signature and
+behavior rather than trusting what it claims to be.</p>
+<p>This matters because plenty of applications deliberately (or
+incidentally) run over port 443 to blend in with ordinary web traffic --
+P2P clients, tunneling tools, even malware command-and-control. A
+port-based rule that allows "tcp/443" allows all of them. An App-ID-aware
+rule can single out the real application and block just that.</p>
+<div class="diagram">
+  <div class="diagram-label">Same port, different verdicts</div>
+  <div class="diagram-flow">
+    <div class="diagram-step"><div class="step-title">Traffic on tcp/443</div></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-branch">
+      <div class="diagram-step warn"><div class="step-title">Port-based rule</div><div class="step-sub">sees "tcp/443" -- allows it, whatever it is</div></div>
+      <div class="diagram-step good"><div class="step-title">App-ID-aware rule</div><div class="step-sub">sees the real app -- allows or blocks based on what it actually is</div></div>
+    </div>
+  </div>
+</div>
