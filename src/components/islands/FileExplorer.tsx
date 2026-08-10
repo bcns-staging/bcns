@@ -191,7 +191,7 @@ export default function FileExplorer() {
   const isEmpty = !listLoading && !listError && sorted.folders.length === 0 && sorted.files.length === 0;
 
   return (
-    <div className="file-explorer">
+    <div className={`file-explorer ${selected ? "has-preview" : ""}`}>
       <div className="file-explorer-browser">
         <div className="file-explorer-toolbar">
           <Breadcrumbs currentFolder={currentFolder} onNavigate={navigateTo} />
@@ -321,68 +321,67 @@ export default function FileExplorer() {
         </div>
       </div>
 
-      <div className="file-explorer-preview">
-        {!selected && <p className="file-explorer-status">Select a file to preview it.</p>}
+      {selected && (
+        <div className="file-explorer-preview">
+          <div className="file-explorer-preview-header">
+            <Breadcrumbs currentFolder={selected.path.split("/").slice(0, -1).join("/")} onNavigate={navigateTo} />
+            <div className="file-explorer-preview-header-actions">
+              <button type="button" onClick={() => setSelected(null)} title="Close preview" className="file-explorer-icon-button">
+                Close
+              </button>
+              <button type="button" onClick={copyPath} title="Copy path" className="file-explorer-icon-button">
+                <CopyIcon size={14} />
+                {copied ? "Copied" : "Copy path"}
+              </button>
+              <a href={downloadUrl(selected.path)} download className="file-explorer-icon-button file-explorer-download">
+                <DownloadIcon size={14} />
+                Download
+              </a>
+            </div>
+          </div>
+          <div className="file-explorer-preview-path">{selected.path}</div>
 
-        {selected && (
-          <>
-            <div className="file-explorer-preview-header">
-              <Breadcrumbs currentFolder={selected.path.split("/").slice(0, -1).join("/")} onNavigate={navigateTo} />
-              <div className="file-explorer-preview-header-actions">
-                <button type="button" onClick={copyPath} title="Copy path" className="file-explorer-icon-button">
-                  <CopyIcon size={14} />
-                  {copied ? "Copied" : "Copy path"}
-                </button>
+          <div className="file-explorer-preview-body">
+            {selectedCategory === "text" && previewLoading && (
+              <div className="file-explorer-status">
+                <Spinner /> Loading…
+              </div>
+            )}
+            {selectedCategory === "text" && previewError && (
+              <p className="file-explorer-status file-explorer-error">Failed to load: {previewError}</p>
+            )}
+            {selectedCategory === "text" && !previewLoading && previewText !== null && <pre>{previewText}</pre>}
+
+            {selectedCategory === "image" && !previewFailed && (
+              <img
+                src={rawUrl(selected.path)}
+                alt={selected.path}
+                className="file-explorer-media"
+                onError={() => setPreviewFailed(true)}
+              />
+            )}
+            {selectedCategory === "pdf" && !previewFailed && (
+              <iframe src={rawUrl(selected.path)} title={selected.path} className="file-explorer-media file-explorer-iframe" />
+            )}
+            {selectedCategory === "audio" && !previewFailed && (
+              <audio controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
+            )}
+            {selectedCategory === "video" && !previewFailed && (
+              <video controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
+            )}
+            {(selectedCategory === "archive" || previewFailed) && (
+              <div className="file-explorer-no-preview">
+                <CategoryIcon category={selectedCategory ?? "text"} size={48} />
+                <p>Preview isn't available for this file.</p>
                 <a href={downloadUrl(selected.path)} download className="file-explorer-icon-button file-explorer-download">
                   <DownloadIcon size={14} />
                   Download
                 </a>
               </div>
-            </div>
-            <div className="file-explorer-preview-path">{selected.path}</div>
-
-            <div className="file-explorer-preview-body">
-              {selectedCategory === "text" && previewLoading && (
-                <div className="file-explorer-status">
-                  <Spinner /> Loading…
-                </div>
-              )}
-              {selectedCategory === "text" && previewError && (
-                <p className="file-explorer-status file-explorer-error">Failed to load: {previewError}</p>
-              )}
-              {selectedCategory === "text" && !previewLoading && previewText !== null && <pre>{previewText}</pre>}
-
-              {selectedCategory === "image" && !previewFailed && (
-                <img
-                  src={rawUrl(selected.path)}
-                  alt={selected.path}
-                  className="file-explorer-media"
-                  onError={() => setPreviewFailed(true)}
-                />
-              )}
-              {selectedCategory === "pdf" && !previewFailed && (
-                <iframe src={rawUrl(selected.path)} title={selected.path} className="file-explorer-media file-explorer-iframe" />
-              )}
-              {selectedCategory === "audio" && !previewFailed && (
-                <audio controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
-              )}
-              {selectedCategory === "video" && !previewFailed && (
-                <video controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
-              )}
-              {(selectedCategory === "archive" || previewFailed) && (
-                <div className="file-explorer-no-preview">
-                  <CategoryIcon category={selectedCategory ?? "text"} size={48} />
-                  <p>Preview isn't available for this file.</p>
-                  <a href={downloadUrl(selected.path)} download className="file-explorer-icon-button file-explorer-download">
-                    <DownloadIcon size={14} />
-                    Download
-                  </a>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
