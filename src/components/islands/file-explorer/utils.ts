@@ -58,16 +58,66 @@ export function downloadUrl(path: string): string {
 // Programmatic download trigger, for the SelectionToolbar's bulk Download
 // button -- can't just render an <a download> per selected file the way the
 // preview pane does, since there's no persistent per-item element to attach
-// one to. The server sets Content-Disposition: attachment for ?download=1
-// URLs regardless of how the request was made, so a synthetic click is
-// enough; no fetch+blob juggling needed.
+// one to.
+//
+// a.download is set to the real basename (with extension) explicitly, not
+// left empty/omitted -- an empty download attribute doesn't reliably fall
+// back to the server's Content-Disposition filename across browsers, and
+// the observed failure mode was exactly this: downloads landing with no
+// extension at all, so the OS couldn't identify the file type. Deriving the
+// filename from the already-known path client-side sidesteps that entirely.
 export function triggerDownload(path: string): void {
   const a = document.createElement("a");
   a.href = downloadUrl(path);
-  a.download = "";
+  a.download = basename(path);
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+// Bulk download for a multi-file selection, zipped client-side -- there's no
+// server-side archive endpoint, so this fetches each file's raw bytes
+// (credentials: "include" so admin-only files the caller can see are
+// included too) and bundles them with JSZip, entirely in the browser.
+// jszip is dynamically imported so it's never in the initial bundle for
+// anyone who never triggers a multi-file download (this whole feature is
+// admin-only to begin with).
+export async function triggerZipDownload(paths: string[], zipName: string): Promise<void> {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  const usedNames = new Set<string>();
+
+  for (const path of paths) {
+    const resp = await fetch(rawUrl(path), { credentials: "include" });
+    if (!resp.ok) continue; // one failed file shouldn't sink the whole zip
+    const blob = await resp.blob();
+
+    let name = basename(path);
+    if (usedNames.has(name)) {
+      // Two selected files from different folders can share a basename --
+      // dedupe the same way Windows/macOS do, "name (1).ext", "name (2).ext".
+      const dot = name.lastIndexOf(".");
+      const stem = dot === -1 ? name : name.slice(0, dot);
+      const ext = dot === -1 ? "" : name.slice(dot);
+      let n = 1;
+      while (usedNames.has(name)) {
+        name = `${stem} (${n})${ext}`;
+        n++;
+      }
+    }
+    usedNames.add(name);
+    zip.file(name, blob);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = zipName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // mcp-fileserver's admin session cookie is cross-site (7beacons.com vs

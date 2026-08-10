@@ -20,6 +20,7 @@ import {
 } from "./file-explorer/icons";
 import {
   API_BASE,
+  basename,
   categoryLabel,
   checkAdminSession,
   detectCategory,
@@ -598,7 +599,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                 <CopyIcon size={14} />
                 {copied ? "Copied" : "Copy path"}
               </button>
-              <a href={downloadUrl(selected.path)} download className="file-explorer-icon-button file-explorer-download">
+              <a href={downloadUrl(selected.path)} download={basename(selected.path)} className="file-explorer-icon-button file-explorer-download">
                 <DownloadIcon size={14} />
                 Download
               </a>
@@ -638,7 +639,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
               <div className="file-explorer-no-preview">
                 <CategoryIcon category={selectedCategory ?? "text"} size={48} />
                 <p>Preview isn't available for this file.</p>
-                <a href={downloadUrl(selected.path)} download className="file-explorer-icon-button file-explorer-download">
+                <a href={downloadUrl(selected.path)} download={basename(selected.path)} className="file-explorer-icon-button file-explorer-download">
                   <DownloadIcon size={14} />
                   Download
                 </a>
