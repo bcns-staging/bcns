@@ -13,7 +13,7 @@ import {
   TrashIcon,
   UploadIcon,
 } from "./icons";
-import { adminFetch, encodePath, triggerDownload } from "./utils";
+import { adminFetch, encodePath, triggerDownload, triggerZipDownload } from "./utils";
 
 interface LoginPanelProps {
   onLoggedIn: () => void;
@@ -231,10 +231,24 @@ export function SelectionToolbar({
   // so only the file entries in a selection are downloadable -- the button
   // just skips any folders mixed into the selection rather than blocking on them.
   const downloadableItems = selectedItems.filter((it) => !it.isFolder);
+  const [zipping, setZipping] = useState(false);
 
-  function handleDownload() {
-    for (const item of downloadableItems) {
-      triggerDownload(item.path);
+  async function handleDownload() {
+    if (downloadableItems.length === 0) return;
+    if (downloadableItems.length === 1) {
+      triggerDownload(downloadableItems[0].path);
+      return;
+    }
+    // 2+ files: bundle into one zip instead of firing off several
+    // simultaneous downloads (which browsers often throttle/block anyway).
+    setZipping(true);
+    try {
+      await triggerZipDownload(
+        downloadableItems.map((it) => it.path),
+        "files.zip",
+      );
+    } finally {
+      setZipping(false);
     }
   }
 
@@ -369,9 +383,14 @@ export function SelectionToolbar({
         <TrashIcon size={14} />
         Delete
       </button>
-      <button type="button" className="file-explorer-icon-button" onClick={handleDownload} disabled={actionsDisabled || downloadableItems.length === 0}>
+      <button
+        type="button"
+        className="file-explorer-icon-button"
+        onClick={handleDownload}
+        disabled={actionsDisabled || zipping || downloadableItems.length === 0}
+      >
         <DownloadIcon size={14} />
-        Download
+        {zipping ? "Zipping…" : downloadableItems.length > 1 ? `Download (${downloadableItems.length})` : "Download"}
       </button>
       <button type="button" className="file-explorer-icon-button" onClick={handleCopy} disabled={actionsDisabled || !hasSelection}>
         <CopyIcon size={14} />
