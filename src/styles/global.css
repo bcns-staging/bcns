@@ -5,6 +5,7 @@
   --color-text-muted: #9aa7b4;
   --color-accent: #ffb703;
   --color-border: #223042;
+  --color-error: #e5484d;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --max-width: 72rem;
 }

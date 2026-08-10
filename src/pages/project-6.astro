@@ -6,6 +6,33 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
 ---
 
 <style>
+  /* Cool slate + teal "workspace" theme scoped to this page only, same
+     mechanism as index.astro's .landing-theme: overriding the shared design
+     tokens as CSS custom properties cascades into Header/Footer's own
+     scoped styles (both are 100% token-driven, zero edits needed) without
+     touching the default theme used elsewhere on the site.
+
+     `color` is set explicitly here, not just `background` -- global.css's
+     `body { color: var(--color-text) }` resolves using body's OWN
+     environment (this wrapper is a *descendant* of body, so it can't
+     retroactively change what body already computed) and that resolved
+     color then inherits into every descendant that doesn't set its own
+     `color`, e.g. Header's brand link and this page's <h1>. Without
+     re-declaring `color` here too, both would silently render in the
+     default theme's (near-invisible-on-this-background) text color. */
+  .file-explorer-theme {
+    --color-bg: #0d1117;
+    --color-bg-alt: #151b23;
+    --color-text: #e6edf3;
+    --color-text-muted: #7d8998;
+    --color-accent: #2dd4bf;
+    --color-border: #26303c;
+    --color-error: #f85149;
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+  }
+
   section {
     padding-block: 2rem 3rem;
   }
@@ -21,46 +48,144 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
     margin: 0 0 1.5rem;
   }
 
+  .intro code {
+    background: var(--color-bg-alt);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.3rem;
+    font-size: 0.9em;
+  }
+
+  /* ---------- layout ---------- */
+
   :global(.file-explorer) {
     display: grid;
-    grid-template-columns: minmax(16rem, 22rem) 1fr;
-    gap: 1.25rem;
+    grid-template-columns: minmax(20rem, 30rem) 1fr;
+    gap: 0;
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
-    min-height: 28rem;
+    min-height: 32rem;
     background: var(--color-bg-alt);
   }
 
-  @media (max-width: 42rem) {
+  @media (max-width: 56rem) {
     :global(.file-explorer) {
       grid-template-columns: 1fr;
     }
   }
 
-  :global(.file-explorer-list) {
+  :global(.file-explorer-browser) {
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--color-border);
-    max-height: 32rem;
-    overflow-y: auto;
+    min-width: 0;
   }
 
-  :global(.file-explorer-list-header) {
+  /* ---------- toolbar ---------- */
+
+  :global(.file-explorer-toolbar) {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.6rem;
     padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--color-border);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
     position: sticky;
     top: 0;
     background: var(--color-bg-alt);
+    z-index: 1;
+  }
+
+  :global(.file-explorer-breadcrumbs) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem;
+    font-size: 0.8rem;
+  }
+
+  :global(.file-explorer-crumb-group) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  :global(.file-explorer-crumb-sep) {
+    color: var(--color-text-muted);
+    opacity: 0.6;
+  }
+
+  :global(.file-explorer-crumb) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 0.15rem 0.35rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+  }
+
+  :global(.file-explorer-crumb:hover) {
+    color: var(--color-text);
+    background: var(--color-bg);
+  }
+
+  :global(.file-explorer-toolbar-actions) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  :global(.file-explorer-search) {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 8rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.4rem;
+    color: var(--color-text-muted);
+  }
+
+  :global(.file-explorer-search input) {
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.8rem;
+    outline: none;
+    width: 100%;
+  }
+
+  :global(.file-explorer-view-toggle) {
+    display: flex;
+    border: 1px solid var(--color-border);
+    border-radius: 0.4rem;
+    overflow: hidden;
+  }
+
+  :global(.file-explorer-view-toggle button) {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 0.55rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  :global(.file-explorer-view-toggle button.is-active) {
+    background: var(--color-bg);
+    color: var(--color-accent);
   }
 
   :global(.file-explorer-refresh) {
-    padding: 0.25rem 0.65rem;
+    padding: 0.4rem 0.7rem;
     border-radius: 0.4rem;
     border: 1px solid var(--color-border);
     background: transparent;
@@ -68,6 +193,7 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
     font: inherit;
     font-size: 0.75rem;
     cursor: pointer;
+    white-space: nowrap;
   }
 
   :global(.file-explorer-refresh:hover:not(:disabled)) {
@@ -79,48 +205,177 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
     cursor: default;
   }
 
-  :global(.file-explorer-list ul) {
-    list-style: none;
-    margin: 0;
+  /* ---------- listing ---------- */
+
+  :global(.file-explorer-listing) {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 40rem;
+  }
+
+  :global(.file-explorer-status) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.5rem 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  :global(.file-explorer-error-block) {
+    color: var(--color-error);
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  :global(.file-explorer-error-block button) {
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-error);
+    background: transparent;
+    color: var(--color-error);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8rem;
+  }
+
+  :global(.file-explorer-error) {
+    color: var(--color-error);
+  }
+
+  :global(.file-explorer-spinner) {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: file-explorer-spin 0.7s linear infinite;
+  }
+
+  @keyframes file-explorer-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ---------- table (list view) ---------- */
+
+  :global(.file-explorer-table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  :global(.file-explorer-table th) {
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+  }
+
+  :global(.file-explorer-table th button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
     padding: 0;
   }
 
-  :global(.file-explorer-list li) {
-    border-bottom: 1px solid var(--color-border);
+  :global(.file-explorer-table th button.is-active) {
+    color: var(--color-accent);
   }
 
-  :global(.file-explorer-list button) {
+  :global(.file-explorer-sort-desc) {
+    transform: rotate(180deg);
+  }
+
+  :global(.file-explorer-table td) {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.file-explorer-name-cell) {
     display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 0;
-    background: transparent;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--color-text);
-    font: inherit;
-    text-align: left;
+    max-width: 16rem;
+  }
+
+  :global(.file-explorer-row) {
     cursor: pointer;
   }
 
-  :global(.file-explorer-list button:hover) {
+  :global(.file-explorer-row:hover) {
     background: var(--color-bg);
   }
 
-  :global(.file-explorer-list button.is-selected) {
+  :global(.file-explorer-row.is-selected) {
     background: var(--color-bg);
     box-shadow: inset 3px 0 0 var(--color-accent);
   }
 
-  :global(.file-explorer-path) {
-    font-size: 0.9rem;
-    word-break: break-all;
+  /* ---------- grid view ---------- */
+
+  :global(.file-explorer-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
   }
 
-  :global(.file-explorer-meta) {
-    font-size: 0.75rem;
+  :global(.file-explorer-card) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.85rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  :global(.file-explorer-card:hover) {
+    background: var(--color-bg);
+  }
+
+  :global(.file-explorer-card.is-selected) {
+    border-color: var(--color-accent);
+    background: var(--color-bg);
+  }
+
+  :global(.file-explorer-card-name) {
+    font-size: 0.78rem;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  :global(.file-explorer-card-size) {
+    font-size: 0.7rem;
     color: var(--color-text-muted);
   }
+
+  /* ---------- preview pane ---------- */
 
   :global(.file-explorer-preview) {
     display: flex;
@@ -129,47 +384,124 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
   }
 
   :global(.file-explorer-preview-header) {
-    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem 0;
+  }
+
+  :global(.file-explorer-preview-header-actions) {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  :global(.file-explorer-icon-button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  :global(.file-explorer-icon-button:hover) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  :global(.file-explorer-download) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  :global(.file-explorer-preview-path) {
+    padding: 0.4rem 1rem 0.85rem;
     border-bottom: 1px solid var(--color-border);
     font-size: 0.85rem;
     font-weight: 600;
     word-break: break-all;
+    color: var(--color-text-muted);
   }
 
-  :global(.file-explorer-preview pre) {
+  :global(.file-explorer-preview-body) {
+    flex: 1;
+    overflow: auto;
+    min-height: 20rem;
+  }
+
+  :global(.file-explorer-preview-body pre) {
     margin: 0;
     padding: 1rem;
-    overflow: auto;
-    max-height: 32rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.85rem;
     white-space: pre-wrap;
     word-break: break-word;
   }
 
-  :global(.file-explorer-status) {
-    padding: 1rem;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
+  :global(.file-explorer-media) {
+    display: block;
+    max-width: 100%;
   }
 
-  :global(.file-explorer-error) {
-    color: #e5484d;
+  :global(.file-explorer-preview-body img.file-explorer-media) {
+    padding: 1rem;
+    max-height: 34rem;
+    object-fit: contain;
+  }
+
+  :global(.file-explorer-preview-body audio.file-explorer-media) {
+    width: calc(100% - 2rem);
+    margin: 1rem;
+  }
+
+  :global(.file-explorer-preview-body video.file-explorer-media) {
+    width: 100%;
+    max-height: 34rem;
+    background: black;
+  }
+
+  :global(.file-explorer-iframe) {
+    width: 100%;
+    height: 34rem;
+    border: 0;
+  }
+
+  :global(.file-explorer-no-preview) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    height: 100%;
+    padding: 2rem 1rem;
+    color: var(--color-text-muted);
+    text-align: center;
   }
 </style>
 
 <Layout title="Project 6 | 7 Beacons">
-  <Header />
-  <main>
-    <section class="container">
-      <h1>Project 6: File explorer</h1>
-      <p class="intro">
-        A read-only browser for files stored by <code>gcs-fileserver</code>, an
-        MCP tool an agent uses to read and write files on my behalf. Pick a
-        file on the left to preview its contents.
-      </p>
-      <FileExplorer client:load />
-    </section>
-  </main>
-  <Footer />
+  <div class="file-explorer-theme">
+    <Header />
+    <main>
+      <section class="container">
+        <h1>Project 6: File explorer</h1>
+        <p class="intro">
+          A read-only browser for files stored by <code>gcs-fileserver</code>, an
+          MCP tool an agent uses to read and write files on my behalf. Browse
+          folders, sort and search, and preview text, images, PDFs, audio, and
+          video directly.
+        </p>
+        <FileExplorer client:load />
+      </section>
+    </main>
+    <Footer />
+  </div>
 </Layout>
