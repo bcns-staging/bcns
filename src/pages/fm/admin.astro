@@ -1,0 +1,11 @@
+---
+import "../../styles/file-explorer.css";
+import Layout from "../../layouts/Layout.astro";
+import FileExplorer from "../../components/islands/FileExplorer.tsx";
+---
+
+<Layout title="Admin | File Manager | 7 Beacons" description="Admin controls for the gcs-fileserver file explorer.">
+  <div class="file-explorer-theme">
+    <FileExplorer client:load adminMode />
+  </div>
+</Layout>

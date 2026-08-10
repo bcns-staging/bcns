@@ -154,3 +154,135 @@ export function CopyIcon({ size = 14, className }: IconProps) {
     </svg>
   );
 }
+
+export function LockIcon({ size = 12, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <rect x="4.5" y="11" width="15" height="10" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M7.5 11V8a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="15.5" r="1.6" />
+    </svg>
+  );
+}
+
+export function UploadIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M13 15.2V4h-2v11.2l-3.1-3.1-1.4 1.4 5.5 5.5 5.5-5.5-1.4-1.4L13 15.2z" transform="rotate(180 12 12)" />
+      <rect x="4" y="18" width="16" height="2" rx="1" />
+    </svg>
+  );
+}
+
+export function FolderPlusIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h4.379a1.5 1.5 0 0 1 1.06.44L11.5 6H19.5A1.5 1.5 0 0 1 21 7.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-13z" />
+      <rect x="11" y="10" width="1.8" height="7" rx="0.9" fill="var(--color-bg-alt, #151b23)" />
+      <rect x="8.5" y="12.5" width="7" height="1.8" rx="0.9" fill="var(--color-bg-alt, #151b23)" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M9 3.5h6l.6 1.5H19v2H5v-2h3.4L9 3.5z" />
+      <path d="M6 7.5h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7a1.5 1.5 0 0 1-1.5-1.4l-1-13z" />
+      <rect x="9.5" y="10" width="1.4" height="8.5" rx="0.7" fill="var(--color-bg-alt, #151b23)" />
+      <rect x="13.1" y="10" width="1.4" height="8.5" rx="0.7" fill="var(--color-bg-alt, #151b23)" />
+    </svg>
+  );
+}
+
+export function EditIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M4 16.9V20h3.1L17.8 9.3l-3.1-3.1L4 16.9z" />
+      <path d="M18.7 8.4a1.3 1.3 0 0 0 0-1.9l-1.2-1.2a1.3 1.3 0 0 0-1.9 0L14.3 6.6l3.1 3.1 1.3-1.3z" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path
+        d="M3.5 12s3.5-6.5 8.5-6.5c1.6 0 3 .5 4.2 1.3M20.5 12s-3.5 6.5-8.5 6.5c-1.6 0-3-.5-4.2-1.3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M4 4l16 16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function EyeIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path
+        d="M2.5 12s3.8-7 9.5-7 9.5 7 9.5 7-3.8 7-9.5 7-9.5-7-9.5-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+      />
+      <circle cx="12" cy="12" r="2.6" />
+    </svg>
+  );
+}
+
+export function LogOutIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M11 4H6a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 6 20h5v-2H6.5V6H11V4z" />
+      <path d="M14.6 7.4l-1.4 1.4 2.2 2.2H9v2h6.4l-2.2 2.2 1.4 1.4L19.4 12l-4.8-4.6z" />
+    </svg>
+  );
+}
+
+export function SelectIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M7.5 12.5l3 3 6-6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function CutIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <circle cx="6" cy="6" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="6" cy="18" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M8 7.5L20 19M8 16.5L20 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function PasteIcon({ size = 15, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <rect x="5" y="4.5" width="14" height="17" rx="1.7" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="9" y="2.5" width="6" height="3.5" rx="1" />
+      <rect x="7.5" y="10" width="9" height="1.6" rx="0.8" />
+      <rect x="7.5" y="14" width="9" height="1.6" rx="0.8" />
+      <rect x="7.5" y="18" width="6" height="1.6" rx="0.8" />
+    </svg>
+  );
+}

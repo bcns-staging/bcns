@@ -1,9 +1,19 @@
+// mcp-fileserver: a separate service/repo (github.com/bcns-staging/mcp-fileserver),
+// same GCP project. Its /api/files* routes are public and read-only; /api/admin/*
+// requires a logged-in admin session -- see that repo's public_api.py/admin_api.py.
+export const API_BASE = "https://mcp-fileserver-751371770492.us-central1.run.app";
+
 export interface FileEntry {
   path: string;
   size_bytes: number;
   content_type: string;
   created: string;
   updated: string;
+  // Only ever present when the request was made as an authenticated admin --
+  // public_api.py omits this key entirely for anonymous callers, both so
+  // there's nothing to accidentally branch on client-side and because a
+  // non-admin-only file is always implicitly "public" anyway.
+  visibility?: "public" | "admin-only";
 }
 
 export interface FolderChild {
@@ -37,9 +47,86 @@ export function encodePath(path: string): string {
   return path.split("/").map(encodeURIComponent).join("/");
 }
 
+export function rawUrl(path: string): string {
+  return `${API_BASE}/api/files/${encodePath(path)}?format=raw`;
+}
+
+export function downloadUrl(path: string): string {
+  return `${API_BASE}/api/files/${encodePath(path)}?format=raw&download=1`;
+}
+
+// Programmatic download trigger, for the SelectionToolbar's bulk Download
+// button -- can't just render an <a download> per selected file the way the
+// preview pane does, since there's no persistent per-item element to attach
+// one to. The server sets Content-Disposition: attachment for ?download=1
+// URLs regardless of how the request was made, so a synthetic click is
+// enough; no fetch+blob juggling needed.
+export function triggerDownload(path: string): void {
+  const a = document.createElement("a");
+  a.href = downloadUrl(path);
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// mcp-fileserver's admin session cookie is cross-site (7beacons.com vs
+// ...run.app), so every admin request needs credentials: "include" to send/
+// receive it, and X-Admin-Csrf on top -- a non-safelisted header that forces
+// a real CORS preflight, which the server's strict origin allowlist then
+// blocks for anyone but this site (see mcp-fileserver's app.py/admin_auth.py
+// for the server side of this). Harmless to include on GET /api/admin/session
+// too even though that route doesn't require it.
+export const ADMIN_CSRF_HEADER = "X-Admin-Csrf";
+
+export async function adminFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    ...init,
+    credentials: "include",
+    headers: { ...(init.headers ?? {}), [ADMIN_CSRF_HEADER]: "1" },
+  });
+}
+
+/** Soft check, never throws -- an anonymous visitor and a logged-out admin
+ * look identical to this call (both just get {authenticated: false}). */
+export async function checkAdminSession(): Promise<boolean> {
+  try {
+    const resp = await adminFetch("/api/admin/session");
+    if (!resp.ok) return false;
+    const data = (await resp.json()) as { authenticated: boolean };
+    return data.authenticated === true;
+  } catch {
+    return false;
+  }
+}
+
 function basename(path: string): string {
   const idx = path.lastIndexOf("/");
   return idx === -1 ? path : path.slice(idx + 1);
+}
+
+/** Drops folder-placeholder marker objects (mkdir creates an empty blob whose
+ * name ends in "/" -- see gcs_client.create_folder_placeholder) from a flat
+ * file list. Only needed for global-search results, which filter the raw
+ * list by substring match directly: getDirectChildren/getAllFolders below
+ * read placeholders correctly as-is (a trailing-slash path always resolves
+ * to a folder name in their prefix-splitting, never gets treated as a
+ * file), and in fact *need* the placeholder present to detect a brand-new,
+ * still-empty folder at all -- so this must NOT be applied at ingestion,
+ * only at the search call site. */
+export function stripFolderPlaceholders(files: FileEntry[]): FileEntry[] {
+  return files.filter((f) => !f.path.endsWith("/"));
+}
+
+/** A folder's own visibility tag, read from its placeholder marker object if
+ * one exists -- the same object the "hide/unhide folder" action in
+ * AdminControls.tsx tags via POST /api/admin/visibility (is_folder: true),
+ * so this stays in sync with that toggle. Folders created only implicitly
+ * (a file uploaded into a path that was never mkdir'd, so no placeholder
+ * exists) default to "public", same convention as an untagged file. */
+export function folderVisibility(files: FileEntry[], folderPath: string): "public" | "admin-only" {
+  const marker = files.find((f) => f.path === `${folderPath}/`);
+  return marker?.visibility === "admin-only" ? "admin-only" : "public";
 }
 
 /** Direct children (sub-folders and files) of currentFolder ("" = root/Home),
