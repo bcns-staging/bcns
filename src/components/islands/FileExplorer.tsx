@@ -22,6 +22,7 @@ import {
   encodePath,
   formatDate,
   formatSize,
+  getAllFolders,
   getDirectChildren,
   sortEntries,
   type FileCategory,
@@ -157,22 +158,22 @@ export default function FileExplorer() {
   }, [refreshKey]);
 
   const directoryContents = useMemo(() => getDirectChildren(files, currentFolder), [files, currentFolder]);
+  const allFolders = useMemo(() => getAllFolders(files), [files]);
 
   const isSearching = search.trim().length > 0;
 
-  // Search is global (every file anywhere in the bucket), not scoped to the
-  // current folder's direct children -- folders aren't included as results
-  // since "this folder matched" isn't a useful result on its own; results
+  // Search is global (every file AND folder anywhere in the bucket, at any
+  // depth), not scoped to the current folder's direct children -- results
   // show their full path (see the name-cell rendering below) since they can
   // come from anywhere in the tree, not just the folder you're standing in.
   const filteredContents = useMemo(() => {
     if (!isSearching) return directoryContents;
     const q = search.trim().toLowerCase();
     return {
-      folders: [],
+      folders: allFolders.filter((f) => f.path.toLowerCase().includes(q)),
       files: files.filter((f) => f.path.toLowerCase().includes(q)),
     };
-  }, [directoryContents, files, isSearching, search]);
+  }, [allFolders, directoryContents, files, isSearching, search]);
 
   const sorted = useMemo(
     () => sortEntries(filteredContents, sortField, sortDirection),
@@ -321,7 +322,7 @@ export default function FileExplorer() {
                   <tr key={folder.path} onClick={() => navigateTo(folder.path)} className="file-explorer-row">
                     <td className="file-explorer-name-cell">
                       <FolderIcon size={17} />
-                      <span className="file-explorer-filename">{folder.name}</span>
+                      <span className="file-explorer-filename">{isSearching ? folder.path : folder.name}</span>
                     </td>
                     <td>Folder</td>
                     <td>—</td>
@@ -355,7 +356,7 @@ export default function FileExplorer() {
               {sorted.folders.map((folder) => (
                 <button type="button" key={folder.path} className="file-explorer-card" onClick={() => navigateTo(folder.path)}>
                   <FolderIcon size={36} />
-                  <span className="file-explorer-card-name">{folder.name}</span>
+                  <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
                 </button>
               ))}
               {sorted.files.map((file) => {

@@ -69,6 +69,23 @@ export function getDirectChildren(files: FileEntry[], currentFolder: string): Di
   return { folders, files: directFiles };
 }
 
+/** Every unique folder path implied by the flat file list, at every depth
+ * (GCS has no real folders -- these are derived purely from "/" segments in
+ * object paths). Used for global search, so a folder can match by name even
+ * when you're not currently standing inside it. */
+export function getAllFolders(files: FileEntry[]): FolderChild[] {
+  const paths = new Set<string>();
+  for (const f of files) {
+    const segments = f.path.split("/");
+    for (let i = 1; i < segments.length; i++) {
+      paths.add(segments.slice(0, i).join("/"));
+    }
+  }
+  return [...paths]
+    .sort((a, b) => a.localeCompare(b))
+    .map((path) => ({ name: path.slice(path.lastIndexOf("/") + 1), path }));
+}
+
 const EXTENSION_MAP: Record<string, FileCategory> = {
   png: "image", jpg: "image", jpeg: "image", gif: "image", webp: "image",
   svg: "image", bmp: "image", ico: "image", avif: "image",
