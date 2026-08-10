@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AdminControls, { SelectionToolbar, type ClipboardState, type SelectedItem } from "./file-explorer/AdminControls";
 import {
   ArchiveIcon,
   AudioIcon,
@@ -11,38 +12,33 @@ import {
   HomeIcon,
   ImageIcon,
   ListViewIcon,
+  LockIcon,
   PdfIcon,
   SearchIcon,
   SortIcon,
   VideoIcon,
 } from "./file-explorer/icons";
 import {
+  API_BASE,
   categoryLabel,
+  checkAdminSession,
   detectCategory,
+  downloadUrl,
   encodePath,
+  folderVisibility,
   formatDate,
   formatSize,
   getAllFolders,
   getDirectChildren,
+  rawUrl,
   sortEntries,
+  stripFolderPlaceholders,
   type FileCategory,
   type FileEntry,
+  type FolderChild,
   type SortDirection,
   type SortField,
 } from "./file-explorer/utils";
-
-// mcp-fileserver: a separate service/repo (github.com/bcns-staging/mcp-fileserver),
-// same GCP project. Its /api/files* routes are public and read-only by design --
-// see that repo's public_api.py for the server side of this.
-const API_BASE = "https://mcp-fileserver-751371770492.us-central1.run.app";
-
-function rawUrl(path: string): string {
-  return `${API_BASE}/api/files/${encodePath(path)}?format=raw`;
-}
-
-function downloadUrl(path: string): string {
-  return `${API_BASE}/api/files/${encodePath(path)}?format=raw&download=1`;
-}
 
 function CategoryIcon({ category, size, className }: { category: FileCategory; size?: number; className?: string }) {
   switch (category) {
@@ -67,17 +63,32 @@ function CategoryIcon({ category, size, className }: { category: FileCategory; s
 // decode as that media type (e.g. every current file is really text/plain
 // under the hood, since write_file only ever stores text -- see utils.ts's
 // detectCategory for why extension-based detection is used at all here).
-function FileThumbnail({ file, size, className }: { file: FileEntry; size: number; className?: string }) {
+function FileThumbnail({
+  file,
+  size = 18,
+  fill = false,
+  className,
+}: {
+  file: FileEntry;
+  size?: number;
+  // Gallery mode for the grid view's image/video cards: the thumbnail fills
+  // its parent tile completely (parent controls the square aspect ratio via
+  // CSS) instead of being a small fixed-size icon-replacement -- see the
+  // file-explorer-card-media branch below.
+  fill?: boolean;
+  className?: string;
+}) {
   const category = detectCategory(file.path, file.content_type);
   const [failed, setFailed] = useState(false);
-  const style = { width: size, height: size };
+  const thumbClass = fill ? "file-explorer-thumb-fill" : "file-explorer-thumb";
+  const style = fill ? undefined : { width: size, height: size };
 
   if (!failed && category === "image") {
     return (
       <img
         src={rawUrl(file.path)}
         alt=""
-        className={`file-explorer-thumb ${className ?? ""}`}
+        className={`${thumbClass} ${className ?? ""}`}
         style={style}
         onError={() => setFailed(true)}
       />
@@ -89,13 +100,37 @@ function FileThumbnail({ file, size, className }: { file: FileEntry; size: numbe
         src={rawUrl(file.path)}
         muted
         preload="metadata"
-        className={`file-explorer-thumb ${className ?? ""}`}
+        className={`${thumbClass} ${className ?? ""}`}
         style={style}
         onError={() => setFailed(true)}
       />
     );
   }
-  return <CategoryIcon category={category} size={size} className={className} />;
+  // Fallback (failed to load, or a non-media category slipped through):
+  // still sized to look reasonable centered in a square gallery tile.
+  return <CategoryIcon category={category} size={fill ? 32 : size} className={className} />;
+}
+
+// Only ever rendered when the viewer is a logged-in admin -- visibility is
+// omitted from the API response entirely for anyone else (see utils.ts's
+// FileEntry doc comment), so there's no "admin-only" data to leak into this
+// badge's absence/presence either way.
+function HiddenBadge({ className }: { className?: string }) {
+  return (
+    <span className={`file-explorer-hidden-badge ${className ?? ""}`} title="Hidden from public visitors">
+      <LockIcon size={11} />
+      Hidden
+    </span>
+  );
+}
+
+// Purely a visual reflection of selection state, not a real <input
+// type="checkbox"> -- the whole row/card is already the click target that
+// toggles selection (see handleFolderActivate/handleFileActivate below), and
+// a plain <span> avoids interactive-content-inside-interactive-content HTML
+// nesting concerns entirely.
+function SelectionCheckbox({ checked }: { checked: boolean }) {
+  return <span className={`file-explorer-checkbox ${checked ? "is-checked" : ""}`} aria-hidden="true" />;
 }
 
 function Spinner() {
@@ -125,11 +160,66 @@ function Breadcrumbs({ currentFolder, onNavigate }: { currentFolder: string; onN
   );
 }
 
-export default function FileExplorer() {
+export interface FileExplorerProps {
+  /** Renders the login form / upload / mkdir / delete / rename / visibility
+   * controls (src/pages/fm/admin.astro). The plain /fm page omits this --
+   * an already-logged-in admin still sees hidden files and the "Hidden"
+   * badge there (isAdmin below is checked unconditionally), just not the
+   * mutating controls, keeping /fm itself strictly browse-only. */
+  adminMode?: boolean;
+}
+
+export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // null until the initial /api/admin/session check resolves.
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    checkAdminSession().then((authenticated) => {
+      if (!cancelled) setIsAdmin(authenticated);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Logging in/out changes which files the server will include in the list
+  // response (visibility filtering happens server-side, keyed off the
+  // session cookie on that same request) -- bump refreshKey alongside
+  // isAdmin so the list is refetched, not just the badge/controls re-rendered.
+  function handleAuthChange(next: boolean) {
+    setIsAdmin(next);
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Bulk-selection state for the SelectionToolbar (Select/Rename/Delete/
+  // Copy/Cut/Paste/Hide) -- replaces per-row action icons with one top bar.
+  // Selection itself is scoped to whatever folder you're standing in (reset
+  // on navigation, see navigateTo below); the clipboard persists across
+  // navigation so Cut in one folder -> Paste in another actually works.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<{ path: string; isFolder: boolean }[]>([]);
+  const [clipboard, setClipboard] = useState<ClipboardState | null>(null);
+
+  function toggleSelectionMode() {
+    setSelectionMode((m) => !m);
+    setSelectedItems([]);
+    setSelected(null);
+  }
+
+  function toggleItemSelected(path: string, isFolder: boolean) {
+    setSelectedItems((items) =>
+      items.some((it) => it.path === path) ? items.filter((it) => it.path !== path) : [...items, { path, isFolder }],
+    );
+  }
+
+  function isItemSelected(path: string) {
+    return selectedItems.some((it) => it.path === path);
+  }
 
   const [currentFolder, setCurrentFolder] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -147,7 +237,7 @@ export default function FileExplorer() {
   useEffect(() => {
     setListLoading(true);
     setListError(null);
-    fetch(`${API_BASE}/api/files`)
+    fetch(`${API_BASE}/api/files`, { credentials: "include" })
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r.json() as Promise<{ files: FileEntry[] }>;
@@ -171,7 +261,10 @@ export default function FileExplorer() {
     const q = search.trim().toLowerCase();
     return {
       folders: allFolders.filter((f) => f.path.toLowerCase().includes(q)),
-      files: files.filter((f) => f.path.toLowerCase().includes(q)),
+      // Placeholder marker objects never surface as search "files" -- unlike
+      // getDirectChildren's prefix-splitting, this is a flat substring match
+      // over the raw list, so it needs the strip applied explicitly.
+      files: stripFolderPlaceholders(files.filter((f) => f.path.toLowerCase().includes(q))),
     };
   }, [allFolders, directoryContents, files, isSearching, search]);
 
@@ -192,6 +285,29 @@ export default function FileExplorer() {
     setSearch("");
     setSelected(null);
     setPreviewFailed(false);
+    // Selection is scoped to "what's checked in the folder I'm looking at
+    // right now" -- the clipboard (separate state) is what's meant to
+    // survive a folder change, for Cut-here/Paste-there.
+    setSelectedItems([]);
+  }
+
+  // While selectionMode is on, activating a row/card toggles its checkbox
+  // instead of navigating/previewing -- otherwise falls through to the
+  // normal browsing behavior.
+  function handleFolderActivate(folder: FolderChild) {
+    if (selectionMode) {
+      toggleItemSelected(folder.path, true);
+    } else {
+      navigateTo(folder.path);
+    }
+  }
+
+  function handleFileActivate(file: FileEntry) {
+    if (selectionMode) {
+      toggleItemSelected(file.path, false);
+    } else {
+      selectFile(file);
+    }
   }
 
   function toggleSort(field: SortField) {
@@ -214,7 +330,7 @@ export default function FileExplorer() {
     if (category !== "text") return; // non-text previews render directly from rawUrl(), no fetch needed
 
     setPreviewLoading(true);
-    fetch(`${API_BASE}/api/files/${encodePath(file.path)}`)
+    fetch(`${API_BASE}/api/files/${encodePath(file.path)}`, { credentials: "include" })
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r.json() as Promise<{ content: string }>;
@@ -241,12 +357,51 @@ export default function FileExplorer() {
 
   const selectedCategory = selected ? detectCategory(selected.path, selected.content_type) : null;
   const isEmpty = !listLoading && !listError && sorted.folders.length === 0 && sorted.files.length === 0;
+  const showAdminControls = adminMode && isAdmin === true;
+  const showCheckboxColumn = showAdminControls && selectionMode;
+
+  function refreshAfterAdminChange() {
+    setRefreshKey((k) => k + 1);
+  }
+
+  function getFolderVisibility(path: string) {
+    return folderVisibility(files, path);
+  }
+
+  const selectedItemsResolved: SelectedItem[] = useMemo(
+    () =>
+      selectedItems.map((it) => ({
+        ...it,
+        visibility: it.isFolder ? getFolderVisibility(it.path) : (files.find((f) => f.path === it.path)?.visibility ?? "public"),
+      })),
+    [selectedItems, files],
+  );
 
   return (
     <div className={`file-explorer ${selected ? "has-preview" : ""}`}>
       <div className="file-explorer-browser">
         <div className="file-explorer-toolbar">
           <Breadcrumbs currentFolder={currentFolder} onNavigate={navigateTo} />
+          {adminMode && (
+            <AdminControls
+              isAdmin={isAdmin}
+              currentFolder={currentFolder}
+              onAuthChange={handleAuthChange}
+              onChanged={refreshAfterAdminChange}
+            />
+          )}
+          {showAdminControls && (
+            <SelectionToolbar
+              selectionMode={selectionMode}
+              onToggleSelectionMode={toggleSelectionMode}
+              selectedItems={selectedItemsResolved}
+              currentFolder={currentFolder}
+              clipboard={clipboard}
+              onSetClipboard={setClipboard}
+              onChanged={refreshAfterAdminChange}
+              onClearSelection={() => setSelectedItems([])}
+            />
+          )}
           <div className="file-explorer-toolbar-actions">
             <div className="file-explorer-search">
               <SearchIcon size={14} />
@@ -302,12 +457,13 @@ export default function FileExplorer() {
           )}
 
           {!listLoading && !listError && viewMode === "list" && (sorted.folders.length > 0 || sorted.files.length > 0) && (
-            <table className="file-explorer-table">
+            <table className={`file-explorer-table ${showCheckboxColumn ? "has-admin-col" : ""}`}>
               <colgroup>
                 <col className="col-name" />
                 <col className="col-type" />
                 <col className="col-size" />
                 <col className="col-modified" />
+                {showCheckboxColumn && <col className="col-admin" />}
               </colgroup>
               <thead>
                 <tr>
@@ -315,35 +471,51 @@ export default function FileExplorer() {
                   <SortableHeader label="Type" field="type" active={sortField} direction={sortDirection} onSort={toggleSort} />
                   <SortableHeader label="Size" field="size" active={sortField} direction={sortDirection} onSort={toggleSort} />
                   <SortableHeader label="Modified" field="modified" active={sortField} direction={sortDirection} onSort={toggleSort} />
+                  {showCheckboxColumn && <th></th>}
                 </tr>
               </thead>
               <tbody>
-                {sorted.folders.map((folder) => (
-                  <tr key={folder.path} onClick={() => navigateTo(folder.path)} className="file-explorer-row">
-                    <td className="file-explorer-name-cell">
-                      <FolderIcon size={17} />
-                      <span className="file-explorer-filename">{isSearching ? folder.path : folder.name}</span>
-                    </td>
-                    <td>Folder</td>
-                    <td>—</td>
-                    <td>—</td>
-                  </tr>
-                ))}
+                {sorted.folders.map((folder) => {
+                  const visibility = getFolderVisibility(folder.path);
+                  return (
+                    <tr key={folder.path} onClick={() => handleFolderActivate(folder)} className="file-explorer-row">
+                      <td className="file-explorer-name-cell">
+                        <FolderIcon size={17} />
+                        <span className="file-explorer-filename">{isSearching ? folder.path : folder.name}</span>
+                        {isAdmin && visibility === "admin-only" && <HiddenBadge />}
+                      </td>
+                      <td>Folder</td>
+                      <td>—</td>
+                      <td>—</td>
+                      {showCheckboxColumn && (
+                        <td>
+                          <SelectionCheckbox checked={isItemSelected(folder.path)} />
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
                 {sorted.files.map((file) => {
                   const category = detectCategory(file.path, file.content_type);
                   return (
                     <tr
                       key={file.path}
-                      onClick={() => selectFile(file)}
+                      onClick={() => handleFileActivate(file)}
                       className={`file-explorer-row ${selected?.path === file.path ? "is-selected" : ""}`}
                     >
                       <td className="file-explorer-name-cell">
                         <FileThumbnail file={file} size={17} />
                         <span className="file-explorer-filename">{displayName(file.path)}</span>
+                        {isAdmin && file.visibility === "admin-only" && <HiddenBadge />}
                       </td>
                       <td>{categoryLabel(category)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
                       <td>{formatDate(file.updated)}</td>
+                      {showCheckboxColumn && (
+                        <td>
+                          <SelectionCheckbox checked={isItemSelected(file.path)} />
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -353,23 +525,59 @@ export default function FileExplorer() {
 
           {!listLoading && !listError && viewMode === "grid" && (sorted.folders.length > 0 || sorted.files.length > 0) && (
             <div className="file-explorer-grid">
-              {sorted.folders.map((folder) => (
-                <button type="button" key={folder.path} className="file-explorer-card" onClick={() => navigateTo(folder.path)}>
-                  <FolderIcon size={36} />
-                  <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
-                </button>
-              ))}
+              {sorted.folders.map((folder) => {
+                const visibility = getFolderVisibility(folder.path);
+                return (
+                  <button
+                    type="button"
+                    key={folder.path}
+                    className="file-explorer-card"
+                    onClick={() => handleFolderActivate(folder)}
+                  >
+                    {showCheckboxColumn && (
+                      <span className="file-explorer-card-checkbox">
+                        <SelectionCheckbox checked={isItemSelected(folder.path)} />
+                      </span>
+                    )}
+                    <FolderIcon size={36} />
+                    <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
+                    {isAdmin && visibility === "admin-only" && <HiddenBadge />}
+                  </button>
+                );
+              })}
               {sorted.files.map((file) => {
+                const category = detectCategory(file.path, file.content_type);
+                // Images/videos get a full-bleed gallery tile (thumbnail
+                // only, no filename/size caption) -- everything else keeps
+                // the icon + name + size card layout.
+                const isMedia = category === "image" || category === "video";
                 return (
                   <button
                     type="button"
                     key={file.path}
-                    className={`file-explorer-card ${selected?.path === file.path ? "is-selected" : ""}`}
-                    onClick={() => selectFile(file)}
+                    title={isMedia ? displayName(file.path) : undefined}
+                    className={`file-explorer-card ${isMedia ? "file-explorer-card-media" : ""} ${selected?.path === file.path ? "is-selected" : ""}`}
+                    onClick={() => handleFileActivate(file)}
                   >
-                    <FileThumbnail file={file} size={36} />
-                    <span className="file-explorer-card-name">{displayName(file.path)}</span>
-                    <span className="file-explorer-card-size">{formatSize(file.size_bytes)}</span>
+                    {showCheckboxColumn && (
+                      <span className="file-explorer-card-checkbox">
+                        <SelectionCheckbox checked={isItemSelected(file.path)} />
+                      </span>
+                    )}
+                    {isMedia ? (
+                      <>
+                        <FileThumbnail file={file} fill />
+                        {isAdmin && file.visibility === "admin-only" && (
+                          <HiddenBadge className="file-explorer-hidden-badge-overlay" />
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <FileThumbnail file={file} size={36} />
+                        <span className="file-explorer-card-name">{displayName(file.path)}</span>
+                        {isAdmin && file.visibility === "admin-only" && <HiddenBadge />}
+                      </>
+                    )}
                   </button>
                 );
               })}
