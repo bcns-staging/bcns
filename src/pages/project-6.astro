@@ -251,8 +251,26 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
 
   :global(.file-explorer-table) {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.85rem;
+  }
+
+  /* table-layout: fixed (not the auto default) so every row's columns share
+     one consistent computed width -- without it, "auto" layout can let each
+     row's Name-cell content nudge that row's column boundaries slightly
+     differently, which reads as misaligned/uneven border lines between rows. */
+  :global(.file-explorer-table col.col-name) {
+    width: 46%;
+  }
+  :global(.file-explorer-table col.col-type) {
+    width: 18%;
+  }
+  :global(.file-explorer-table col.col-size) {
+    width: 16%;
+  }
+  :global(.file-explorer-table col.col-modified) {
+    width: 20%;
   }
 
   :global(.file-explorer-table th) {
@@ -301,7 +319,24 @@ import FileExplorer from "../components/islands/FileExplorer.tsx";
     align-items: center;
     gap: 0.5rem;
     color: var(--color-text);
-    max-width: 20rem;
+  }
+
+  :global(.file-explorer-name-cell svg),
+  :global(.file-explorer-name-cell .file-explorer-thumb) {
+    flex-shrink: 0;
+  }
+
+  :global(.file-explorer-filename) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  :global(.file-explorer-thumb) {
+    border-radius: 0.25rem;
+    object-fit: cover;
+    background: var(--color-bg);
   }
 
   :global(.file-explorer-row) {

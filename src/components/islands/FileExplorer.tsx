@@ -60,6 +60,43 @@ function CategoryIcon({ category, size, className }: { category: FileCategory; s
   }
 }
 
+// Shows a real thumbnail for images/videos (reusing the same raw-bytes URL
+// the preview pane uses) instead of always falling back to the generic
+// category icon -- falls back to CategoryIcon if the file doesn't actually
+// decode as that media type (e.g. every current file is really text/plain
+// under the hood, since write_file only ever stores text -- see utils.ts's
+// detectCategory for why extension-based detection is used at all here).
+function FileThumbnail({ file, size, className }: { file: FileEntry; size: number; className?: string }) {
+  const category = detectCategory(file.path, file.content_type);
+  const [failed, setFailed] = useState(false);
+  const style = { width: size, height: size };
+
+  if (!failed && category === "image") {
+    return (
+      <img
+        src={rawUrl(file.path)}
+        alt=""
+        className={`file-explorer-thumb ${className ?? ""}`}
+        style={style}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  if (!failed && category === "video") {
+    return (
+      <video
+        src={rawUrl(file.path)}
+        muted
+        preload="metadata"
+        className={`file-explorer-thumb ${className ?? ""}`}
+        style={style}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return <CategoryIcon category={category} size={size} className={className} />;
+}
+
 function Spinner() {
   return <span className="file-explorer-spinner" role="status" aria-label="Loading" />;
 }
@@ -249,6 +286,12 @@ export default function FileExplorer() {
 
           {!listLoading && !listError && viewMode === "list" && (sorted.folders.length > 0 || sorted.files.length > 0) && (
             <table className="file-explorer-table">
+              <colgroup>
+                <col className="col-name" />
+                <col className="col-type" />
+                <col className="col-size" />
+                <col className="col-modified" />
+              </colgroup>
               <thead>
                 <tr>
                   <SortableHeader label="Name" field="name" active={sortField} direction={sortDirection} onSort={toggleSort} />
@@ -262,7 +305,7 @@ export default function FileExplorer() {
                   <tr key={folder.path} onClick={() => navigateTo(folder.path)} className="file-explorer-row">
                     <td className="file-explorer-name-cell">
                       <FolderIcon size={17} />
-                      {folder.name}
+                      <span className="file-explorer-filename">{folder.name}</span>
                     </td>
                     <td>Folder</td>
                     <td>—</td>
@@ -278,8 +321,10 @@ export default function FileExplorer() {
                       className={`file-explorer-row ${selected?.path === file.path ? "is-selected" : ""}`}
                     >
                       <td className="file-explorer-name-cell">
-                        <CategoryIcon category={category} size={17} />
-                        {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
+                        <FileThumbnail file={file} size={17} />
+                        <span className="file-explorer-filename">
+                          {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
+                        </span>
                       </td>
                       <td>{categoryLabel(category)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
@@ -300,7 +345,6 @@ export default function FileExplorer() {
                 </button>
               ))}
               {sorted.files.map((file) => {
-                const category = detectCategory(file.path, file.content_type);
                 return (
                   <button
                     type="button"
@@ -308,7 +352,7 @@ export default function FileExplorer() {
                     className={`file-explorer-card ${selected?.path === file.path ? "is-selected" : ""}`}
                     onClick={() => selectFile(file)}
                   >
-                    <CategoryIcon category={category} size={36} />
+                    <FileThumbnail file={file} size={36} />
                     <span className="file-explorer-card-name">
                       {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
                     </span>
