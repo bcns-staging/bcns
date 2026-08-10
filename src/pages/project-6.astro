@@ -1,0 +1,175 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import FileExplorer from "../components/islands/FileExplorer.tsx";
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 1.5rem;
+  }
+
+  :global(.file-explorer) {
+    display: grid;
+    grid-template-columns: minmax(16rem, 22rem) 1fr;
+    gap: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    min-height: 28rem;
+    background: var(--color-bg-alt);
+  }
+
+  @media (max-width: 42rem) {
+    :global(.file-explorer) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  :global(.file-explorer-list) {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-border);
+    max-height: 32rem;
+    overflow-y: auto;
+  }
+
+  :global(.file-explorer-list-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    position: sticky;
+    top: 0;
+    background: var(--color-bg-alt);
+  }
+
+  :global(.file-explorer-refresh) {
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  :global(.file-explorer-refresh:hover:not(:disabled)) {
+    border-color: var(--color-accent);
+  }
+
+  :global(.file-explorer-refresh:disabled) {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  :global(.file-explorer-list ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  :global(.file-explorer-list li) {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  :global(.file-explorer-list button) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  :global(.file-explorer-list button:hover) {
+    background: var(--color-bg);
+  }
+
+  :global(.file-explorer-list button.is-selected) {
+    background: var(--color-bg);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+
+  :global(.file-explorer-path) {
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  :global(.file-explorer-meta) {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  :global(.file-explorer-preview) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  :global(.file-explorer-preview-header) {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  :global(.file-explorer-preview pre) {
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    max-height: 32rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  :global(.file-explorer-status) {
+    padding: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  :global(.file-explorer-error) {
+    color: #e5484d;
+  }
+</style>
+
+<Layout title="Project 6 | 7 Beacons">
+  <Header />
+  <main>
+    <section class="container">
+      <h1>Project 6: File explorer</h1>
+      <p class="intro">
+        A read-only browser for files stored by <code>gcs-fileserver</code>, an
+        MCP tool an agent uses to read and write files on my behalf. Pick a
+        file on the left to preview its contents.
+      </p>
+      <FileExplorer client:load />
+    </section>
+  </main>
+  <Footer />
+</Layout>
