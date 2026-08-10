@@ -22,6 +22,7 @@ import {
   encodePath,
   formatDate,
   formatSize,
+  getAllFolders,
   getDirectChildren,
   sortEntries,
   type FileCategory,
@@ -157,20 +158,34 @@ export default function FileExplorer() {
   }, [refreshKey]);
 
   const directoryContents = useMemo(() => getDirectChildren(files, currentFolder), [files, currentFolder]);
+  const allFolders = useMemo(() => getAllFolders(files), [files]);
 
+  const isSearching = search.trim().length > 0;
+
+  // Search is global (every file AND folder anywhere in the bucket, at any
+  // depth), not scoped to the current folder's direct children -- results
+  // show their full path (see the name-cell rendering below) since they can
+  // come from anywhere in the tree, not just the folder you're standing in.
   const filteredContents = useMemo(() => {
-    if (!search.trim()) return directoryContents;
+    if (!isSearching) return directoryContents;
     const q = search.trim().toLowerCase();
     return {
-      folders: directoryContents.folders.filter((f) => f.name.toLowerCase().includes(q)),
-      files: directoryContents.files.filter((f) => f.path.toLowerCase().includes(q)),
+      folders: allFolders.filter((f) => f.path.toLowerCase().includes(q)),
+      files: files.filter((f) => f.path.toLowerCase().includes(q)),
     };
-  }, [directoryContents, search]);
+  }, [allFolders, directoryContents, files, isSearching, search]);
 
   const sorted = useMemo(
     () => sortEntries(filteredContents, sortField, sortDirection),
     [filteredContents, sortField, sortDirection],
   );
+
+  // Full path while a global search is active (results can come from any
+  // folder), otherwise just the name relative to the folder being browsed.
+  function displayName(path: string): string {
+    if (isSearching) return path;
+    return path.slice(currentFolder ? currentFolder.length + 1 : 0);
+  }
 
   function navigateTo(path: string) {
     setCurrentFolder(path);
@@ -237,7 +252,7 @@ export default function FileExplorer() {
               <SearchIcon size={14} />
               <input
                 type="text"
-                placeholder="Filter this folder…"
+                placeholder="Search all files…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -282,7 +297,9 @@ export default function FileExplorer() {
               </button>
             </div>
           )}
-          {isEmpty && <p className="file-explorer-status">This folder is empty.</p>}
+          {isEmpty && (
+            <p className="file-explorer-status">{isSearching ? "No files match your search." : "This folder is empty."}</p>
+          )}
 
           {!listLoading && !listError && viewMode === "list" && (sorted.folders.length > 0 || sorted.files.length > 0) && (
             <table className="file-explorer-table">
@@ -305,7 +322,7 @@ export default function FileExplorer() {
                   <tr key={folder.path} onClick={() => navigateTo(folder.path)} className="file-explorer-row">
                     <td className="file-explorer-name-cell">
                       <FolderIcon size={17} />
-                      <span className="file-explorer-filename">{folder.name}</span>
+                      <span className="file-explorer-filename">{isSearching ? folder.path : folder.name}</span>
                     </td>
                     <td>Folder</td>
                     <td>—</td>
@@ -322,9 +339,7 @@ export default function FileExplorer() {
                     >
                       <td className="file-explorer-name-cell">
                         <FileThumbnail file={file} size={17} />
-                        <span className="file-explorer-filename">
-                          {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
-                        </span>
+                        <span className="file-explorer-filename">{displayName(file.path)}</span>
                       </td>
                       <td>{categoryLabel(category)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
@@ -341,7 +356,7 @@ export default function FileExplorer() {
               {sorted.folders.map((folder) => (
                 <button type="button" key={folder.path} className="file-explorer-card" onClick={() => navigateTo(folder.path)}>
                   <FolderIcon size={36} />
-                  <span className="file-explorer-card-name">{folder.name}</span>
+                  <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
                 </button>
               ))}
               {sorted.files.map((file) => {
@@ -353,9 +368,7 @@ export default function FileExplorer() {
                     onClick={() => selectFile(file)}
                   >
                     <FileThumbnail file={file} size={36} />
-                    <span className="file-explorer-card-name">
-                      {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
-                    </span>
+                    <span className="file-explorer-card-name">{displayName(file.path)}</span>
                     <span className="file-explorer-card-size">{formatSize(file.size_bytes)}</span>
                   </button>
                 );
