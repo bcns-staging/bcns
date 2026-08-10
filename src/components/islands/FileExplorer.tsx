@@ -158,19 +158,33 @@ export default function FileExplorer() {
 
   const directoryContents = useMemo(() => getDirectChildren(files, currentFolder), [files, currentFolder]);
 
+  const isSearching = search.trim().length > 0;
+
+  // Search is global (every file anywhere in the bucket), not scoped to the
+  // current folder's direct children -- folders aren't included as results
+  // since "this folder matched" isn't a useful result on its own; results
+  // show their full path (see the name-cell rendering below) since they can
+  // come from anywhere in the tree, not just the folder you're standing in.
   const filteredContents = useMemo(() => {
-    if (!search.trim()) return directoryContents;
+    if (!isSearching) return directoryContents;
     const q = search.trim().toLowerCase();
     return {
-      folders: directoryContents.folders.filter((f) => f.name.toLowerCase().includes(q)),
-      files: directoryContents.files.filter((f) => f.path.toLowerCase().includes(q)),
+      folders: [],
+      files: files.filter((f) => f.path.toLowerCase().includes(q)),
     };
-  }, [directoryContents, search]);
+  }, [directoryContents, files, isSearching, search]);
 
   const sorted = useMemo(
     () => sortEntries(filteredContents, sortField, sortDirection),
     [filteredContents, sortField, sortDirection],
   );
+
+  // Full path while a global search is active (results can come from any
+  // folder), otherwise just the name relative to the folder being browsed.
+  function displayName(path: string): string {
+    if (isSearching) return path;
+    return path.slice(currentFolder ? currentFolder.length + 1 : 0);
+  }
 
   function navigateTo(path: string) {
     setCurrentFolder(path);
@@ -237,7 +251,7 @@ export default function FileExplorer() {
               <SearchIcon size={14} />
               <input
                 type="text"
-                placeholder="Filter this folder…"
+                placeholder="Search all files…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -282,7 +296,9 @@ export default function FileExplorer() {
               </button>
             </div>
           )}
-          {isEmpty && <p className="file-explorer-status">This folder is empty.</p>}
+          {isEmpty && (
+            <p className="file-explorer-status">{isSearching ? "No files match your search." : "This folder is empty."}</p>
+          )}
 
           {!listLoading && !listError && viewMode === "list" && (sorted.folders.length > 0 || sorted.files.length > 0) && (
             <table className="file-explorer-table">
@@ -322,9 +338,7 @@ export default function FileExplorer() {
                     >
                       <td className="file-explorer-name-cell">
                         <FileThumbnail file={file} size={17} />
-                        <span className="file-explorer-filename">
-                          {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
-                        </span>
+                        <span className="file-explorer-filename">{displayName(file.path)}</span>
                       </td>
                       <td>{categoryLabel(category)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
@@ -353,9 +367,7 @@ export default function FileExplorer() {
                     onClick={() => selectFile(file)}
                   >
                     <FileThumbnail file={file} size={36} />
-                    <span className="file-explorer-card-name">
-                      {file.path.slice(currentFolder ? currentFolder.length + 1 : 0)}
-                    </span>
+                    <span className="file-explorer-card-name">{displayName(file.path)}</span>
                     <span className="file-explorer-card-size">{formatSize(file.size_bytes)}</span>
                   </button>
                 );
