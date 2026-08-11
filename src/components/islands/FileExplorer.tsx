@@ -82,8 +82,29 @@ function FileThumbnail({
 }) {
   const category = detectCategory(file.path, file.content_type);
   const [failed, setFailed] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const thumbClass = fill ? "file-explorer-thumb-fill" : "file-explorer-thumb";
   const style = fill ? undefined : { width: size, height: size };
+
+  // Video thumbnails, same as the preview pane: Cloud Run doesn't support
+  // the HTTP Range requests a <video> needs, even just to grab a poster
+  // frame for preload="metadata" -- so this needs the same signed, direct-
+  // to-GCS URL rather than rawUrl(). Not needed for images (a plain <img>
+  // GET works fine without Range support).
+  useEffect(() => {
+    if (category !== "video") return;
+    let cancelled = false;
+    getSignedUrl(file.path)
+      .then((url) => {
+        if (!cancelled) setVideoUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [category, file.path]);
 
   if (!failed && category === "image") {
     return (
@@ -96,20 +117,22 @@ function FileThumbnail({
       />
     );
   }
-  if (!failed && category === "video") {
+  if (!failed && category === "video" && videoUrl) {
     return (
       <video
-        src={rawUrl(file.path)}
+        src={videoUrl}
         muted
         preload="metadata"
+        playsInline
         className={`${thumbClass} ${className ?? ""}`}
         style={style}
         onError={() => setFailed(true)}
       />
     );
   }
-  // Fallback (failed to load, or a non-media category slipped through):
-  // still sized to look reasonable centered in a square gallery tile.
+  // Fallback: failed to load, a non-media category, or (for video) the
+  // signed URL just hasn't resolved yet -- still sized to look reasonable
+  // centered in a square gallery tile.
   return <CategoryIcon category={category} size={fill ? 32 : size} className={className} />;
 }
 
