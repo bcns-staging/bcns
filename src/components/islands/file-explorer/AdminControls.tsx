@@ -31,6 +31,42 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // "Forgot password?" is a separate small form, not another step of the
+  // same login flow -- it doesn't need the password field at all, just an
+  // email to send a reset link to.
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotBusy, setForgotBusy] = useState(false);
+
+  async function requestReset(e: FormEvent) {
+    e.preventDefault();
+    setForgotBusy(true);
+    setForgotMessage(null);
+    try {
+      const resp = await adminFetch("/api/admin/password-reset/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      // The server itself always returns the same generic message regardless
+      // of whether the email matched an account, to avoid account
+      // enumeration -- mirrored here so the UI can't leak that distinction
+      // even by accident. A 429 (client hit the request cooldown) is the one
+      // response worth surfacing differently, since it's a rate limit on
+      // *this* request, not information about the account.
+      if (resp.status === 429) {
+        setForgotMessage("Too many requests. Try again in a minute.");
+      } else {
+        setForgotMessage("If that email is registered, a reset link has been sent.");
+      }
+    } catch {
+      setForgotMessage("If that email is registered, a reset link has been sent.");
+    } finally {
+      setForgotBusy(false);
+    }
+  }
+
   async function attemptLogin(code: string) {
     const resp = await adminFetch("/api/admin/login", {
       method: "POST",
@@ -67,6 +103,37 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (forgotMode) {
+    return (
+      <form className="file-explorer-admin-login" onSubmit={requestReset}>
+        <input
+          type="email"
+          placeholder="Admin email"
+          value={forgotEmail}
+          onChange={(e) => setForgotEmail(e.target.value)}
+          autoComplete="username"
+          autoFocus
+          required
+        />
+        <button type="submit" className="file-explorer-icon-button" disabled={forgotBusy}>
+          {forgotBusy ? "Sending…" : "Send reset link"}
+        </button>
+        <button
+          type="button"
+          className="file-explorer-link-button"
+          onClick={() => {
+            setForgotMode(false);
+            setForgotEmail("");
+            setForgotMessage(null);
+          }}
+        >
+          Back to login
+        </button>
+        {forgotMessage && <span className="file-explorer-admin-login-hint">{forgotMessage}</span>}
+      </form>
+    );
   }
 
   if (mfaRequired) {
@@ -111,6 +178,114 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
       />
       <button type="submit" className="file-explorer-icon-button" disabled={busy}>
         {busy ? "Signing in…" : "Log in"}
+      </button>
+      <button type="button" className="file-explorer-link-button" onClick={() => setForgotMode(true)}>
+        Forgot password?
+      </button>
+      {error && <span className="file-explorer-error file-explorer-admin-login-error">{error}</span>}
+    </form>
+  );
+}
+
+interface ResetPasswordPanelProps {
+  token: string;
+  onCancel: () => void;
+  onSuccess: () => void;
+}
+
+// Rendered instead of LoginPanel when the page loaded with a ?reset_token=
+// from the emailed link (see the default export below). Not reachable any
+// other way -- there's no button anywhere that leads here.
+function ResetPasswordPanel({ token, onCancel, onSuccess }: ResetPasswordPanelProps) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // The token is single-use and short-lived either way -- once this form is
+  // left (cancelled or completed), there's no reason for it to keep sitting
+  // in the address bar/browser history.
+  function clearTokenFromUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("reset_token");
+    window.history.replaceState({}, "", url.toString());
+  }
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (newPassword !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const resp = await adminFetch("/api/admin/password-reset/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError(body.error ?? "That reset link is invalid or has expired.");
+        return;
+      }
+      clearTokenFromUrl();
+      setSuccess(true);
+    } catch {
+      setError("Reset request failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="file-explorer-admin-login">
+        <span>Password updated. You've been logged out everywhere -- log in again with your new password.</span>
+        <button type="button" className="file-explorer-icon-button" onClick={onSuccess}>
+          Log in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form className="file-explorer-admin-login" onSubmit={submit}>
+      <input
+        type="password"
+        placeholder="New password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        autoComplete="new-password"
+        autoFocus
+        required
+      />
+      <input
+        type="password"
+        placeholder="Confirm new password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        autoComplete="new-password"
+        required
+      />
+      <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+        {busy ? "Saving…" : "Set new password"}
+      </button>
+      <button
+        type="button"
+        className="file-explorer-link-button"
+        onClick={() => {
+          clearTokenFromUrl();
+          onCancel();
+        }}
+      >
+        Cancel
       </button>
       {error && <span className="file-explorer-error file-explorer-admin-login-error">{error}</span>}
     </form>
@@ -404,6 +579,35 @@ export interface AdminControlsProps {
 }
 
 export default function AdminControls({ isAdmin, currentFolder, onAuthChange, onChanged }: AdminControlsProps) {
+  // Set once on mount, not read directly during render: window isn't
+  // available during Astro's SSG prerender pass for this client:load
+  // island, same reason isAdmin itself starts null and is resolved via an
+  // effect in FileExplorer.tsx rather than at render time.
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  useEffect(() => {
+    setResetToken(new URLSearchParams(window.location.search).get("reset_token"));
+  }, []);
+
+  // Takes priority over both the login form and the logged-in dashboard --
+  // reachable from a session-less browser (the whole point of email-based
+  // recovery) and doesn't need to wait on the /api/admin/session check
+  // FileExplorer.tsx runs in parallel.
+  if (resetToken) {
+    return (
+      <ResetPasswordPanel
+        token={resetToken}
+        onCancel={() => setResetToken(null)}
+        onSuccess={() => {
+          setResetToken(null);
+          // The reset just revoked every session server-side, so any cookie
+          // this tab was holding is already dead -- reflect that immediately
+          // instead of waiting for the next session check to notice.
+          onAuthChange(false);
+        }}
+      />
+    );
+  }
+
   if (isAdmin === null) return null;
   if (!isAdmin) return <LoginPanel onLoggedIn={() => onAuthChange(true)} />;
   return (

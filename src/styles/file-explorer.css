@@ -209,6 +209,22 @@
   font-size: 0.78rem;
 }
 
+.file-explorer-admin-login-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.file-explorer-link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .file-explorer-admin-bar {
   display: flex;
   align-items: center;
