@@ -23,8 +23,12 @@ export default defineConfig({
         // audio/video previews on /fm -- there's no "audio-src"/
         // "video-src"; media-src is the real directive, and with none
         // declared at all it falls back to default-src 'self', which would
-        // silently block this origin.
-        "media-src 'self' https://mcp-fileserver-751371770492.us-central1.run.app",
+        // silently block this origin. storage.googleapis.com is for video/
+        // audio playback specifically: those <source> elements point at a
+        // short-lived signed GCS URL (?format=signed-url), not the proxied
+        // mcp-fileserver route, since Cloud Run doesn't support the HTTP
+        // Range requests video playback/seeking needs.
+        "media-src 'self' https://mcp-fileserver-751371770492.us-central1.run.app https://storage.googleapis.com",
         "worker-src blob:",
         // YouTube Live embed for /project-4's public wildlife cam; mcp-fileserver
         // origin added for /fm's PDF preview via <iframe> (not

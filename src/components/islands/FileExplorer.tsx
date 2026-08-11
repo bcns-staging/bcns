@@ -30,6 +30,7 @@ import {
   formatSize,
   getAllFolders,
   getDirectChildren,
+  getSignedUrl,
   rawUrl,
   sortEntries,
   stripFolderPlaceholders,
@@ -235,6 +236,11 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   const [previewFailed, setPreviewFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // Video/audio play from a signed GCS URL, not rawUrl() -- Cloud Run
+  // doesn't support the HTTP Range requests playback/seeking needs. null
+  // while the signed URL is being fetched for the currently-selected file.
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaUrlError, setMediaUrlError] = useState(false);
 
   useEffect(() => {
     setListLoading(true);
@@ -327,9 +333,19 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
     setPreviewError(null);
     setPreviewFailed(false);
     setCopied(false);
+    setMediaUrl(null);
+    setMediaUrlError(false);
 
     const category = detectCategory(file.path, file.content_type);
-    if (category !== "text") return; // non-text previews render directly from rawUrl(), no fetch needed
+
+    if (category === "video" || category === "audio") {
+      getSignedUrl(file.path)
+        .then((url) => setMediaUrl(url))
+        .catch(() => setMediaUrlError(true));
+      return;
+    }
+
+    if (category !== "text") return; // image/pdf previews render directly from rawUrl(), no fetch needed
 
     setPreviewLoading(true);
     fetch(`${API_BASE}/api/files/${encodePath(file.path)}`, { credentials: "include" })
@@ -648,13 +664,43 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
             {selectedCategory === "pdf" && !previewFailed && (
               <iframe src={rawUrl(selected.path)} title={selected.path} className="file-explorer-media file-explorer-iframe" />
             )}
-            {selectedCategory === "audio" && !previewFailed && (
-              <audio controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
+            {(selectedCategory === "video" || selectedCategory === "audio") &&
+              !mediaUrl &&
+              !mediaUrlError &&
+              !previewFailed && (
+                <div className="file-explorer-status">
+                  <Spinner /> Loading…
+                </div>
+              )}
+            {selectedCategory === "audio" && mediaUrl && !previewFailed && (
+              <audio
+                controls
+                preload="metadata"
+                src={mediaUrl}
+                className="file-explorer-media"
+                onError={() => setPreviewFailed(true)}
+              />
             )}
-            {selectedCategory === "video" && !previewFailed && (
-              <video controls src={rawUrl(selected.path)} className="file-explorer-media" onError={() => setPreviewFailed(true)} />
+            {selectedCategory === "video" && mediaUrl && !previewFailed && (
+              // playsInline: don't force fullscreen on mobile just to start
+              // playback. preload="metadata" (not the "auto" default): fetch
+              // just enough for duration/dimensions, not the whole file up
+              // front -- matters a lot more now that a video can be 250MB.
+              // Everything else (seek scrubbing, volume, fullscreen,
+              // picture-in-picture, playback speed) is the browser's own
+              // native controls, which is why this needed a real Range-
+              // capable source (mediaUrl, a signed GCS URL) to begin with --
+              // rawUrl() through Cloud Run doesn't support seeking at all.
+              <video
+                controls
+                preload="metadata"
+                playsInline
+                src={mediaUrl}
+                className="file-explorer-media"
+                onError={() => setPreviewFailed(true)}
+              />
             )}
-            {(selectedCategory === "archive" || previewFailed) && (
+            {(selectedCategory === "archive" || previewFailed || mediaUrlError) && (
               <div className="file-explorer-no-preview">
                 <CategoryIcon category={selectedCategory ?? "text"} size={48} />
                 <p>Preview isn't available for this file.</p>
