@@ -1,0 +1,386 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<style>
+  section {
+    padding-block: 2rem 3rem;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin: 3rem 0 0.75rem;
+  }
+
+  .intro {
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin: 0 0 1rem;
+  }
+
+  .fm-links {
+    display: flex;
+    gap: 1rem;
+    margin: 0 0 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .fm-links a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .fm-links a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---- system diagram --------------------------------------------- */
+
+  .arch-diagram {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem 1rem;
+    align-items: stretch;
+    margin: 1.5rem 0;
+  }
+
+  .arch-box {
+    border: 1px solid var(--color-border);
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-alt);
+  }
+
+  .arch-box strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+
+  .arch-box span {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    margin-top: 0.2rem;
+  }
+
+  .arch-box-accent {
+    border-color: var(--color-accent);
+  }
+
+  .arch-arrow {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .arch-span-2 {
+    grid-column: span 2;
+  }
+
+  .arch-span-3 {
+    grid-column: span 3;
+  }
+
+  @media (max-width: 40rem) {
+    .arch-diagram {
+      grid-template-columns: 1fr;
+    }
+
+    .arch-box,
+    .arch-arrow {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ---- component / security cards ----------------------------------- */
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+  }
+
+  .card h3 {
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .card p {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  ul.security-list {
+    display: grid;
+    gap: 0.75rem;
+    padding-left: 1.25rem;
+    margin: 0;
+    max-width: 68ch;
+  }
+
+  ul.security-list li {
+    font-size: 0.92rem;
+  }
+
+  ul.security-list strong {
+    color: var(--color-text);
+  }
+
+  /* ---- deploy pipeline ------------------------------------------------ */
+
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 1rem 0;
+  }
+
+  .pipeline-step {
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.82rem;
+    background: var(--color-bg-alt);
+    white-space: nowrap;
+  }
+
+  .pipeline-arrow {
+    color: var(--color-text-muted);
+  }
+
+  /* ---- access tiers table ---------------------------------------------- */
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    min-width: 40rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+
+  thead th {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  td:first-child,
+  th:first-child {
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+</style>
+
+<Layout
+  title="Architecture | File Manager | 7 Beacons"
+  description="How the gcs-fileserver file manager is built: public browsing, admin controls, and AI agent integration sharing one storage backend."
+>
+  <Header />
+  <main>
+    <section class="container">
+      <h1>How the File Manager works</h1>
+      <p class="intro">
+        A small, real system with three separate audiences — a public visitor, an admin, and a
+        connected AI agent — sharing one storage backend, each through a different door with
+        different keys.
+      </p>
+      <p class="fm-links">
+        <a href="/fm">→ Browse the File Manager</a>
+        <a href="/fm/admin">→ Admin login</a>
+      </p>
+
+      <h2>System overview</h2>
+      <div class="arch-diagram">
+        <div class="arch-box">
+          <strong>Public visitor</strong>
+          <span>Browser, no login</span>
+        </div>
+        <div class="arch-box">
+          <strong>Admin</strong>
+          <span>Browser, logged in</span>
+        </div>
+        <div class="arch-box arch-box-accent">
+          <strong>AI agent</strong>
+          <span>MCP client</span>
+        </div>
+
+        <div class="arch-arrow">↓</div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-arrow">↓</div>
+
+        <div class="arch-box arch-span-2">
+          <strong>7 Beacons — this site</strong>
+          <span>Astro, static · /fm and /fm/admin pages</span>
+        </div>
+        <div class="arch-box arch-box-accent">
+          <strong>Model Context Protocol</strong>
+          <span>Direct connection, bearer token — never touches this site</span>
+        </div>
+
+        <div class="arch-arrow arch-span-3">↓</div>
+
+        <div class="arch-box arch-span-3">
+          <strong>mcp-fileserver backend</strong>
+          <span>Python (Starlette), containerized, its own Cloud Run service</span>
+          <span>Public read API · Admin API (session + CSRF) · MCP tool surface (bearer token)</span>
+        </div>
+
+        <div class="arch-arrow arch-span-3">↓</div>
+
+        <div class="arch-box arch-span-3">
+          <strong>Google Cloud Storage bucket</strong>
+          <span>files/ — browsable content · _admin/ — runtime config (2FA secret, password-reset override), outside the browsable prefix so it can never appear in a listing</span>
+        </div>
+      </div>
+
+      <h2>Components</h2>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Frontend</h3>
+          <p>
+            This site: Astro, statically rendered, ships close to zero JS by default. The file
+            explorer itself is a small React island, hydrated only on the two /fm pages — the
+            rest of the site stays untouched.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Backend</h3>
+          <p>
+            A separate service, mcp-fileserver: Python on Starlette, its own container, its own
+            repo and deploy pipeline. It's the only thing that talks to storage directly, and it
+            exposes three independent APIs on top of it.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Storage</h3>
+          <p>
+            One Google Cloud Storage bucket holds everything. A path prefix separates
+            world-browsable content from a small amount of runtime config the admin panel needs
+            to mutate without a redeploy.
+          </p>
+        </div>
+        <div class="card">
+          <h3>AI agent integration</h3>
+          <p>
+            The backend also speaks the Model Context Protocol: a fixed, small tool surface — read
+            a file, list files, write a text file, create a share link — for a connected AI agent,
+            authenticated with its own bearer token, entirely separate from the admin login.
+          </p>
+        </div>
+        <div class="card">
+          <h3>CI/CD</h3>
+          <p>
+            Both repos deploy via GitHub Actions: type-check, build, containerize, push to
+            Artifact Registry, deploy to Cloud Run. GitHub authenticates to Google Cloud via
+            Workload Identity Federation — no long-lived key stored anywhere.
+          </p>
+        </div>
+      </div>
+
+      <h2>Three doors, three keys</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Public visitor</th>
+              <th>Admin</th>
+              <th>AI agent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Entry point</td>
+              <td>/fm</td>
+              <td>/fm/admin</td>
+              <td>MCP tool calls</td>
+            </tr>
+            <tr>
+              <td>Authentication</td>
+              <td>None</td>
+              <td>Email + password, optional TOTP 2FA, server-side session</td>
+              <td>Bearer token</td>
+            </tr>
+            <tr>
+              <td>Can do</td>
+              <td>Browse and download public files</td>
+              <td>Upload, organize, delete, hide/unhide files, manage its own login</td>
+              <td>Read a file, list files, write a text file, create a share link</td>
+            </tr>
+            <tr>
+              <td>Can't do</td>
+              <td>See admin-only files — a hidden file returns the exact same 404 as one that doesn't exist</td>
+              <td>—</td>
+              <td>Touch visibility rules, upload binary files, or manage admin auth</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Security</h2>
+      <ul class="security-list">
+        <li><strong>Password hashing:</strong> scrypt, a memory-hard algorithm — not a bare hash — with a random salt per password.</li>
+        <li><strong>Real sessions:</strong> server-side and revocable, not a signed token that stays valid on its own until it expires.</li>
+        <li><strong>CSRF protection:</strong> every admin write requires a custom header on top of the session cookie, backed by a strict CORS origin allowlist.</li>
+        <li><strong>Brute-force lockout:</strong> repeated failed logins trigger an escalating delay — 15s, 30s, 60s… capped at 15 minutes.</li>
+        <li><strong>Two-factor authentication:</strong> optional TOTP, works with any standard authenticator app.</li>
+        <li><strong>Email-based password reset:</strong> single-use, 30-minute links; an identical response either way so the system never reveals whether an email address is the real admin account; a successful reset logs out every existing session but never touches 2FA, so a compromised inbox alone still isn't enough to get in.</li>
+        <li><strong>No existence leaks:</strong> hidden files are invisible, not just unlisted — a direct request for one returns the same response as a file that was never there.</li>
+        <li><strong>No secrets in git:</strong> every credential is generated locally, gitignored, and deployed as an environment variable — never committed.</li>
+        <li><strong>No long-lived cloud keys:</strong> both repos' GitHub Actions authenticate to Google Cloud via Workload Identity Federation, impersonating a scoped service account per run.</li>
+      </ul>
+
+      <h2>Deploy pipeline</h2>
+      <p class="intro">Every push runs CI; every merge to main ships automatically.</p>
+      <div class="pipeline">
+        <span class="pipeline-step">Push / PR</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">CI: type-check + build</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">Merge to main</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">Build container</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">Push to Artifact Registry</span>
+        <span class="pipeline-arrow">→</span>
+        <span class="pipeline-step">Deploy to Cloud Run</span>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>
