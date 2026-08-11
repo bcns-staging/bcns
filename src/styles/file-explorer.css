@@ -227,6 +227,36 @@
   letter-spacing: 0.04em;
 }
 
+.file-explorer-totp-settings {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  background: var(--color-bg);
+}
+
+.file-explorer-totp-qr {
+  display: block;
+  width: 8.5rem;
+  height: 8.5rem;
+  border-radius: 0.3rem;
+  /* the QR itself is black-on-white regardless of theme -- a light frame
+     keeps it scannable and stops it looking like a rendering glitch */
+  background: #fff;
+  padding: 0.4rem;
+}
+
+.file-explorer-totp-secret {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
+  max-width: 16rem;
+}
+
 .file-explorer-hidden-badge {
   display: inline-flex;
   align-items: center;

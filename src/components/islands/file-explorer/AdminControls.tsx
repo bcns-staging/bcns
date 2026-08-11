@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   CopyIcon,
   CutIcon,
@@ -22,35 +22,73 @@ interface LoginPanelProps {
 function LoginPanel({ onLoggedIn }: LoginPanelProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  // Two-step form: password first: if 2FA is enabled, the server confirms
+  // the password was right without creating a session and asks for a code
+  // (mfaRequired below) instead of logging in outright; the same
+  // email+password are then resent together with the code.
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  async function attemptLogin(code: string) {
+    const resp = await adminFetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(code ? { email, password, totp_code: code } : { email, password }),
+    });
+    if (resp.status === 429) {
+      const retryAfter = resp.headers.get("Retry-After");
+      setError(retryAfter ? `Too many attempts. Try again in ${retryAfter}s.` : "Too many attempts. Try again shortly.");
+      return;
+    }
+    if (!resp.ok) {
+      setError(mfaRequired ? "Invalid code." : "Invalid email or password.");
+      return;
+    }
+    const body = (await resp.json()) as { authenticated: boolean; mfa_required?: boolean };
+    if (body.mfa_required) {
+      setMfaRequired(true);
+      return;
+    }
+    setPassword("");
+    setTotpCode("");
+    onLoggedIn();
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      const resp = await adminFetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (resp.status === 429) {
-        const retryAfter = resp.headers.get("Retry-After");
-        setError(retryAfter ? `Too many attempts. Try again in ${retryAfter}s.` : "Too many attempts. Try again shortly.");
-        return;
-      }
-      if (!resp.ok) {
-        setError("Invalid email or password.");
-        return;
-      }
-      setPassword("");
-      onLoggedIn();
+      await attemptLogin(mfaRequired ? totpCode : "");
     } catch {
       setError("Login request failed.");
     } finally {
       setBusy(false);
     }
+  }
+
+  if (mfaRequired) {
+    return (
+      <form className="file-explorer-admin-login" onSubmit={submit}>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="6-digit code"
+          value={totpCode}
+          onChange={(e) => setTotpCode(e.target.value)}
+          maxLength={6}
+          autoFocus
+          required
+        />
+        <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+          {busy ? "Verifying…" : "Verify"}
+        </button>
+        {error && <span className="file-explorer-error file-explorer-admin-login-error">{error}</span>}
+      </form>
+    );
   }
 
   return (
@@ -180,6 +218,183 @@ function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
   );
 }
 
+// 2FA management -- only reachable once already logged in (via password
+// alone if 2FA isn't set up yet), a separate block from AdminBar since its
+// expanded states (QR code, confirm/disable code fields) need real vertical
+// space, not another button crammed into that single-line toolbar.
+function TotpSettings() {
+  const [enabled, setEnabled] = useState<boolean | null>(null); // null = status not loaded yet
+  const [setupData, setSetupData] = useState<{ secret: string; otpauth_url: string } | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [confirmCode, setConfirmCode] = useState("");
+  const [showDisableForm, setShowDisableForm] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    adminFetch("/api/admin/totp/status")
+      .then((r) => r.json())
+      .then((body: { enabled: boolean }) => {
+        if (!cancelled) setEnabled(body.enabled);
+      })
+      .catch(() => {
+        if (!cancelled) setEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function startSetup() {
+    setBusy(true);
+    setError(null);
+    try {
+      const resp = await adminFetch("/api/admin/totp/setup", { method: "POST" });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError(body.error ?? `Couldn't start setup (${resp.status})`);
+        return;
+      }
+      const body = (await resp.json()) as { secret: string; otpauth_url: string };
+      setSetupData(body);
+      // Dynamically imported, same reasoning as jszip elsewhere in this
+      // file -- keeps a rarely-used dependency out of the main admin bundle.
+      const { toDataURL } = await import("qrcode");
+      setQrDataUrl(await toDataURL(body.otpauth_url, { margin: 1, width: 220 }));
+    } catch {
+      setError("Couldn't start setup.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmSetup(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const resp = await adminFetch("/api/admin/totp/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: confirmCode }),
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError(body.error ?? "Invalid code.");
+        return;
+      }
+      setEnabled(true);
+      setSetupData(null);
+      setQrDataUrl(null);
+      setConfirmCode("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disable(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const resp = await adminFetch("/api/admin/totp/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: disableCode }),
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError(body.error ?? "Invalid code.");
+        return;
+      }
+      setEnabled(false);
+      setShowDisableForm(false);
+      setDisableCode("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (enabled === null) return null;
+
+  if (setupData) {
+    return (
+      <div className="file-explorer-totp-settings">
+        {qrDataUrl && <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="file-explorer-totp-qr" />}
+        <span className="file-explorer-totp-secret">Or enter this key manually: {setupData.secret}</span>
+        <form className="file-explorer-admin-login" onSubmit={confirmSetup}>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="6-digit code"
+            value={confirmCode}
+            onChange={(e) => setConfirmCode(e.target.value)}
+            maxLength={6}
+            autoFocus
+            required
+          />
+          <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+            {busy ? "Confirming…" : "Confirm"}
+          </button>
+        </form>
+        {error && <span className="file-explorer-error">{error}</span>}
+      </div>
+    );
+  }
+
+  if (!enabled) {
+    return (
+      <div className="file-explorer-totp-settings">
+        <button type="button" className="file-explorer-icon-button" onClick={startSetup} disabled={busy}>
+          {busy ? "Starting…" : "Set up 2FA"}
+        </button>
+        {error && <span className="file-explorer-error">{error}</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="file-explorer-totp-settings">
+      <span className="file-explorer-admin-badge">2FA enabled</span>
+      {!showDisableForm ? (
+        <button type="button" className="file-explorer-icon-button" onClick={() => setShowDisableForm(true)}>
+          Disable 2FA
+        </button>
+      ) : (
+        <form className="file-explorer-admin-login" onSubmit={disable}>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="6-digit code"
+            value={disableCode}
+            onChange={(e) => setDisableCode(e.target.value)}
+            maxLength={6}
+            autoFocus
+            required
+          />
+          <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+            {busy ? "Disabling…" : "Confirm disable"}
+          </button>
+          <button
+            type="button"
+            className="file-explorer-icon-button"
+            onClick={() => {
+              setShowDisableForm(false);
+              setDisableCode("");
+              setError(null);
+            }}
+          >
+            Cancel
+          </button>
+        </form>
+      )}
+      {error && <span className="file-explorer-error">{error}</span>}
+    </div>
+  );
+}
+
 export interface AdminControlsProps {
   /** null while the initial /api/admin/session check is still in flight. */
   isAdmin: boolean | null;
@@ -191,7 +406,12 @@ export interface AdminControlsProps {
 export default function AdminControls({ isAdmin, currentFolder, onAuthChange, onChanged }: AdminControlsProps) {
   if (isAdmin === null) return null;
   if (!isAdmin) return <LoginPanel onLoggedIn={() => onAuthChange(true)} />;
-  return <AdminBar currentFolder={currentFolder} onChanged={onChanged} onLoggedOut={() => onAuthChange(false)} />;
+  return (
+    <>
+      <AdminBar currentFolder={currentFolder} onChanged={onChanged} onLoggedOut={() => onAuthChange(false)} />
+      <TotpSettings />
+    </>
+  );
 }
 
 export interface SelectedItem {
