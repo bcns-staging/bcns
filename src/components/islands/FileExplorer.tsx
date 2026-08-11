@@ -127,6 +127,19 @@ function FileThumbnail({
         className={`${thumbClass} ${className ?? ""}`}
         style={style}
         onError={() => setFailed(true)}
+        // Frame 0 is very often a black/blank fade-in -- seeking to the
+        // midpoint once we know the duration gives a much more
+        // representative still. Fine here specifically because this video
+        // is never actually played (muted, no controls, the whole tile is
+        // just a click target that opens the real preview); doing the same
+        // in the preview pane's player would make playback start from the
+        // middle instead of the beginning, which is why it's thumbnail-only.
+        onLoadedMetadata={(e) => {
+          const video = e.currentTarget;
+          if (Number.isFinite(video.duration) && video.duration > 0) {
+            video.currentTime = video.duration / 2;
+          }
+        }}
       />
     );
   }
