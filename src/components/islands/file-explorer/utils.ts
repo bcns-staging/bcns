@@ -51,6 +51,25 @@ export function rawUrl(path: string): string {
   return `${API_BASE}/api/files/${encodePath(path)}?format=raw`;
 }
 
+// A short-lived signed URL straight to GCS for this file -- used for video/
+// audio <source> elements (Cloud Run doesn't support the HTTP Range
+// requests video playback/seeking needs, and fully buffers large files in
+// memory otherwise) and for every download (see triggerZipDownload below).
+// Uses adminFetch (credentials + CSRF header) even on the plain, non-admin
+// /fm page: the server-side route this hits is a public, unauthenticated
+// GET either way, but sending the session cookie is what lets an
+// already-logged-in admin's video/audio previews and downloads work for
+// admin-only files too, same as every other read on this page.
+export async function getSignedUrl(path: string): Promise<string> {
+  const resp = await adminFetch(`/api/files/${encodePath(path)}?format=signed-url`);
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body.error ?? `Couldn't get a link for ${path} (${resp.status})`);
+  }
+  const { url } = (await resp.json()) as { url: string };
+  return url;
+}
+
 // Every download -- single file or a multi-file selection -- goes through
 // this, always producing a real .zip. Two reasons, not just one:
 //   1. It's what was asked for: one consistent "Download" action regardless
@@ -74,8 +93,17 @@ export async function triggerZipDownload(paths: string[], zipName: string): Prom
   const usedNames = new Set<string>();
 
   for (const path of paths) {
-    const resp = await fetch(rawUrl(path), { credentials: "include" });
-    if (!resp.ok) continue; // one failed file shouldn't sink the whole zip
+    // A signed GCS URL, not rawUrl()+credentials through mcp-fileserver --
+    // downloading a 250MB video through Cloud Run means fully buffering it
+    // in that process's memory first; GCS serves it directly instead.
+    let signedUrl: string;
+    try {
+      signedUrl = await getSignedUrl(path);
+    } catch {
+      continue; // one failed file shouldn't sink the whole zip
+    }
+    const resp = await fetch(signedUrl);
+    if (!resp.ok) continue;
     const blob = await resp.blob();
 
     let name = basename(path);
