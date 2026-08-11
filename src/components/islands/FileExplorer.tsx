@@ -286,6 +286,11 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewFailed, setPreviewFailed] = useState(false);
+  // Defaults to "preview" (render the page) per the feature ask, with
+  // "source" as an escape hatch back to the old code view -- reset to
+  // "preview" on every new selection so a stale toggle choice from a
+  // previously-viewed file doesn't carry over.
+  const [htmlViewMode, setHtmlViewMode] = useState<"preview" | "source">("preview");
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   // Video/audio play from a signed GCS URL, not rawUrl() -- Cloud Run
@@ -387,6 +392,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
     setCopied(false);
     setMediaUrl(null);
     setMediaUrlError(false);
+    setHtmlViewMode("preview");
 
     const category = detectCategory(file.path, file.content_type);
 
@@ -397,7 +403,11 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
       return;
     }
 
-    if (category !== "text") return; // image/pdf previews render directly from rawUrl(), no fetch needed
+    // image/pdf previews render directly from rawUrl(), no fetch needed.
+    // html also renders straight from rawUrl() (see the sandboxed iframe
+    // below), but its text is still fetched here too so the "View source"
+    // toggle has something to show without a second round trip.
+    if (category !== "text" && category !== "html") return;
 
     setPreviewLoading(true);
     fetch(`${API_BASE}/api/files/${encodePath(file.path)}`, { credentials: "include" })
@@ -707,15 +717,69 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
           <div className="file-explorer-preview-path">{selected.path}</div>
 
           <div className="file-explorer-preview-body">
-            {selectedCategory === "text" && previewLoading && (
+            {(selectedCategory === "text" || selectedCategory === "html") && previewLoading && (
               <div className="file-explorer-status">
                 <Spinner /> Loading…
               </div>
             )}
-            {selectedCategory === "text" && previewError && (
+            {(selectedCategory === "text" || selectedCategory === "html") && previewError && (
               <p className="file-explorer-status file-explorer-error">Failed to load: {previewError}</p>
             )}
             {selectedCategory === "text" && !previewLoading && previewText !== null && <pre>{previewText}</pre>}
+
+            {selectedCategory === "html" && !previewLoading && !previewError && (
+              <div className="file-explorer-html-preview">
+                <div className="file-explorer-view-toggle file-explorer-html-toggle">
+                  <button
+                    type="button"
+                    className={htmlViewMode === "preview" ? "is-active" : ""}
+                    onClick={() => setHtmlViewMode("preview")}
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    className={htmlViewMode === "source" ? "is-active" : ""}
+                    onClick={() => setHtmlViewMode("source")}
+                  >
+                    View source
+                  </button>
+                </div>
+                {htmlViewMode === "preview" ? (
+                  // Rendered from rawUrl() (mcp-fileserver's own origin), not
+                  // srcDoc -- srcDoc would inherit this site's own strict CSP
+                  // (script-src/style-src locked to Astro's own precomputed
+                  // hashes), which would silently strip any inline <style>/
+                  // <script> the previewed file has and defeat the point of
+                  // a real rendered preview. mcp-fileserver sets no CSP of
+                  // its own, so this renders with full fidelity instead.
+                  //
+                  // What makes that safe: sandbox="allow-scripts" WITHOUT
+                  // allow-same-origin forces this frame into a unique opaque
+                  // origin no matter what URL it loaded from. That blocks
+                  // script in the previewed file from reading this site's or
+                  // mcp-fileserver's cookies, and any fetch() it fires at
+                  // mcp-fileserver's admin API carries an Origin: null header
+                  // that its CORS allowlist rejects -- so even a malicious
+                  // HTML file (this could be a saved email attachment) can't
+                  // ride the admin's session to do anything. No allow-forms/
+                  // allow-popups/allow-top-navigation either, so it can't
+                  // phish via a fake login form or redirect the tab. Not
+                  // covered: the file's own external resource loads (e.g. an
+                  // email tracking pixel) still go out -- sandboxing doesn't
+                  // block subresource requests, only scripted/credentialed
+                  // access back into this app.
+                  <iframe
+                    src={rawUrl(selected.path)}
+                    sandbox="allow-scripts"
+                    title={selected.path}
+                    className="file-explorer-media file-explorer-iframe"
+                  />
+                ) : (
+                  <pre>{previewText}</pre>
+                )}
+              </div>
+            )}
 
             {selectedCategory === "image" && !previewFailed && (
               <img

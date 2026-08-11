@@ -767,6 +767,24 @@
   border: 0;
 }
 
+.file-explorer-html-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.file-explorer-html-toggle {
+  margin: 0.75rem 1.25rem 0;
+  align-self: flex-start;
+  flex: none;
+}
+
+.file-explorer-html-preview .file-explorer-iframe,
+.file-explorer-html-preview pre {
+  flex: 1;
+  min-height: 0;
+}
+
 .file-explorer-no-preview {
   display: flex;
   flex-direction: column;

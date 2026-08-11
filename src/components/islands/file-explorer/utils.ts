@@ -26,7 +26,7 @@ export interface DirectoryContents {
   files: FileEntry[];
 }
 
-export type FileCategory = "image" | "pdf" | "audio" | "video" | "archive" | "text";
+export type FileCategory = "image" | "pdf" | "audio" | "video" | "archive" | "html" | "text";
 
 export type SortField = "name" | "size" | "modified" | "type";
 export type SortDirection = "asc" | "desc";
@@ -283,6 +283,7 @@ const EXTENSION_MAP: Record<string, FileCategory> = {
   mp3: "audio", wav: "audio", ogg: "audio", m4a: "audio", flac: "audio", aac: "audio",
   mp4: "video", webm: "video", mov: "video", mkv: "video", avi: "video",
   zip: "archive", tar: "archive", gz: "archive", "7z": "archive", rar: "archive",
+  html: "html", htm: "html",
 };
 
 /** Extension-primary, content-type-fallback category detection. Extension is
@@ -300,6 +301,7 @@ export function detectCategory(path: string, contentType?: string): FileCategory
     if (contentType.startsWith("audio/")) return "audio";
     if (contentType.startsWith("video/")) return "video";
     if (/zip|tar|7z|rar|gzip|compressed/.test(contentType)) return "archive";
+    if (contentType === "text/html") return "html";
   }
   return "text";
 }
@@ -310,6 +312,7 @@ const CATEGORY_LABELS: Record<FileCategory, string> = {
   audio: "Audio",
   video: "Video",
   archive: "Archive",
+  html: "HTML",
   text: "Text",
 };
 
