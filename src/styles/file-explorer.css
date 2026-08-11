@@ -209,6 +209,12 @@
   font-size: 0.78rem;
 }
 
+.file-explorer-turnstile {
+  /* Reserves roughly the widget's own footprint before Cloudflare's iframe
+     loads in, so the form doesn't visibly jump once it appears. */
+  min-height: 65px;
+}
+
 .file-explorer-admin-login-hint {
   font-size: 0.78rem;
   color: var(--color-text-muted);

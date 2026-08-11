@@ -15,6 +15,90 @@ import {
 } from "./icons";
 import { adminFetch, encodePath, triggerZipDownload, uploadFile } from "./utils";
 
+// Cloudflare Turnstile: the CAPTCHA-alternative widget gating the admin
+// login form. Loaded from Cloudflare's own script, not bundled -- the
+// actual challenge (device check / proof-of-work) runs on their
+// infrastructure via an iframe, it can't be vendored in.
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "expired-callback"?: () => void;
+          "error-callback"?: () => void;
+        },
+      ) => string;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
+// Cloudflare's public "always passes" TEST site key (documented at
+// developers.cloudflare.com/turnstile/troubleshooting/testing/) -- it
+// renders a real, clickable widget so the whole flow can be built and
+// verified end to end without waiting on real Cloudflare credentials, but
+// it does NOT provide real bot protection. Replace with the real site key
+// from the Cloudflare dashboard (Turnstile -> Add a site) before this is
+// live; the matching secret key is configured separately, server-side only,
+// via mcp-fileserver's deploy.sh (see turnstile.py in that repo) -- it must
+// never appear here, only the site key is meant to be public.
+const TURNSTILE_SITE_KEY = "1x00000000000000000000AA";
+
+let turnstileScriptPromise: Promise<void> | null = null;
+
+// Idempotent: safe to call from multiple widget mounts over a page's
+// lifetime (login form -> mfa step -> a retry all mount their own widget
+// instance) without re-injecting the <script> tag or racing two loads.
+function loadTurnstileScript(): Promise<void> {
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+  turnstileScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Turnstile"));
+    document.head.appendChild(script);
+  });
+  return turnstileScriptPromise;
+}
+
+// One-shot: mounts a fresh widget and reports its token up once solved.
+// Tokens are single-use (consumed by the server's siteverify call
+// regardless of whether the login attempt then succeeds or fails), so a
+// NEW TurnstileWidget instance -- not a reused one -- is what a retry needs;
+// see LoginPanel's turnstileAttempt below, which forces that via `key`.
+function TurnstileWidget({ onToken }: { onToken: (token: string | null) => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTurnstileScript()
+      .then(() => {
+        if (cancelled || !containerRef.current || !window.turnstile) return;
+        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token) => onToken(token),
+          "expired-callback": () => onToken(null),
+          "error-callback": () => onToken(null),
+        });
+      })
+      .catch(() => onToken(null));
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current && window.turnstile) window.turnstile.remove(widgetIdRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <div ref={containerRef} className="file-explorer-turnstile" />;
+}
+
 interface LoginPanelProps {
   onLoggedIn: () => void;
 }
@@ -30,6 +114,14 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Gates the submit button on both the password step and the mfa step --
+  // "only after the check can you press login" per the design. turnstileAttempt
+  // is bumped after every submit (success or fail) and used as TurnstileWidget's
+  // `key`, forcing a fresh widget/token for the next attempt, since the
+  // previous token was already spent against the server's siteverify call.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
 
   // "Forgot password?" is a separate small form, not another step of the
   // same login flow -- it doesn't need the password field at all, just an
@@ -71,7 +163,12 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
     const resp = await adminFetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(code ? { email, password, totp_code: code } : { email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        ...(code ? { totp_code: code } : {}),
+        turnstile_token: turnstileToken,
+      }),
     });
     if (resp.status === 429) {
       const retryAfter = resp.headers.get("Retry-After");
@@ -79,7 +176,12 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
       return;
     }
     if (!resp.ok) {
-      setError(mfaRequired ? "Invalid code." : "Invalid email or password.");
+      const body = await resp.json().catch(() => ({}) as { error?: string });
+      if (body.error === "verification failed") {
+        setError("Verification failed -- please try again.");
+      } else {
+        setError(mfaRequired ? "Invalid code." : "Invalid email or password.");
+      }
       return;
     }
     const body = (await resp.json()) as { authenticated: boolean; mfa_required?: boolean };
@@ -102,6 +204,10 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
       setError("Login request failed.");
     } finally {
       setBusy(false);
+      // The token just submitted (if any) is spent either way -- force a
+      // fresh widget for whatever comes next (a retry, or the mfa step).
+      setTurnstileToken(null);
+      setTurnstileAttempt((n) => n + 1);
     }
   }
 
@@ -150,7 +256,8 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
           autoFocus
           required
         />
-        <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+        <TurnstileWidget key={turnstileAttempt} onToken={setTurnstileToken} />
+        <button type="submit" className="file-explorer-icon-button" disabled={busy || !turnstileToken}>
           {busy ? "Verifying…" : "Verify"}
         </button>
         {error && <span className="file-explorer-error file-explorer-admin-login-error">{error}</span>}
@@ -176,7 +283,8 @@ function LoginPanel({ onLoggedIn }: LoginPanelProps) {
         autoComplete="current-password"
         required
       />
-      <button type="submit" className="file-explorer-icon-button" disabled={busy}>
+      <TurnstileWidget key={turnstileAttempt} onToken={setTurnstileToken} />
+      <button type="submit" className="file-explorer-icon-button" disabled={busy || !turnstileToken}>
         {busy ? "Signing in…" : "Log in"}
       </button>
       <button type="button" className="file-explorer-link-button" onClick={() => setForgotMode(true)}>

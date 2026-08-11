@@ -33,14 +33,31 @@ export default defineConfig({
         // YouTube Live embed for /project-4's public wildlife cam; mcp-fileserver
         // origin added for /fm's PDF preview via <iframe> (not
         // <embed>/<object>, so this belongs under frame-src, not object-src).
-        "frame-src https://www.youtube.com https://mcp-fileserver-751371770492.us-central1.run.app",
+        // challenges.cloudflare.com renders the actual Turnstile challenge
+        // (/fm/admin's login) in its own iframe -- that's real infrastructure
+        // on Cloudflare's side, not something that can be vendored in.
+        "frame-src https://www.youtube.com https://mcp-fileserver-751371770492.us-central1.run.app https://challenges.cloudflare.com",
         "child-src blob:",
         // mcp-fileserver-...run.app is /fm's file explorer (separate
         // repo/service, github.com/bcns-staging/mcp-fileserver).
-        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app https://mcp-fileserver-751371770492.us-central1.run.app https://storage.googleapis.com http://localhost:4000",
+        // challenges.cloudflare.com is Turnstile's own token-verification
+        // traffic (see frame-src above for why it's needed at all).
+        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app https://mcp-fileserver-751371770492.us-central1.run.app https://storage.googleapis.com http://localhost:4000 https://challenges.cloudflare.com",
         "form-action 'self'",
         "base-uri 'none'",
       ],
+      // Turnstile's script (challenges.cloudflare.com/turnstile/v0/api.js,
+      // loaded on /fm/admin only) and whatever it injects for its own
+      // widget UI can't be covered by Astro's auto-generated hashes, since
+      // that content isn't known at build time -- these two explicitly
+      // allowlist the domain instead, alongside (not instead of) the
+      // per-page hashes Astro keeps adding automatically.
+      scriptDirective: {
+        resources: ["'self'", "https://challenges.cloudflare.com"],
+      },
+      styleDirective: {
+        resources: ["'self'", "https://challenges.cloudflare.com"],
+      },
     },
   },
 });
