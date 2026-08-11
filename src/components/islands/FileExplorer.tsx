@@ -167,7 +167,7 @@ function HiddenBadge({ className }: { className?: string }) {
 // disambiguates without needing to open the preview.
 function MediaTypeBadge({ category }: { category: "image" | "video" }) {
   return (
-    <span className="file-explorer-media-type-badge" aria-hidden="true">
+    <span className={`file-explorer-media-type-badge ${category === "video" ? "is-video" : ""}`} aria-hidden="true">
       {category === "video" ? <VideoIcon size={12} /> : <ImageIcon size={12} />}
     </span>
   );

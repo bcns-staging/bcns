@@ -601,6 +601,10 @@
   color: var(--color-text);
 }
 
+.file-explorer-media-type-badge.is-video {
+  color: #ff6a3d;
+}
+
 .file-explorer-card-actions-overlay {
   position: absolute;
   left: 0;
