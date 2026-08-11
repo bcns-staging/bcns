@@ -162,6 +162,17 @@ function HiddenBadge({ className }: { className?: string }) {
   );
 }
 
+// A gallery tile's thumbnail (a still frame, or the photo itself) doesn't
+// otherwise say whether it's a video or an image -- a small corner badge
+// disambiguates without needing to open the preview.
+function MediaTypeBadge({ category }: { category: "image" | "video" }) {
+  return (
+    <span className="file-explorer-media-type-badge" aria-hidden="true">
+      {category === "video" ? <VideoIcon size={12} /> : <ImageIcon size={12} />}
+    </span>
+  );
+}
+
 // Purely a visual reflection of selection state, not a real <input
 // type="checkbox"> -- the whole row/card is already the click target that
 // toggles selection (see handleFolderActivate/handleFileActivate below), and
@@ -634,6 +645,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                     {isMedia ? (
                       <>
                         <FileThumbnail file={file} fill />
+                        <MediaTypeBadge category={category as "image" | "video"} />
                         {isAdmin && file.visibility === "admin-only" && (
                           <HiddenBadge className="file-explorer-hidden-badge-overlay" />
                         )}
