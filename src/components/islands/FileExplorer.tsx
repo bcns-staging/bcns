@@ -24,7 +24,6 @@ import {
   categoryLabel,
   checkAdminSession,
   detectCategory,
-  downloadUrl,
   encodePath,
   folderVisibility,
   formatDate,
@@ -34,6 +33,7 @@ import {
   rawUrl,
   sortEntries,
   stripFolderPlaceholders,
+  triggerZipDownload,
   type FileCategory,
   type FileEntry,
   type FolderChild,
@@ -234,6 +234,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewFailed, setPreviewFailed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     setListLoading(true);
@@ -354,6 +355,19 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
         // context, etc.) -- fail quietly rather than leaving an unhandled
         // rejection; the button just doesn't show "Copied" confirmation.
       });
+  }
+
+  async function downloadSelected() {
+    if (!selected) return;
+    setDownloading(true);
+    try {
+      const name = basename(selected.path);
+      const dot = name.lastIndexOf(".");
+      const stem = dot === -1 ? name : name.slice(0, dot);
+      await triggerZipDownload([selected.path], `${stem}.zip`);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   const selectedCategory = selected ? detectCategory(selected.path, selected.content_type) : null;
@@ -599,10 +613,15 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                 <CopyIcon size={14} />
                 {copied ? "Copied" : "Copy path"}
               </button>
-              <a href={downloadUrl(selected.path)} download={basename(selected.path)} className="file-explorer-icon-button file-explorer-download">
+              <button
+                type="button"
+                onClick={downloadSelected}
+                disabled={downloading}
+                className="file-explorer-icon-button file-explorer-download"
+              >
                 <DownloadIcon size={14} />
-                Download
-              </a>
+                {downloading ? "Zipping…" : "Download"}
+              </button>
             </div>
           </div>
           <div className="file-explorer-preview-path">{selected.path}</div>
@@ -639,10 +658,15 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
               <div className="file-explorer-no-preview">
                 <CategoryIcon category={selectedCategory ?? "text"} size={48} />
                 <p>Preview isn't available for this file.</p>
-                <a href={downloadUrl(selected.path)} download={basename(selected.path)} className="file-explorer-icon-button file-explorer-download">
+                <button
+                  type="button"
+                  onClick={downloadSelected}
+                  disabled={downloading}
+                  className="file-explorer-icon-button file-explorer-download"
+                >
                   <DownloadIcon size={14} />
-                  Download
-                </a>
+                  {downloading ? "Zipping…" : "Download"}
+                </button>
               </div>
             )}
           </div>

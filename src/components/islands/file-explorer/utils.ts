@@ -51,37 +51,23 @@ export function rawUrl(path: string): string {
   return `${API_BASE}/api/files/${encodePath(path)}?format=raw`;
 }
 
-export function downloadUrl(path: string): string {
-  return `${API_BASE}/api/files/${encodePath(path)}?format=raw&download=1`;
-}
-
-// Programmatic download trigger, for the SelectionToolbar's bulk Download
-// button -- can't just render an <a download> per selected file the way the
-// preview pane does, since there's no persistent per-item element to attach
-// one to.
+// Every download -- single file or a multi-file selection -- goes through
+// this, always producing a real .zip. Two reasons, not just one:
+//   1. It's what was asked for: one consistent "Download" action regardless
+//      of selection size, instead of a single-file special case.
+//   2. It's also the actual fix for downloads landing as an unrecognized
+//      file type. A direct `<a href=cross-origin-url download>` click is
+//      unreliable about which filename wins (the download attribute's
+//      value vs. the server's Content-Disposition header can disagree
+//      across browsers, and the download attribute itself is documented as
+//      only reliably honored for same-origin/blob:/data: URLs -- mdn.io/a
+//      mcp-fileserver is a different origin from this site). Fetching the
+//      bytes ourselves and downloading a blob: URL sidesteps all of that:
+//      blob: is always same-origin, and the filename is entirely ours to
+//      set, no server header negotiation involved.
 //
-// a.download is set to the real basename (with extension) explicitly, not
-// left empty/omitted -- an empty download attribute doesn't reliably fall
-// back to the server's Content-Disposition filename across browsers, and
-// the observed failure mode was exactly this: downloads landing with no
-// extension at all, so the OS couldn't identify the file type. Deriving the
-// filename from the already-known path client-side sidesteps that entirely.
-export function triggerDownload(path: string): void {
-  const a = document.createElement("a");
-  a.href = downloadUrl(path);
-  a.download = basename(path);
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// Bulk download for a multi-file selection, zipped client-side -- there's no
-// server-side archive endpoint, so this fetches each file's raw bytes
-// (credentials: "include" so admin-only files the caller can see are
-// included too) and bundles them with JSZip, entirely in the browser.
 // jszip is dynamically imported so it's never in the initial bundle for
-// anyone who never triggers a multi-file download (this whole feature is
-// admin-only to begin with).
+// anyone who never downloads anything (this whole feature is admin-only).
 export async function triggerZipDownload(paths: string[], zipName: string): Promise<void> {
   const { default: JSZip } = await import("jszip");
   const zip = new JSZip();
@@ -109,7 +95,11 @@ export async function triggerZipDownload(paths: string[], zipName: string): Prom
     zip.file(name, blob);
   }
 
-  const zipBlob = await zip.generateAsync({ type: "blob" });
+  // STORE, not the DEFLATE default -- everything passing through here
+  // (images, video, pdf, existing zips) is already a compressed format, so
+  // re-compressing just burns CPU/time for no size benefit, and matters
+  // more now that a single file can be up to 250MB.
+  const zipBlob = await zip.generateAsync({ type: "blob", compression: "STORE" });
   const url = URL.createObjectURL(zipBlob);
   const a = document.createElement("a");
   a.href = url;
@@ -118,6 +108,41 @@ export async function triggerZipDownload(paths: string[], zipName: string): Prom
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// Direct browser-to-GCS upload via a signed URL (see mcp-fileserver's
+// gcs_client.generate_upload_url) -- bypasses this app's own backend
+// entirely for the actual bytes, since Cloud Run enforces a request body
+// limit (~32MB) far below the 250MB this admin UI allows per file.
+export async function uploadFile(
+  path: string,
+  file: File,
+  visibility: "public" | "admin-only",
+  overwrite: boolean,
+): Promise<void> {
+  const resp = await adminFetch("/api/admin/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      path,
+      content_type: file.type || "application/octet-stream",
+      visibility,
+      overwrite,
+      size_bytes: file.size,
+    }),
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body.error ?? `Couldn't start upload for ${file.name} (${resp.status})`);
+  }
+  const { upload_url, headers } = (await resp.json()) as { upload_url: string; headers: Record<string, string> };
+
+  // The headers returned here are exactly what generate_upload_url signed
+  // into the URL -- must be sent as-is, or GCS rejects the PUT with a 403.
+  const putResp = await fetch(upload_url, { method: "PUT", headers, body: file });
+  if (!putResp.ok) {
+    throw new Error(`Upload failed for ${file.name} (${putResp.status})`);
+  }
 }
 
 // mcp-fileserver's admin session cookie is cross-site (7beacons.com vs
