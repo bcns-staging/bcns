@@ -13,7 +13,7 @@ import {
   TrashIcon,
   UploadIcon,
 } from "./icons";
-import { adminFetch, encodePath, triggerDownload, triggerZipDownload } from "./utils";
+import { adminFetch, encodePath, triggerZipDownload, uploadFile } from "./utils";
 
 interface LoginPanelProps {
   onLoggedIn: () => void;
@@ -85,9 +85,16 @@ interface AdminBarProps {
   onLoggedOut: () => void;
 }
 
+// Keep in sync with mcp-fileserver's MCP_ADMIN_MAX_UPLOAD_BYTES (deploy.sh) --
+// checked client-side too so an oversized file (most likely a long video)
+// fails immediately with a clear message instead of after a signed-URL
+// round trip, or worse, partway through a 200MB PUT.
+const MAX_UPLOAD_BYTES = 250 * 1024 * 1024;
+
 function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function logout() {
@@ -95,30 +102,33 @@ function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
     onLoggedOut();
   }
 
-  async function handleFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // reset so picking the same file again still fires onChange
-    if (!file) return;
+  async function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const fileList = e.target.files;
+    e.target.value = ""; // reset so picking the same file(s) again still fires onChange
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+
+    const tooLarge = files.find((f) => f.size > MAX_UPLOAD_BYTES);
+    if (tooLarge) {
+      setError(`${tooLarge.name} is larger than the 250MB upload limit.`);
+      return;
+    }
 
     setUploading(true);
     setError(null);
     try {
-      const path = currentFolder ? `${currentFolder}/${file.name}` : file.name;
-      const form = new FormData();
-      form.append("file", file);
-      form.append("path", path);
-      form.append("overwrite", "true");
-      const resp = await adminFetch("/api/admin/upload", { method: "POST", body: form });
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        setError(body.error ?? `Upload failed (${resp.status})`);
-        return;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadStatus(files.length > 1 ? `Uploading ${i + 1}/${files.length}: ${file.name}` : `Uploading ${file.name}…`);
+        const path = currentFolder ? `${currentFolder}/${file.name}` : file.name;
+        await uploadFile(path, file, "public", true);
       }
       onChanged();
-    } catch {
-      setError("Upload failed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
+      setUploadStatus(null);
     }
   }
 
@@ -149,9 +159,9 @@ function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
         disabled={uploading}
       >
         <UploadIcon size={14} />
-        {uploading ? "Uploading…" : `Upload to ${currentFolder || "Home"}`}
+        {uploadStatus ?? `Upload to ${currentFolder || "Home"}`}
       </button>
-      <input ref={fileInputRef} type="file" hidden onChange={handleFilePicked} />
+      <input ref={fileInputRef} type="file" multiple hidden onChange={handleFilesPicked} />
       <button type="button" className="file-explorer-icon-button" onClick={createFolder}>
         <FolderPlusIcon size={14} />
         New folder
@@ -198,6 +208,12 @@ function basenameOf(path: string): string {
   return path.includes("/") ? path.slice(path.lastIndexOf("/") + 1) : path;
 }
 
+function stemOf(path: string): string {
+  const name = basenameOf(path);
+  const dot = name.lastIndexOf(".");
+  return dot === -1 ? name : name.slice(0, dot);
+}
+
 export interface SelectionToolbarProps {
   selectionMode: boolean;
   onToggleSelectionMode: () => void;
@@ -235,17 +251,13 @@ export function SelectionToolbar({
 
   async function handleDownload() {
     if (downloadableItems.length === 0) return;
-    if (downloadableItems.length === 1) {
-      triggerDownload(downloadableItems[0].path);
-      return;
-    }
-    // 2+ files: bundle into one zip instead of firing off several
-    // simultaneous downloads (which browsers often throttle/block anyway).
     setZipping(true);
     try {
+      const zipName =
+        downloadableItems.length === 1 ? `${stemOf(downloadableItems[0].path)}.zip` : "files.zip";
       await triggerZipDownload(
         downloadableItems.map((it) => it.path),
-        "files.zip",
+        zipName,
       );
     } finally {
       setZipping(false);

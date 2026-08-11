@@ -15,6 +15,9 @@ export default defineConfig({
         "default-src 'self'",
         // data:/blob: for MapLibre's rendered tile bitmaps; blob: workers
         // and tiles.openfreemap.org connect-src are for the /map page.
+        // storage.googleapis.com connect-src is for /fm/admin's uploads --
+        // the admin UI PUTs large files directly to a signed GCS URL,
+        // bypassing mcp-fileserver's own Cloud Run request-size limit.
         // mcp-fileserver origin is for /fm's image previews.
         "img-src 'self' data: blob: https://i.pravatar.cc https://mcp-fileserver-751371770492.us-central1.run.app",
         // audio/video previews on /fm -- there's no "audio-src"/
@@ -30,7 +33,7 @@ export default defineConfig({
         "child-src blob:",
         // mcp-fileserver-...run.app is /fm's file explorer (separate
         // repo/service, github.com/bcns-staging/mcp-fileserver).
-        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app https://mcp-fileserver-751371770492.us-central1.run.app http://localhost:4000",
+        "connect-src 'self' https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://www.marineregions.org https://bcns-graphql-api-751371770492.us-central1.run.app https://mcp-fileserver-751371770492.us-central1.run.app https://storage.googleapis.com http://localhost:4000",
         "form-action 'self'",
         "base-uri 'none'",
       ],
