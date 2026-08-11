@@ -104,9 +104,14 @@ function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
 
   async function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
     const fileList = e.target.files;
-    e.target.value = ""; // reset so picking the same file(s) again still fires onChange
     if (!fileList || fileList.length === 0) return;
+    // Array.from() must run BEFORE clearing e.target.value below -- a file
+    // input's .files is a live FileList tied to the element, and resetting
+    // .value empties it in place in some browsers. Materializing plain File
+    // references first means the reset can't silently wipe out the
+    // selection out from under us.
     const files = Array.from(fileList);
+    e.target.value = ""; // reset so picking the same file(s) again still fires onChange
 
     const tooLarge = files.find((f) => f.size > MAX_UPLOAD_BYTES);
     if (tooLarge) {
