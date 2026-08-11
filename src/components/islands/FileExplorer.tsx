@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import AdminControls, { SelectionToolbar, type ClipboardState, type SelectedItem } from "./file-explorer/AdminControls";
+import AdminControls, {
+  PublicSelectionToolbar,
+  SelectionToolbar,
+  type ClipboardState,
+  type SelectedItem,
+} from "./file-explorer/AdminControls";
 import {
   ArchiveIcon,
   AudioIcon,
@@ -436,7 +441,11 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   const selectedCategory = selected ? detectCategory(selected.path, selected.content_type) : null;
   const isEmpty = !listLoading && !listError && sorted.folders.length === 0 && sorted.files.length === 0;
   const showAdminControls = adminMode && isAdmin === true;
-  const showCheckboxColumn = showAdminControls && selectionMode;
+  // Selection (and its checkboxes) is available on both the admin page
+  // (full SelectionToolbar) and the plain /fm page (PublicSelectionToolbar,
+  // Select + Download only) -- toggled by whichever of those two renders
+  // below, so this just follows selectionMode itself.
+  const showCheckboxColumn = selectionMode;
 
   function refreshAfterAdminChange() {
     setRefreshKey((k) => k + 1);
@@ -478,6 +487,13 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
               onSetClipboard={setClipboard}
               onChanged={refreshAfterAdminChange}
               onClearSelection={() => setSelectedItems([])}
+            />
+          )}
+          {!adminMode && (
+            <PublicSelectionToolbar
+              selectionMode={selectionMode}
+              onToggleSelectionMode={toggleSelectionMode}
+              selectedItems={selectedItems}
             />
           )}
           <div className="file-explorer-toolbar-actions">

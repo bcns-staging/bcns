@@ -428,3 +428,68 @@ export function SelectionToolbar({
     </div>
   );
 }
+
+export interface PublicSelectionToolbarProps {
+  selectionMode: boolean;
+  onToggleSelectionMode: () => void;
+  selectedItems: { path: string; isFolder: boolean }[];
+}
+
+// The plain, unauthenticated /fm page's counterpart to SelectionToolbar --
+// deliberately a separate, minimal component (not the full toolbar with a
+// prop to hide most of it) so there's no mutating action anywhere in its
+// code for a public visitor to reach, by construction, not just by disabled
+// buttons.
+//
+// Security note: handleDownload below calls the exact same
+// getSignedUrl()/triggerZipDownload() path the admin toolbar's Download
+// button uses, with no session cookie attached for an anonymous caller
+// (there isn't one to send). That's not a gap -- mcp-fileserver's
+// ?format=signed-url endpoint independently re-checks each file's
+// visibility server-side on every single request (stat() first, 404 for
+// admin-only files, same as every other read route), regardless of what
+// this page happens to have rendered or what paths are in `selectedItems`.
+// A public visitor cannot get a working signed URL for an admin-only file
+// this way -- and since /api/files already omits admin-only entries from
+// anonymous listings entirely, there's nothing for `selectedItems` to
+// reference in the first place that this UI doesn't already show.
+export function PublicSelectionToolbar({ selectionMode, onToggleSelectionMode, selectedItems }: PublicSelectionToolbarProps) {
+  const [zipping, setZipping] = useState(false);
+  const downloadableItems = selectedItems.filter((it) => !it.isFolder);
+
+  async function handleDownload() {
+    if (downloadableItems.length === 0) return;
+    setZipping(true);
+    try {
+      const zipName = downloadableItems.length === 1 ? `${stemOf(downloadableItems[0].path)}.zip` : "files.zip";
+      await triggerZipDownload(
+        downloadableItems.map((it) => it.path),
+        zipName,
+      );
+    } finally {
+      setZipping(false);
+    }
+  }
+
+  return (
+    <div className="file-explorer-selection-toolbar">
+      <button
+        type="button"
+        className={`file-explorer-icon-button ${selectionMode ? "is-active" : ""}`}
+        onClick={onToggleSelectionMode}
+      >
+        <SelectIcon size={14} />
+        {selectionMode && selectedItems.length > 0 ? `${selectedItems.length} selected` : "Select"}
+      </button>
+      <button
+        type="button"
+        className="file-explorer-icon-button"
+        onClick={handleDownload}
+        disabled={!selectionMode || zipping || downloadableItems.length === 0}
+      >
+        <DownloadIcon size={14} />
+        {zipping ? "Zipping…" : downloadableItems.length > 1 ? `Download (${downloadableItems.length})` : "Download"}
+      </button>
+    </div>
+  );
+}
