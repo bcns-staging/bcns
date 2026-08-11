@@ -82,8 +82,29 @@ function FileThumbnail({
 }) {
   const category = detectCategory(file.path, file.content_type);
   const [failed, setFailed] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const thumbClass = fill ? "file-explorer-thumb-fill" : "file-explorer-thumb";
   const style = fill ? undefined : { width: size, height: size };
+
+  // Video thumbnails, same as the preview pane: Cloud Run doesn't support
+  // the HTTP Range requests a <video> needs, even just to grab a poster
+  // frame for preload="metadata" -- so this needs the same signed, direct-
+  // to-GCS URL rather than rawUrl(). Not needed for images (a plain <img>
+  // GET works fine without Range support).
+  useEffect(() => {
+    if (category !== "video") return;
+    let cancelled = false;
+    getSignedUrl(file.path)
+      .then((url) => {
+        if (!cancelled) setVideoUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [category, file.path]);
 
   if (!failed && category === "image") {
     return (
@@ -96,20 +117,35 @@ function FileThumbnail({
       />
     );
   }
-  if (!failed && category === "video") {
+  if (!failed && category === "video" && videoUrl) {
     return (
       <video
-        src={rawUrl(file.path)}
+        src={videoUrl}
         muted
         preload="metadata"
+        playsInline
         className={`${thumbClass} ${className ?? ""}`}
         style={style}
         onError={() => setFailed(true)}
+        // Frame 0 is very often a black/blank fade-in -- seeking to the
+        // midpoint once we know the duration gives a much more
+        // representative still. Fine here specifically because this video
+        // is never actually played (muted, no controls, the whole tile is
+        // just a click target that opens the real preview); doing the same
+        // in the preview pane's player would make playback start from the
+        // middle instead of the beginning, which is why it's thumbnail-only.
+        onLoadedMetadata={(e) => {
+          const video = e.currentTarget;
+          if (Number.isFinite(video.duration) && video.duration > 0) {
+            video.currentTime = video.duration / 2;
+          }
+        }}
       />
     );
   }
-  // Fallback (failed to load, or a non-media category slipped through):
-  // still sized to look reasonable centered in a square gallery tile.
+  // Fallback: failed to load, a non-media category, or (for video) the
+  // signed URL just hasn't resolved yet -- still sized to look reasonable
+  // centered in a square gallery tile.
   return <CategoryIcon category={category} size={fill ? 32 : size} className={className} />;
 }
 
@@ -122,6 +158,17 @@ function HiddenBadge({ className }: { className?: string }) {
     <span className={`file-explorer-hidden-badge ${className ?? ""}`} title="Hidden from public visitors">
       <LockIcon size={11} />
       Hidden
+    </span>
+  );
+}
+
+// A gallery tile's thumbnail (a still frame, or the photo itself) doesn't
+// otherwise say whether it's a video or an image -- a small corner badge
+// disambiguates without needing to open the preview.
+function MediaTypeBadge({ category }: { category: "image" | "video" }) {
+  return (
+    <span className={`file-explorer-media-type-badge ${category === "video" ? "is-video" : ""}`} aria-hidden="true">
+      {category === "video" ? <VideoIcon size={12} /> : <ImageIcon size={12} />}
     </span>
   );
 }
@@ -598,6 +645,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                     {isMedia ? (
                       <>
                         <FileThumbnail file={file} fill />
+                        <MediaTypeBadge category={category as "image" | "video"} />
                         {isAdmin && file.visibility === "admin-only" && (
                           <HiddenBadge className="file-explorer-hidden-badge-overlay" />
                         )}

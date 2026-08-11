@@ -588,6 +588,23 @@
   backdrop-filter: blur(2px);
 }
 
+.file-explorer-media-type-badge {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border-radius: 50%;
+  background: rgba(13, 17, 23, 0.55);
+  color: var(--color-text);
+}
+
+.file-explorer-media-type-badge.is-video {
+  color: #ff6a3d;
+}
+
 .file-explorer-card-actions-overlay {
   position: absolute;
   left: 0;
