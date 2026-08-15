@@ -276,7 +276,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   }
 
   const [currentFolder, setCurrentFolder] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [search, setSearch] = useState("");
