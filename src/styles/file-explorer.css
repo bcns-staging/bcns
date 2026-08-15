@@ -610,6 +610,11 @@
   overflow: hidden;
 }
 
+.file-explorer-card-size {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
 /* Gallery tile for image/video cards -- thumbnail only, no name/size caption
    (the filename is still available as a native tooltip via the card's
    title attribute). */

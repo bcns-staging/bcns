@@ -30,6 +30,7 @@ import {
   checkAdminSession,
   detectCategory,
   encodePath,
+  folderSizeBytes,
   folderVisibility,
   formatDate,
   formatSize,
@@ -589,7 +590,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                         {isAdmin && visibility === "admin-only" && <HiddenBadge />}
                       </td>
                       <td>Folder</td>
-                      <td>—</td>
+                      <td>{formatSize(folderSizeBytes(files, folder.path))}</td>
                       <td>—</td>
                       {showCheckboxColumn && (
                         <td>
@@ -645,6 +646,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                     )}
                     <FolderIcon size={36} />
                     <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
+                    <span className="file-explorer-card-size">{formatSize(folderSizeBytes(files, folder.path))}</span>
                     {isAdmin && visibility === "admin-only" && <HiddenBadge />}
                   </button>
                 );
@@ -680,6 +682,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                       <>
                         <FileThumbnail file={file} size={36} />
                         <span className="file-explorer-card-name">{displayName(file.path)}</span>
+                        <span className="file-explorer-card-size">{formatSize(file.size_bytes)}</span>
                         {isAdmin && file.visibility === "admin-only" && <HiddenBadge />}
                       </>
                     )}
