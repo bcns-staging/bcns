@@ -261,16 +261,22 @@ export function getDirectChildren(files: FileEntry[], currentFolder: string): Di
 
 /** Recursive: every file anywhere under folderPath, not just direct
  * children -- matches what "Download" (zips the whole subtree) actually
- * produces. The files array passed in is already scoped to what the
+ * produces. The files array is already scoped server-side to what the
  * caller is allowed to see (the backend omits admin-only entries from a
- * non-admin's /api/files response entirely, see public_api.py), so this
- * naturally sums only-visible-files for a public caller and the true
- * total for an admin one -- no separate public/admin branching needed. */
-export function folderSizeBytes(files: FileEntry[], folderPath: string): number {
+ * non-admin's /api/files response entirely, see public_api.py) -- isAdmin
+ * here is a second, client-side check on top of that, not a replacement
+ * for it: this function never sums an admin-only entry's bytes unless the
+ * caller explicitly claims to be admin, so a stale cache, a proxy, or a
+ * future server-side regression that let a hidden entry slip into a
+ * public response still can't inflate a public visitor's folder total
+ * with hidden-file sizes. */
+export function folderSizeBytes(files: FileEntry[], folderPath: string, isAdmin: boolean): number {
   const prefix = `${folderPath}/`;
   let total = 0;
   for (const f of files) {
-    if (f.path.startsWith(prefix)) total += f.size_bytes;
+    if (!f.path.startsWith(prefix)) continue;
+    if (!isAdmin && f.visibility === "admin-only") continue;
+    total += f.size_bytes;
   }
   return total;
 }
