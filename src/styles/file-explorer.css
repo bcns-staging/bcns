@@ -422,7 +422,14 @@
 /* ---------- table (list view) ---------- */
 
 .file-explorer-table {
-  width: 100%;
+  /* calc, not a plain 100%: this table carries its own outer margin (below)
+     for breathing room against the pane edges, and box-sizing:border-box
+     only accounts for padding/border, never margin -- 100% width alongside
+     a horizontal margin would overflow the listing pane by exactly that
+     margin. */
+  width: calc(100% - 2.5rem);
+  margin: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
   /* Below this, columns get uncomfortably cramped (most noticeable with the
      preview pane open, which narrows this whole browser column down to as
      little as 20rem) -- the listing wrapper's overflow-x: auto takes over
@@ -480,7 +487,7 @@
 
 .file-explorer-table th {
   text-align: left;
-  padding: 0.5rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
@@ -511,7 +518,7 @@
 }
 
 .file-explorer-table td {
-  padding: 0.5rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
   white-space: nowrap;
