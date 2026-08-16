@@ -303,7 +303,12 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   useEffect(() => {
     setListLoading(true);
     setListError(null);
-    fetch(`${API_BASE}/api/files`, { credentials: "include" })
+    // no-store: this same URL returns different files depending on the
+    // caller's login state (admin-only entries included or omitted, see
+    // public_api.py) -- the server already sends Cache-Control: no-store
+    // for the same reason, this is belt-and-suspenders against the
+    // browser's HTTP cache reusing a pre-login (or post-logout) response.
+    fetch(`${API_BASE}/api/files`, { credentials: "include", cache: "no-store" })
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r.json() as Promise<{ files: FileEntry[] }>;
@@ -411,7 +416,8 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
     if (category !== "text" && category !== "html") return;
 
     setPreviewLoading(true);
-    fetch(`${API_BASE}/api/files/${encodePath(file.path)}`, { credentials: "include" })
+    // no-store: same reasoning as the /api/files list fetch above.
+    fetch(`${API_BASE}/api/files/${encodePath(file.path)}`, { credentials: "include", cache: "no-store" })
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r.json() as Promise<{ content: string }>;
@@ -590,7 +596,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                         {isAdmin && visibility === "admin-only" && <HiddenBadge />}
                       </td>
                       <td>Folder</td>
-                      <td>{formatSize(folderSizeBytes(files, folder.path))}</td>
+                      <td>{formatSize(folderSizeBytes(files, folder.path, isAdmin === true))}</td>
                       <td>—</td>
                       {showCheckboxColumn && (
                         <td>
@@ -646,7 +652,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                     )}
                     <FolderIcon size={36} />
                     <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
-                    <span className="file-explorer-card-size">{formatSize(folderSizeBytes(files, folder.path))}</span>
+                    <span className="file-explorer-card-size">{formatSize(folderSizeBytes(files, folder.path, isAdmin === true))}</span>
                     {isAdmin && visibility === "admin-only" && <HiddenBadge />}
                   </button>
                 );
