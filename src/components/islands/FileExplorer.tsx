@@ -340,8 +340,8 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
   }, [allFolders, directoryContents, files, isSearching, search]);
 
   const sorted = useMemo(
-    () => sortEntries(filteredContents, sortField, sortDirection),
-    [filteredContents, sortField, sortDirection],
+    () => sortEntries(filteredContents, sortField, sortDirection, files, isAdmin === true),
+    [filteredContents, sortField, sortDirection, files, isAdmin],
   );
 
   // Full path while a global search is active (results can come from any
