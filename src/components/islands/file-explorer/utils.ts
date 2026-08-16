@@ -342,10 +342,25 @@ export function categoryLabel(category: FileCategory): string {
   return CATEGORY_LABELS[category];
 }
 
-export function sortEntries(contents: DirectoryContents, field: SortField, direction: SortDirection): DirectoryContents {
+/** allFiles/isAdmin are only needed for the "size" field -- folders don't
+ * have their own size_bytes, so sorting them by size means recomputing
+ * folderSizeBytes() per folder against the full (already caller-scoped)
+ * file list, same isAdmin-gating as everywhere else that number is shown. */
+export function sortEntries(
+  contents: DirectoryContents,
+  field: SortField,
+  direction: SortDirection,
+  allFiles: FileEntry[],
+  isAdmin: boolean,
+): DirectoryContents {
   const mul = direction === "asc" ? 1 : -1;
 
-  const folders = [...contents.folders].sort((a, b) => mul * a.name.localeCompare(b.name));
+  const folders = [...contents.folders].sort((a, b) => {
+    if (field === "size") {
+      return mul * (folderSizeBytes(allFiles, a.path, isAdmin) - folderSizeBytes(allFiles, b.path, isAdmin));
+    }
+    return mul * a.name.localeCompare(b.name);
+  });
 
   const files = [...contents.files].sort((a, b) => {
     switch (field) {
