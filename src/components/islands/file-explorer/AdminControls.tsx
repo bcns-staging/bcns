@@ -36,16 +36,12 @@ declare global {
   }
 }
 
-// Cloudflare's public "always passes" TEST site key (documented at
-// developers.cloudflare.com/turnstile/troubleshooting/testing/) -- it
-// renders a real, clickable widget so the whole flow can be built and
-// verified end to end without waiting on real Cloudflare credentials, but
-// it does NOT provide real bot protection. Replace with the real site key
-// from the Cloudflare dashboard (Turnstile -> Add a site) before this is
-// live; the matching secret key is configured separately, server-side only,
-// via mcp-fileserver's deploy.sh (see turnstile.py in that repo) -- it must
-// never appear here, only the site key is meant to be public.
-const TURNSTILE_SITE_KEY = "1x00000000000000000000AA";
+// Real Turnstile site key for the "7 Beacons admin login" widget
+// (dash.cloudflare.com -> Turnstile). Public by design -- safe to embed
+// here, unlike the matching secret key, which is configured separately,
+// server-side only, via mcp-fileserver's deploy.sh (see turnstile.py in
+// that repo) and must never appear in this repo.
+const TURNSTILE_SITE_KEY = "0x4AAAAAAERLEgZL5u6hcYon";
 
 let turnstileScriptPromise: Promise<void> | null = null;
 
