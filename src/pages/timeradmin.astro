@@ -20,48 +20,71 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
   }
 
   :global(.timer-admin) {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 2rem;
     width: 100%;
-    max-width: 40rem;
+    max-width: 48rem;
   }
 
-  :global(.timer-admin-form) {
+  :global(.timer-admin-toolbar) {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
     align-items: center;
-    justify-content: center;
-    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
-  :global(.timer-admin-form input) {
-    padding: 0.5rem 0.75rem;
+  :global(.timer-admin-add),
+  :global(.timer-admin-select) {
+    padding: 0.6rem 1rem;
     border-radius: 0.4rem;
     border: 1px solid var(--color-border);
     background: var(--color-bg-alt);
     color: var(--color-text);
     font: inherit;
     font-size: 0.85rem;
+    cursor: pointer;
   }
 
-  :global(.timer-admin-form input[type="text"]) {
-    flex: 1;
-    min-width: 12rem;
+  :global(.timer-admin-select) {
+    min-width: 10rem;
   }
 
-  :global(.timer-admin-form button) {
-    padding: 0.5rem 1rem;
+  :global(.timer-admin-form) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-alt);
+  }
+
+  :global(.timer-admin-form input) {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
     border-radius: 0.4rem;
-    border: 1px solid var(--color-accent);
-    background: var(--color-accent);
-    color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.85rem;
+  }
+
+  :global(.timer-admin-form-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  :global(.timer-admin-form-actions button) {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.4rem;
     font: inherit;
     font-size: 0.85rem;
     font-weight: 600;
@@ -69,7 +92,25 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     white-space: nowrap;
   }
 
-  :global(.timer-admin-form button:disabled) {
+  :global(.timer-admin-form-actions button[type="submit"]) {
+    border: 1px solid var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  :global(.timer-admin-delete) {
+    border: 1px solid var(--color-error);
+    background: transparent;
+    color: var(--color-error);
+  }
+
+  :global(.timer-admin-cancel) {
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+  }
+
+  :global(.timer-admin-form-actions button:disabled) {
     opacity: 0.6;
     cursor: not-allowed;
   }
@@ -84,43 +125,48 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     font-size: 0.9rem;
   }
 
-  :global(.timer-admin-list) {
+  :global(.timer-admin-listing) {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 1.25rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  :global(.timer-admin-listing-heading) {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
+
+  :global(.timer-admin-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
     gap: 1.5rem;
-    width: 100%;
   }
 
   :global(.timer-admin-item) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    width: 100%;
+    gap: 0.6rem;
   }
 
-  :global(.timer-admin-item-header) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
+  :global(.timer-admin-item-title) {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    text-align: center;
   }
 
-  :global(.timer-admin-item-header h3) {
-    margin: 0;
-    font-size: 1.1rem;
-  }
-
-  :global(.timer-admin-delete) {
-    padding: 0.3rem 0.75rem;
-    border-radius: 0.4rem;
-    border: 1px solid var(--color-error);
-    background: transparent;
-    color: var(--color-error);
-    font: inherit;
-    font-size: 0.78rem;
-    cursor: pointer;
+  /* Smaller than the main /cypher showcase clocks -- several of these sit
+     side by side in a grid, so the full-size digits (tuned for one clock
+     alone) would overwhelm it. */
+  :global(.timer-admin-clock) {
+    padding: 1rem 1.25rem;
+    transform: scale(0.55);
   }
 
   :global(.timer-admin-expired) {
