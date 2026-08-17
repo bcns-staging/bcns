@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Colon, DigitGroup, pad2 } from "./SevenSegment";
 
-export default function Clock({ showDate = true }: { showDate?: boolean }) {
+export default function Clock() {
   // Starts null, set on mount: the server-rendered/prerendered version of
   // this page has no notion of "now" (there is no server for a static
   // site), so the first real render has to happen client-side or every
@@ -19,8 +19,7 @@ export default function Clock({ showDate = true }: { showDate?: boolean }) {
 
   // Toggles once per second, in step with the tick that updates `now` --
   // the classic digital-clock blink, on for one second and off for the
-  // next. Only the time row's colons blink; the date row's separators
-  // aren't tied to seconds ticking, so they stay solidly lit.
+  // next.
   const secondsDotsLit = now.getSeconds() % 2 === 0;
 
   return (
@@ -32,15 +31,6 @@ export default function Clock({ showDate = true }: { showDate?: boolean }) {
         <Colon blinking lit={secondsDotsLit} />
         <DigitGroup value={pad2(now.getSeconds())} />
       </div>
-      {showDate && (
-        <div className="clock-row clock-date-row">
-          <DigitGroup value={pad2(now.getDate())} />
-          <Colon />
-          <DigitGroup value={pad2(now.getMonth() + 1)} />
-          <Colon />
-          <DigitGroup value={now.getFullYear().toString()} />
-        </div>
-      )}
     </div>
   );
 }
