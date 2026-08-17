@@ -13,6 +13,8 @@ export interface DeadDrop {
 }
 
 const EXPIRY_OPTIONS = [
+  { label: "2 minutes", hours: 2 / 60 },
+  { label: "5 minutes", hours: 5 / 60 },
   { label: "1 hour", hours: 1 },
   { label: "6 hours", hours: 6 },
   { label: "24 hours", hours: 24 },
