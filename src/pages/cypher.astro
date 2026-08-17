@@ -4,6 +4,7 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import Clock from "../components/islands/Clock.tsx";
+import TimerList from "../components/islands/TimerList.tsx";
 ---
 
 <style>
@@ -15,6 +16,13 @@ import Clock from "../components/islands/Clock.tsx";
     justify-content: center;
     gap: 2rem;
   }
+
+  :global(.timer-list-public) {
+    width: 100%;
+    max-width: 48rem;
+    border-top: none;
+    padding-top: 0;
+  }
 </style>
 
 <Layout title="Cypher | 7 Beacons">
@@ -23,6 +31,9 @@ import Clock from "../components/islands/Clock.tsx";
     <section class="container">
       {/* "timerclock" -- referred to by this name in later requests. */}
       <Clock client:load />
+      {/* Public mirror of whatever's managed in /timeradmin -- same
+          /api/timers data, polled independently; see TimerList.tsx. */}
+      <TimerList client:load />
     </section>
   </main>
   <Footer />

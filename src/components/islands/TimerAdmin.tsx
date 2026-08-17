@@ -1,62 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { LoginPanel } from "./file-explorer/AdminControls";
 import { API_BASE, adminFetch, checkAdminSession } from "./file-explorer/utils";
-import { Colon, DigitGroup, pad2 } from "./SevenSegment";
-
-interface Timer {
-  id: string;
-  title: string;
-  target_time: string;
-  created_at: string;
-}
-
-function daysHoursMinutesSeconds(msRemaining: number) {
-  const clamped = Math.max(0, msRemaining);
-  const totalSeconds = Math.floor(clamped / 1000);
-  return {
-    days: Math.floor(totalSeconds / 86400),
-    hours: Math.floor((totalSeconds % 86400) / 3600),
-    minutes: Math.floor((totalSeconds % 3600) / 60),
-    seconds: totalSeconds % 60,
-  };
-}
-
-function TimerCountdown({ targetTime }: { targetTime: string }) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const remaining = new Date(targetTime).getTime() - now;
-  if (remaining <= 0) {
-    return (
-      <div className="digital-clock timer-admin-clock">
-        <div className="clock-row">
-          <span className="timer-admin-expired">EXPIRED</span>
-        </div>
-      </div>
-    );
-  }
-
-  const { days, hours, minutes, seconds } = daysHoursMinutesSeconds(remaining);
-  const dotsLit = Math.floor(now / 1000) % 2 === 0;
-
-  return (
-    <div className="digital-clock timer-admin-clock">
-      <div className="clock-row">
-        <DigitGroup value={pad2(days)} />
-        <Colon blinking lit={dotsLit} />
-        <DigitGroup value={pad2(hours)} />
-        <Colon blinking lit={dotsLit} />
-        <DigitGroup value={pad2(minutes)} />
-        <Colon blinking lit={dotsLit} />
-        <DigitGroup value={pad2(seconds)} />
-      </div>
-    </div>
-  );
-}
+import { TimerCard, type Timer } from "./TimerCard";
 
 // A local <input type="datetime-local"> value ("2030-01-01T22:45") has no
 // timezone of its own -- the Date constructor interprets it in the
@@ -79,10 +24,11 @@ interface TimerFormProps {
   editingTimer: Timer | null;
   onSaved: () => void;
   onDeleted: () => void;
+  onStateChanged: () => void;
   onCancelEdit: () => void;
 }
 
-function TimerForm({ editingTimer, onSaved, onDeleted, onCancelEdit }: TimerFormProps) {
+function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelEdit }: TimerFormProps) {
   const [title, setTitle] = useState("");
   const [targetTime, setTargetTime] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -123,18 +69,24 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onCancelEdit }: TimerForm
     }
   }
 
-  async function handleDelete() {
+  async function handleAction(action: "pause" | "resume" | "delete") {
     if (!editingTimer) return;
     setBusy(true);
     setError(null);
     try {
-      const resp = await adminFetch(`/api/admin/timers/${encodeURIComponent(editingTimer.id)}`, { method: "DELETE" });
+      const path = `/api/admin/timers/${encodeURIComponent(editingTimer.id)}${action === "delete" ? "" : `/${action}`}`;
+      const resp = await adminFetch(path, { method: action === "delete" ? "DELETE" : "POST" });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
-        setError(body.error ?? `Couldn't delete timer (${resp.status})`);
+        setError(body.error ?? `Couldn't ${action} timer (${resp.status})`);
         return;
       }
-      onDeleted();
+      if (action === "delete") onDeleted();
+      // pause/resume deliberately don't close the edit view (unlike a
+      // title/time save) -- staying on the same timer lets you flip
+      // Pause -> Resume -> Pause again without re-picking it from the
+      // dropdown each time.
+      else onStateChanged();
     } finally {
       setBusy(false);
     }
@@ -157,7 +109,15 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onCancelEdit }: TimerForm
         </button>
         {editingTimer && (
           <>
-            <button type="button" className="timer-admin-delete" disabled={busy} onClick={handleDelete}>
+            <button
+              type="button"
+              className="timer-admin-pause"
+              disabled={busy}
+              onClick={() => handleAction(editingTimer.paused ? "resume" : "pause")}
+            >
+              {editingTimer.paused ? "Resume" : "Pause"} timer
+            </button>
+            <button type="button" className="timer-admin-delete" disabled={busy} onClick={() => handleAction("delete")}>
               Delete
             </button>
             <button type="button" className="timer-admin-cancel" disabled={busy} onClick={onCancelEdit}>
@@ -240,6 +200,7 @@ export default function TimerAdmin() {
           setEditingId(null);
           refreshTimers();
         }}
+        onStateChanged={refreshTimers}
         onCancelEdit={() => setEditingId(null)}
       />
 
@@ -250,10 +211,7 @@ export default function TimerAdmin() {
         {timers.length === 0 && <p className="timer-admin-empty">No timers yet.</p>}
         <div className="timer-admin-grid">
           {timers.map((timer) => (
-            <div className="timer-admin-item" key={timer.id}>
-              <TimerCountdown targetTime={timer.target_time} />
-              <span className="timer-admin-item-title">{timer.title}</span>
-            </div>
+            <TimerCard key={timer.id} timer={timer} />
           ))}
         </div>
       </div>

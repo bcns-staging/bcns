@@ -98,6 +98,12 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     color: var(--color-bg);
   }
 
+  :global(.timer-admin-pause) {
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+  }
+
   :global(.timer-admin-delete) {
     border: 1px solid var(--color-error);
     background: transparent;
@@ -118,63 +124,6 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
   :global(.timer-admin-error) {
     color: var(--color-error);
     font-size: 0.85rem;
-  }
-
-  :global(.timer-admin-empty) {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-  }
-
-  :global(.timer-admin-listing) {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-border);
-  }
-
-  :global(.timer-admin-listing-heading) {
-    margin: 0;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-text-muted);
-  }
-
-  :global(.timer-admin-grid) {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 1.5rem;
-  }
-
-  :global(.timer-admin-item) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  :global(.timer-admin-item-title) {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    text-align: center;
-  }
-
-  /* Smaller than the main /cypher showcase clocks -- several of these sit
-     side by side in a grid, so the full-size digits (tuned for one clock
-     alone) would overwhelm it. */
-  :global(.timer-admin-clock) {
-    padding: 1rem 1.25rem;
-    transform: scale(0.55);
-  }
-
-  :global(.timer-admin-expired) {
-    color: var(--color-error);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
   }
 </style>
 
