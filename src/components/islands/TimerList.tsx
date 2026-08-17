@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "./file-explorer/utils";
 import { TimerCard, type Timer } from "./TimerCard";
+import { TimerHudTopBar } from "./TimerHudTopBar";
 
 // Public, read-only mirror of whatever's managed in /timeradmin -- no
 // login, same /api/timers endpoint the admin page's own listing reads
@@ -47,12 +48,14 @@ export default function TimerList() {
   if (!timers || timers.length === 0) return null;
 
   return (
-    <div className="timer-admin-listing timer-list-public">
-      <h2 className="timer-admin-listing-heading">Timers</h2>
-      <div className="timer-admin-grid">
-        {timers.map((timer) => (
-          <TimerCard key={timer.id} timer={timer} clockOffsetMs={clockOffsetMs} />
-        ))}
+    <div className="timer-list-public-wrap">
+      <TimerHudTopBar timers={timers} clockOffsetMs={clockOffsetMs} />
+      <div className="timer-admin-listing">
+        <div className="timer-admin-grid">
+          {timers.map((timer) => (
+            <TimerCard key={timer.id} timer={timer} clockOffsetMs={clockOffsetMs} />
+          ))}
+        </div>
       </div>
     </div>
   );

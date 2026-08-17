@@ -4,6 +4,33 @@
    once a second page (timeradmin.astro) needed the same look, rather than
    duplicating ~150 lines of CSS across both. */
 
+/* "KeyVault" HUD theme tokens for the timer pages (timeradmin.astro,
+   cypher.astro) -- both of them, and only them, load this stylesheet, so
+   defining these at :root here is exactly as scoped as putting them on a
+   page wrapper would be, without needing one defined redundantly in each
+   page's own <style> block. Declaring a custom property has no visual
+   effect by itself (nothing here consumes --hud-* at :root level), so this
+   is safe even though :root is otherwise a site-wide scope. */
+:root {
+  --hud-bg-1: #39423a;
+  --hud-bg-2: #232a24;
+  --hud-bg-3: #141814;
+  --hud-panel-bg: rgb(10 12 10 / 72%);
+  --hud-border: rgb(255 255 255 / 9%);
+  --hud-border-hover: rgb(255 255 255 / 22%);
+  --hud-text: #e2e8de;
+  --hud-text-muted: #8b9487;
+  --hud-text-dim: #6f7a6c;
+  --hud-text-dimmer: #5c665a;
+  --hud-accent: #ff3c1e;
+  --hud-ready: #8fd18a;
+  --hud-ready-bg: rgb(143 209 138 / 8%);
+  --hud-ready-border: rgb(143 209 138 / 35%);
+  --hud-corner: #9fae9a;
+  --hud-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --hud-gradient: radial-gradient(130% 70% at 50% 0%, var(--hud-bg-1) 0%, var(--hud-bg-2) 45%, var(--hud-bg-3) 100%);
+}
+
 .digital-clock {
   display: flex;
   flex-direction: column;
@@ -45,7 +72,7 @@
   justify-content: center;
   align-items: center;
   gap: 10px;
-  height: 78px;
+  height: 74px;
   margin: 0 0.4rem;
 }
 
@@ -61,26 +88,21 @@
 }
 
 .clock-colon-dot.is-lit {
-  background: #ff1a1a;
+  background: #ff2a12;
   box-shadow:
-    0 0 8px 2px rgba(255, 26, 26, 0.85),
-    0 0 16px 4px rgba(255, 26, 26, 0.35);
+    0 0 8px 2px rgba(255, 42, 18, 0.85),
+    0 0 16px 4px rgba(255, 42, 18, 0.35);
 }
 
 .digit {
   position: relative;
   display: inline-block;
-  /* Thin-segment proportions matched to a reference photo: a tall, narrow
-     digit (width:height roughly 1:2) with a segment thickness that's a
-     much smaller fraction of the digit box than a typical bold LED-clock
-     rendering. */
-  width: 38px;
-  height: 78px;
-  margin: 0 2px;
-  /* The italic-leaning LED look -- skews the whole digit as one unit, so
-     its 7 child segments (each individually positioned/clipped) tilt
-     together rather than needing their own per-segment transforms. */
-  transform: skewX(-8deg);
+  /* Matched to the "DIGIT REFERENCE 0-9" strip: a bold block digit, its
+     height a bit under 2x its width. Upright -- no skew/italic lean, the
+     reference digits sit perfectly straight. */
+  width: 42px;
+  height: 74px;
+  margin: 0 3px;
 }
 
 .segment {
@@ -90,10 +112,10 @@
 }
 
 .segment.is-lit {
-  background: #ff1a1a;
+  background: #ff2a12;
   box-shadow:
-    0 0 8px 2px rgba(255, 26, 26, 0.85),
-    0 0 18px 5px rgba(255, 26, 26, 0.4);
+    0 0 8px 2px rgba(255, 42, 18, 0.85),
+    0 0 18px 5px rgba(255, 42, 18, 0.4);
 }
 
 /* Horizontal segments (top / middle / bottom) -- a pointed hexagon bar, the
@@ -103,14 +125,14 @@
 .seg-d {
   left: 3px;
   right: 3px;
-  height: 7px;
+  height: 8px;
   clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
 }
 .seg-a {
   top: 0;
 }
 .seg-g {
-  top: 36px;
+  top: 33px;
 }
 .seg-d {
   bottom: 0;
@@ -123,28 +145,28 @@
 .seg-b,
 .seg-e,
 .seg-c {
-  width: 7px;
+  width: 8px;
   clip-path: polygon(0% 15%, 50% 0%, 100% 15%, 100% 85%, 50% 100%, 0% 85%);
 }
 .seg-f {
   top: 4px;
   left: 0;
-  height: 32px;
+  height: 29px;
 }
 .seg-b {
   top: 4px;
   right: 0;
-  height: 32px;
+  height: 29px;
 }
 .seg-e {
   bottom: 4px;
   left: 0;
-  height: 31px;
+  height: 29px;
 }
 .seg-c {
   bottom: 4px;
   right: 0;
-  height: 31px;
+  height: 29px;
 }
 
 @media (max-width: 30rem) {
@@ -154,129 +176,202 @@
   }
 }
 
-/* ---- timer cards -- shared by TimerAdmin.tsx (timeradmin.astro) and the
-   public, read-only TimerList.tsx (cypher.astro): same grid of countdown
-   cards in both places, so they stay visually identical rather than two
-   independently-styled listings drifting apart. */
+/* ---- timer cards -- "KeyVault" HUD theme, shared by TimerAdmin.tsx
+   (timeradmin.astro) and the public, read-only TimerList.tsx
+   (cypher.astro): same grid of countdown cards and top bar in both places,
+   so they stay visually identical rather than two independently-styled
+   listings drifting apart. Palette/tokens live in the :root block above,
+   loaded only on these two pages, so this dark HUD look stays contained to
+   the timer feature instead of leaking into the rest of the site's theme. */
+
+/* TimerHudTopBar.tsx -- "KEYVAULT ONLINE  N SEALED" status pill + a
+   compact live HH:MM:SS clock, sitting above the grid on both pages. */
+.timer-hud-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.timer-hud-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.1rem;
+  background: var(--hud-panel-bg);
+  border: 1px solid var(--hud-border);
+  font-family: var(--hud-mono);
+  font-size: 0.78rem;
+}
+
+.timer-hud-status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: var(--hud-accent);
+  box-shadow: 0 0 8px 2px rgb(255 60 30 / 65%);
+  flex-shrink: 0;
+}
+
+.timer-hud-status-label {
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hud-text);
+}
+
+.timer-hud-status-count {
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hud-text-dim);
+}
+
+/* A second, compact instance of .digital-clock -- overrides its padding/
+   zoom to fit a slim top-bar rather than a full showcase display. Source
+   order (after .digital-clock above) is what lets these overrides win at
+   equal specificity, same trick .timer-admin-clock already relies on. */
+.timer-hud-clock {
+  padding: 0.55rem 1rem;
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 6%);
+  border-radius: 0.3rem;
+  zoom: 0.55;
+}
+
+/* Public /cypher wrapper -- same top-bar-then-grid rhythm as .timer-admin,
+   since TimerList.tsx doesn't share a DOM parent with TimerAdmin.tsx's own
+   .timer-admin div. */
+.timer-list-public-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
 
 .timer-admin-listing {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.timer-admin-listing-heading {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
 }
 
 .timer-admin-empty {
-  color: var(--color-text-muted);
+  color: var(--hud-text-muted);
   font-size: 0.9rem;
 }
 
+/* No background of its own now -- the page itself (see timeradmin.astro/
+   cypher.astro's main styles) carries the HUD gradient, so cards just sit
+   directly on that shared backdrop instead of each view nesting a second,
+   redundant gradient inside the page's own. Wider minmax than before --
+   two generously-sized cards per row on a typical viewport, matching the
+   reference design, instead of the previous 15rem floor which packed in
+   3-4 cramped columns. */
 .timer-admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  /* No gap -- spacing now comes from each item's own padding, so the
-     border-right/border-bottom below (see .timer-admin-item) sit flush in
-     the middle of that space as real separator lines between cells,
-     table-style, instead of floating in an empty gap. */
-  gap: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 0.6rem;
-  /* Clips the sharp-cornered edge items to the grid's own rounded corners. */
-  overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(23rem, 1fr));
+  gap: 1.5rem;
 }
 
 .timer-admin-item {
   position: relative;
-  /* Roots a stacking context here so the expired glow's z-index: -1 below
-     stays contained to this cell -- without it, a negative z-index on a
-     positioned descendant can escape and paint behind *sibling* cells
-     instead of just behind this cell's own title/clock. */
-  isolation: isolate;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1.25rem;
-  border-right: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  gap: 0.85rem;
+  padding: 1.25rem 1.35rem;
+  background: var(--hud-panel-bg);
+  border: 1px solid var(--hud-border);
+  transition: border-color 0.15s ease;
 }
 
-/* Soft glow along the top of the cell -- colored by running/paused/
-   expired status. Lives here, on the cell itself (the "table box" a card
-   sits in), not on .timer-admin-clock: that element is the LED clock's
-   own opaque black housing and fills almost all of the cell, so a glow
-   behind it would mostly just be hidden -- this cell's own padding is
-   what actually gives it room to show. */
-.timer-admin-item.is-running {
-  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(34 197 94 / 25%), transparent 65%), var(--color-bg-alt);
+.timer-admin-item:hover {
+  border-color: var(--hud-border-hover);
 }
 
-.timer-admin-item.is-paused {
-  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(255 183 3 / 25%), transparent 65%), var(--color-bg-alt);
+/* Only set on TimerAdmin.tsx's cards (see TimerCard.tsx's onSelect prop) --
+   clicking anywhere on the card opens it for editing, replacing the old
+   separate "Edit..." dropdown. Public /cypher cards never get this class,
+   so they stay inert. */
+.timer-admin-item-editable {
+  cursor: pointer;
 }
 
-.timer-admin-item.is-expired {
-  background: var(--color-bg-alt);
+.timer-admin-item-editable:hover {
+  border-color: var(--hud-accent);
 }
 
-/* Expired cells get a slow "breathing" glow instead of the flat status
-   color -- a separate layer with a *fixed* gradient, animating its
-   `opacity` rather than the gradient's own alpha. Browsers don't reliably
-   cross-fade between two different radial-gradient() values in a
-   @keyframes animation (it was landing as a hard on/off jump at each
-   keyframe instead of a smooth fade); opacity is a plain number and
-   always interpolates smoothly. z-index: -1 (scoped by the parent's
-   isolation: isolate above) keeps it behind the title/clock, which stay
-   at full visibility throughout -- only the glow itself pulses. Respects
-   prefers-reduced-motion -- purely decorative, never load-bearing for
-   reading a card's status (that's still the color itself, static for
-   anyone who'd rather not see it animate). */
-.timer-admin-item.is-expired::before {
-  content: "";
+.timer-admin-item-editable:focus-visible {
+  outline: 1px solid var(--hud-accent);
+  outline-offset: 2px;
+}
+
+/* Small L-shaped targeting-corner accents, opposite corners only -- pure
+   decoration, matching the reference HUD design's card framing. */
+.timer-hud-corner {
   position: absolute;
-  inset: 0;
-  z-index: -1;
+  width: 0.85rem;
+  height: 0.85rem;
   pointer-events: none;
-  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(229 72 77 / 55%), transparent 65%);
-  opacity: 0.3;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .timer-admin-item.is-expired::before {
-    animation: timer-expired-glow-breathe 4s ease-in-out infinite;
-  }
+.timer-hud-corner-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--hud-corner);
+  border-left: 2px solid var(--hud-corner);
 }
 
-@keyframes timer-expired-glow-breathe {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
+.timer-hud-corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--hud-corner);
+  border-right: 2px solid var(--hud-corner);
 }
 
-.timer-admin-item-title {
-  /* Sits above the clock now (was a muted caption below it) -- reads as a
-     real title, not an afterthought, so full text color and real weight
-     instead of the small muted caption style. */
-  font-size: 1rem;
+.timer-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.timer-hud-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--color-text);
-  text-align: center;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-text);
   overflow-wrap: break-word;
+}
+
+.timer-hud-pill {
+  flex-shrink: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Not a traffic-light mapping -- "LOCKED" (still counting down,
+   reveal_text inaccessible) reads neutral/muted, "READY" (expired,
+   reveal_text available) reads green, paused keeps the site's own accent
+   amber. */
+.timer-hud-pill.is-running {
+  color: var(--hud-text-muted);
+  border: 1px solid var(--hud-border-hover);
+}
+
+.timer-hud-pill.is-paused {
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.timer-hud-pill.is-expired {
+  color: var(--hud-ready);
+  border: 1px solid var(--hud-ready-border);
 }
 
 /* Smaller than the main /cypher showcase clock -- several of these sit
@@ -285,30 +380,25 @@
 
    Uses `zoom`, not `transform: scale`, deliberately: transform is paint-only
    and never changes layout, so .clock-row's flex-wrap still sees the full
-   pre-shrink width and wraps into two rows (days+hours on one line,
-   minutes+seconds on another) once a 4-group DD:HH:MM:SS timer is squeezed
-   into a ~15rem grid card -- the box then gets scaled down *after* already
-   wrapping into that squarish shape. zoom shrinks the box before layout, so
-   .clock-row perceives a proportionally larger available width and never
-   needs to wrap -- the card stays one flat row, just smaller. */
+   pre-shrink width and wraps into two rows once a 4-group DD:HH:MM:SS timer
+   is squeezed into a ~15rem grid card -- the box then gets scaled down
+   *after* already wrapping into that squarish shape. zoom shrinks the box
+   before layout, so .clock-row perceives a proportionally larger available
+   width and never needs to wrap -- the card stays one flat row, just
+   smaller. Only the digit row lives inside this zoomed box now (header,
+   progress bar, and footer are normal-scale siblings outside it) -- the
+   card's shape no longer depends on which footer state is showing, since
+   the digit row's own content (always all four DD:HH:MM:SS groups, every
+   timer, every state) never changes. */
 .timer-admin-clock {
   position: relative;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.1rem;
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 6%);
+  border-radius: 0.4rem;
   zoom: 0.36;
-  /* Pinned to the natural (pre-zoom) footprint of the full DD:HH:MM:SS
-     countdown display plus the reveal-text footer below it (see
-     .timer-reveal-footer) -- 4 .clock-box digit groups (116px each) + 3
-     .clock-colon separators (~19px each) + 6 clock-row gaps (8px each) for
-     width; 110px clock-row + 24px column gap + ~80px footer (2.75rem text
-     at this element's 0.36 zoom, see .timer-reveal-button/-text) for
-     height, plus this element's own padding/border. Without a floor, a
-     running (footer-less) timer would shrink-to-fit a shorter box than an
-     expired one, so cards would change size the moment a timer hit zero --
-     this keeps every card the same size in both states. min- (not fixed)
-     so a long custom reveal_text can still wrap and grow taller instead of
-     being clipped. */
-  min-width: 611px;
-  min-height: 250px;
+  min-width: 620px;
+  min-height: 190px;
   justify-content: center;
 }
 
@@ -316,91 +406,136 @@
   flex-wrap: nowrap;
 }
 
-.timer-admin-expired {
-  color: var(--color-error);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+.timer-hud-unit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-/* Sits below the clock-row, inside the same box, once a timer expires --
-   the digits themselves stay at 00:00:00:00 (see TimerCard.tsx) rather
-   than being replaced, so only this footer changes between running and
-   expired. Reveal still takes a deliberate click even after expiry (expiry
-   alone only unlocks reveal_text server-side, see mcp-fileserver's
-   public_api.py) -- it reads as unwrapping a surprise, not a plain status
-   label. */
+.timer-hud-unit-digits {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* font-size here is ~1.7rem, not the ~0.6rem it visually reads as -- this
+   sits inside .timer-admin-clock's zoom: 0.36, so a plain 0.6rem would
+   render at effectively 0.22rem, way too small to read. */
+.timer-hud-unit-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hud-text-dim);
+}
+
+.timer-hud-progress-track {
+  height: 4px;
+  background: rgb(255 255 255 / 8%);
+  overflow: hidden;
+}
+
+.timer-hud-progress-fill {
+  height: 100%;
+  background: var(--hud-accent);
+  transition: width 1s linear;
+}
+
+/* Always renders *something* (sealed label, reveal button, or the
+   revealed text) so the card's shape stays consistent as a timer's state
+   changes. Normal page-scale sizing -- unlike the digit row above, this
+   sits outside .timer-admin-clock's zoom, so no inflate-then-shrink math
+   needed here. */
 .timer-reveal-footer {
-  width: 100%;
-  /* Sized in the same inflated-then-zoomed-down scale as the button/text
-     below -- see their comment for why these numbers look oversized on
-     their own (they're not, once .timer-admin-clock's 0.36 zoom applies). */
-  padding-top: 1.65rem;
-  border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 }
 
-/* font-size here (and on .timer-reveal-text below) is ~2.75rem, not the
-   ~1rem it visually reads as -- both sit inside .timer-admin-clock's
-   zoom: 0.36, so a plain 1rem rendered at effectively 0.36rem, way too
-   small to read (that was the actual bug, not a deliberate small design).
-   2.75rem here lands back around a normal ~1rem-equivalent on screen
-   (2.75 * 0.36 ~= 1), matching the timer title's size above the clock. */
+.timer-sealed-label {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-text-dimmer);
+  padding: 0.55rem 0;
+  border: 1px dashed var(--hud-border);
+}
+
 .timer-reveal-button {
   display: inline-flex;
   align-items: center;
-  gap: 1.1rem;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  font-size: 2.75rem;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  border: 1px solid var(--hud-ready-border);
+  background: var(--hud-ready-bg);
+  padding: 0.55rem 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-ready);
   cursor: pointer;
-  /* Gradient-filled text: the gradient becomes the background, then the
-     text itself is clipped to only show that background where the glyphs
-     are (-webkit-text-fill-color: transparent hides the actual glyph
-     color, letting the clipped background show through instead). */
-  background: linear-gradient(180deg, #ff6b6b 34%, #feca57 100%, #48dbfb 0%, #1dd1a1 100%);
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+}
+
+.timer-reveal-button:hover,
+.timer-reveal-button:focus-visible {
+  background: rgb(143 209 138 / 18%);
+}
+
+.timer-reveal-revealed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  background: var(--hud-ready-bg);
+  border: 1px solid var(--hud-ready-border);
 }
 
 .timer-reveal-text {
   border: 0;
   background: transparent;
   padding: 0;
-  font: inherit;
-  font-size: 2.75rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--hud-ready);
   word-break: break-word;
+  text-align: left;
   cursor: pointer;
 }
 
 .timer-reveal-text:hover,
 .timer-reveal-text:focus-visible {
-  color: var(--color-accent);
+  color: var(--hud-text);
 }
 
-.timer-admin-paused-badge {
-  position: absolute;
-  top: -0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-bg-alt, #151b23);
-  border: 1px solid var(--color-error);
-  color: var(--color-error);
+.timer-reveal-hide {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud-text-muted);
+  cursor: pointer;
+}
+
+.timer-reveal-hide:hover,
+.timer-reveal-hide:focus-visible {
+  color: var(--hud-text);
 }
 

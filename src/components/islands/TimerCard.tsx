@@ -28,36 +28,45 @@ function daysHoursMinutesSeconds(msRemaining: number) {
   };
 }
 
+const STATUS_LABEL = { running: "LOCKED", paused: "PAUSED", expired: "READY" } as const;
+
 // Shared by TimerAdmin.tsx (the login-gated management view) and
 // TimerList.tsx (the public, read-only /cypher listing) -- same countdown
 // rendering either way, so pausing/resuming behaves identically in both
 // places instead of two implementations drifting apart.
 //
 // clockOffsetMs corrects for skew between the browser's clock and the
-// server's: target_time/paused_at are both server timestamps, so a paused
-// timer's frozen remaining (target_time - paused_at) never touches the
-// client clock and is always exact. A *running* timer's remaining
-// (target_time - now) does mix in the browser's Date.now() though -- if the
-// two clocks disagree, that shows up as a jump right at the instant a timer
-// resumes (going from a skew-free frozen value to a skew-affected live one)
-// even though nothing about the pause/resume math itself is wrong.
-// Server-supplied clockOffsetMs (see TimerList.tsx/TimerAdmin.tsx) cancels
-// that skew out so "now" here means the same instant the server means.
+// server's: target_time/paused_at/created_at are all server timestamps, so
+// a paused timer's frozen remaining (target_time - paused_at) never
+// touches the client clock and is always exact. A *running* timer's
+// remaining (target_time - now) does mix in the browser's Date.now()
+// though -- if the two clocks disagree, that shows up as a jump right at
+// the instant a timer resumes (going from a skew-free frozen value to a
+// skew-affected live one) even though nothing about the pause/resume math
+// itself is wrong. Server-supplied clockOffsetMs (see TimerList.tsx/
+// TimerAdmin.tsx) cancels that skew out so "now" here means the same
+// instant the server means.
 export function TimerCountdown({
   timer,
   clockOffsetMs = 0,
   title,
+  onSelect,
 }: {
   timer: Timer;
   clockOffsetMs?: number;
   title: string;
+  // Only passed by TimerAdmin.tsx -- makes the whole card clickable to open
+  // it for editing, replacing the old separate "Edit..." dropdown. Absent
+  // on the public /cypher listing, where cards aren't interactive.
+  onSelect?: () => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
   // The reveal text sits behind a "click to reveal" prompt even once the
   // countdown hits zero -- expiry unlocks it (see public_api.py's
   // list_timers), but showing it still takes a deliberate click rather
   // than just appearing, so it reads as unwrapping a surprise. Local,
-  // unpersisted state: reloading the page (or a fresh visitor) re-hides it.
+  // unpersisted state: reloading the page (or a fresh visitor) re-hides
+  // it. A "Hide" action can also re-collapse it without a reload.
   const [revealed, setRevealed] = useState(false);
   // Briefly shows "Copied!" in place of the text after a click -- reset by
   // its own timeout, not tied to `revealed` (staying revealed is separate
@@ -88,6 +97,15 @@ export function TimerCountdown({
   const anchor = timer.paused && timer.paused_at ? new Date(timer.paused_at).getTime() : serverNow;
   const remaining = target - anchor;
   const expired = remaining <= 0;
+  const status = expired ? "expired" : timer.paused ? "paused" : "running";
+
+  // Progress bar: how much of the timer's own original span (created_at ->
+  // target_time) has elapsed, using the same frozen-while-paused anchor as
+  // the countdown itself so the bar stops moving in lockstep with the
+  // digits rather than continuing to creep forward while paused.
+  const created = new Date(timer.created_at).getTime();
+  const totalSpan = Math.max(target - created, 1);
+  const progressPct = expired ? 100 : Math.min(100, Math.max(0, ((anchor - created) / totalSpan) * 100));
 
   // daysHoursMinutesSeconds clamps negative remaining to 0 -- an expired
   // timer just keeps showing 00:00:00:00 rather than swapping the digits
@@ -99,50 +117,116 @@ export function TimerCountdown({
   // analog clock.
   const dotsLit = timer.paused || expired ? true : Math.floor(serverNow / 1000) % 2 === 0;
   const blinking = !timer.paused && !expired;
-  const status = expired ? "expired" : timer.paused ? "paused" : "running";
 
   return (
-    // Status class lives on this outer cell (the "table box" a card sits
-    // in), not on .timer-admin-clock -- that's the LED clock's own opaque
-    // black housing, which would just hide most of a background glow
-    // behind it. The cell around it has room (its own padding) for the
-    // glow to actually show.
-    <div className={`timer-admin-item is-${status}`}>
-      <span className="timer-admin-item-title">{title}</span>
+    <div
+      className={`timer-admin-item${onSelect ? " timer-admin-item-editable" : ""}`}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={onSelect}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }
+    >
+      <span className="timer-hud-corner timer-hud-corner-tl" aria-hidden="true" />
+      <span className="timer-hud-corner timer-hud-corner-br" aria-hidden="true" />
+      <div className="timer-hud-header">
+        <span className="timer-hud-label">{title}</span>
+        <span className={`timer-hud-pill is-${status}`}>{STATUS_LABEL[status]}</span>
+      </div>
       <div className="digital-clock timer-admin-clock">
-        {timer.paused && !expired && <span className="timer-admin-paused-badge">PAUSED</span>}
         <div className="clock-row">
-          <DigitGroup value={pad2(days)} />
-          <Colon blinking={blinking} lit={dotsLit} />
-          <DigitGroup value={pad2(hours)} />
-          <Colon blinking={blinking} lit={dotsLit} />
-          <DigitGroup value={pad2(minutes)} />
-          <Colon blinking={blinking} lit={dotsLit} />
-          <DigitGroup value={pad2(seconds)} />
-        </div>
-        {expired && (
-          <div className="timer-reveal-footer">
-            {revealed ? (
-              <button
-                type="button"
-                className="timer-reveal-text"
-                onClick={() => copyRevealText(timer.reveal_text || "EXPIRED")}
-                title="Click to copy"
-              >
-                {copied ? "Copied!" : timer.reveal_text || "EXPIRED"}
-              </button>
-            ) : (
-              <button type="button" className="timer-reveal-button" onClick={() => setRevealed(true)}>
-                Reveal Text <span aria-hidden="true">👁</span>
-              </button>
-            )}
+          <div className="timer-hud-unit-col">
+            <div className="timer-hud-unit-digits">
+              <DigitGroup value={pad2(days)} />
+            </div>
+            <span className="timer-hud-unit-label">Days</span>
           </div>
+          <div className="timer-hud-unit-col">
+            <div className="timer-hud-unit-digits">
+              <Colon blinking={blinking} lit={dotsLit} />
+              <DigitGroup value={pad2(hours)} />
+            </div>
+            <span className="timer-hud-unit-label">Hrs</span>
+          </div>
+          <div className="timer-hud-unit-col">
+            <div className="timer-hud-unit-digits">
+              <Colon blinking={blinking} lit={dotsLit} />
+              <DigitGroup value={pad2(minutes)} />
+            </div>
+            <span className="timer-hud-unit-label">Min</span>
+          </div>
+          <div className="timer-hud-unit-col">
+            <div className="timer-hud-unit-digits">
+              <Colon blinking={blinking} lit={dotsLit} />
+              <DigitGroup value={pad2(seconds)} />
+            </div>
+            <span className="timer-hud-unit-label">Sec</span>
+          </div>
+        </div>
+      </div>
+      <div className="timer-hud-progress-track">
+        <div className="timer-hud-progress-fill" style={{ width: `${progressPct}%` }} />
+      </div>
+      <div className="timer-reveal-footer">
+        {!expired ? (
+          <span className="timer-sealed-label">Sealed until zero</span>
+        ) : revealed ? (
+          <div className="timer-reveal-revealed">
+            <button
+              type="button"
+              className="timer-reveal-text"
+              onClick={(e) => {
+                e.stopPropagation();
+                copyRevealText(timer.reveal_text || "EXPIRED");
+              }}
+              title="Click to copy"
+            >
+              {copied ? "Copied!" : timer.reveal_text || "EXPIRED"}
+            </button>
+            <button
+              type="button"
+              className="timer-reveal-hide"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRevealed(false);
+              }}
+            >
+              Hide
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="timer-reveal-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setRevealed(true);
+            }}
+          >
+            Reveal Key <span aria-hidden="true">▸</span>
+          </button>
         )}
       </div>
     </div>
   );
 }
 
-export function TimerCard({ timer, clockOffsetMs }: { timer: Timer; clockOffsetMs?: number }) {
-  return <TimerCountdown timer={timer} clockOffsetMs={clockOffsetMs} title={timer.title} />;
+export function TimerCard({
+  timer,
+  clockOffsetMs,
+  onSelect,
+}: {
+  timer: Timer;
+  clockOffsetMs?: number;
+  onSelect?: () => void;
+}) {
+  return <TimerCountdown timer={timer} clockOffsetMs={clockOffsetMs} title={timer.title} onSelect={onSelect} />;
 }
