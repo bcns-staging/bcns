@@ -1,0 +1,98 @@
+---
+import "../../styles/seven-segment-clock.css";
+import Layout from "../../layouts/Layout.astro";
+import DeadDropView from "../../components/islands/DeadDropView.tsx";
+---
+
+<style>
+  /* Full-bleed "KeyVault" HUD dashboard, same theme as /deaddrop and
+     /timeradmin -- --hud-* tokens come from seven-segment-clock.css's
+     :root block, imported above. This page reads the drop id from the URL
+     query string and the decryption key from the URL *fragment*
+     (DeadDropView.tsx) rather than an Astro dynamic route param: the site
+     is fully static (no server-side rendering), and drop ids are minted at
+     runtime, long after this page was built -- a static shell that reads
+     both from window.location and fetches mcp-fileserver directly is the
+     same architecture every other dynamic page on this site already uses
+     (TimerList.tsx, FileExplorer.tsx). */
+  :global(body) {
+    background: var(--hud-gradient);
+  }
+
+  main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+  }
+
+  :global(.deaddrop-view-item) {
+    max-width: 32rem;
+    margin-inline: auto;
+    padding: 1.75rem;
+  }
+
+  :global(.deaddrop-view-copy) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-text-muted);
+    line-height: 1.6;
+  }
+
+  :global(.deaddrop-view-reveal) {
+    align-self: center;
+    width: auto;
+    padding-inline: 2rem;
+  }
+
+  :global(.deaddrop-view-error) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-accent);
+    line-height: 1.6;
+  }
+
+  :global(.deaddrop-view-plaintext) {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: rgb(0 0 0 / 40%);
+    border: 1px solid var(--hud-ready-border);
+    color: var(--hud-ready);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: pointer;
+  }
+
+  :global(.deaddrop-view-plaintext:hover) {
+    border-color: var(--hud-ready);
+  }
+
+  :global(.deaddrop-view-copied-hint) {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--hud-text-dim);
+    text-align: center;
+  }
+
+  :global(.deaddrop-view-burned-notice) {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--hud-text-dimmer);
+    text-align: center;
+    font-style: italic;
+  }
+</style>
+
+<Layout title="Dead Drop | 7 Beacons">
+  <main>
+    <DeadDropView client:load />
+  </main>
+</Layout>
