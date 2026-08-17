@@ -39,11 +39,12 @@ function DigitGroup({ value }: { value: string }) {
   );
 }
 
-function Colon() {
+function Colon({ blinking = false, lit = true }: { blinking?: boolean; lit?: boolean }) {
+  const on = !blinking || lit;
   return (
     <span className="clock-colon">
-      <span className="clock-colon-dot" />
-      <span className="clock-colon-dot" />
+      <span className={`clock-colon-dot${on ? " is-lit" : ""}`} />
+      <span className={`clock-colon-dot${on ? " is-lit" : ""}`} />
     </span>
   );
 }
@@ -70,14 +71,20 @@ export default function Clock() {
 
   if (!now) return null;
 
+  // Toggles once per second, in step with the tick that updates `now` --
+  // the classic digital-clock blink, on for one second and off for the
+  // next. Only the time row's colons blink; the date row's separators
+  // aren't tied to seconds ticking, so they stay solidly lit.
+  const secondsDotsLit = now.getSeconds() % 2 === 0;
+
   return (
     <div className="digital-clock">
       <div className="clock-day">{DAY_NAMES[now.getDay()]}</div>
       <div className="clock-row">
         <DigitGroup value={pad2(now.getHours())} />
-        <Colon />
+        <Colon blinking lit={secondsDotsLit} />
         <DigitGroup value={pad2(now.getMinutes())} />
-        <Colon />
+        <Colon blinking lit={secondsDotsLit} />
         <DigitGroup value={pad2(now.getSeconds())} />
       </div>
       <div className="clock-row clock-date-row">

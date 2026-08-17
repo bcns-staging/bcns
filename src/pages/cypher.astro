@@ -78,6 +78,14 @@ import Clock from "../components/islands/Clock.tsx";
     width: 6px;
     height: 6px;
     border-radius: 50%;
+    /* Unlit by default, same dark-red "off segment" look as .segment --
+       the time row's colons toggle .is-lit on/off once a second (see
+       Clock.tsx), the date row's stay lit via the same class. */
+    background: #2a0808;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  :global(.clock-colon-dot.is-lit) {
     background: #ff1a1a;
     box-shadow:
       0 0 8px 2px rgba(255, 26, 26, 0.85),
@@ -88,10 +96,10 @@ import Clock from "../components/islands/Clock.tsx";
     position: relative;
     display: inline-block;
     /* Thin-segment proportions matched to the reference photo: a tall,
-       narrow digit (width:height roughly 1:2.3) with a segment thickness
-       (5px) that's a much smaller fraction of the digit box than a typical
+       narrow digit (width:height roughly 1:2) with a segment thickness
+       that's a much smaller fraction of the digit box than a typical
        bold LED-clock rendering. */
-    width: 34px;
+    width: 38px;
     height: 78px;
     margin: 0 2px;
     /* The italic-leaning LED look -- skews the whole digit as one unit, so
@@ -120,7 +128,7 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.seg-d) {
     left: 3px;
     right: 3px;
-    height: 6px;
+    height: 7px;
     clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
   }
   :global(.seg-a) {
@@ -140,7 +148,7 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.seg-b),
   :global(.seg-e),
   :global(.seg-c) {
-    width: 6px;
+    width: 7px;
     clip-path: polygon(0% 15%, 50% 0%, 100% 15%, 100% 85%, 50% 100%, 0% 85%);
   }
   :global(.seg-f) {
@@ -156,12 +164,12 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.seg-e) {
     bottom: 4px;
     left: 0;
-    height: 32px;
+    height: 31px;
   }
   :global(.seg-c) {
     bottom: 4px;
     right: 0;
-    height: 32px;
+    height: 31px;
   }
 
   @media (max-width: 30rem) {
