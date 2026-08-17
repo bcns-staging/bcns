@@ -1,40 +1,36 @@
 ---
 import "../styles/seven-segment-clock.css";
 import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
-import Clock from "../components/islands/Clock.tsx";
 import TimerList from "../components/islands/TimerList.tsx";
 ---
 
 <style>
-  section {
-    padding-block: 3rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
+  /* Full-bleed "KeyVault" HUD dashboard -- no site header/footer chrome on
+     this page at all, per the reference design. --hud-* tokens come from
+     seven-segment-clock.css's :root block, imported above.
+
+     The gradient goes on :global(body), not just main -- body is the
+     actual full-height, full-bleed element (Layout.astro's, not this
+     page's own template, hence :global), so there's no seam of the site's
+     default dark-blue background showing past main's own box in any
+     scenario (overscroll, a shorter-than-viewport content flash, etc). */
+  :global(body) {
+    background: var(--hud-gradient);
   }
 
-  :global(.timer-list-public) {
-    width: 100%;
-    max-width: 48rem;
-    border-top: none;
-    padding-top: 0;
+  main {
+    display: block;
+    min-height: 100vh;
+    padding-block: 2.5rem;
   }
 </style>
 
 <Layout title="Cypher | 7 Beacons">
-  <Header />
   <main>
-    <section class="container">
-      {/* "timerclock" -- referred to by this name in later requests. */}
-      <Clock client:load />
+    <div class="container">
       {/* Public mirror of whatever's managed in /timeradmin -- same
           /api/timers data, polled independently; see TimerList.tsx. */}
       <TimerList client:load />
-    </section>
+    </div>
   </main>
-  <Footer />
 </Layout>
