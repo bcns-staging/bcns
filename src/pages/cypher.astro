@@ -177,6 +177,8 @@ import Clock from "../components/islands/Clock.tsx";
   <main>
     <section class="container">
       <Clock client:load />
+      {/* "timerclock" -- the time-only (no date row) variant, 3 separately
+          boxed HH/MM/SS groups. Referred to by this name in later requests. */}
       <Clock client:load showDate={false} />
     </section>
   </main>
