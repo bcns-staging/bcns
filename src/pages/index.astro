@@ -6,31 +6,111 @@ import Footer from "../components/Footer.astro";
 ---
 
 <style>
-  /* Industrial/futuristic theme scoped to the landing page only - gunmetal
-     panels + a red-to-yellow neon glow accent, inspired by a sci-fi door
-     reference. Overrides the shared design tokens as CSS custom properties,
-     which cascade into Header/Hero/Footer through the real DOM regardless
-     of Astro's per-component style scoping, without touching those shared
-     components' own color values (they're also used on /map and /project-3,
-     which must stay on the default theme). */
+  /* "KeyVault" HUD theme, matching /timeradmin, /cypher, /fm, and /fm/admin
+     -- same hex values as those pages' tokens, hand-duplicated here rather
+     than imported (each of those lives in its own stylesheet with a lot of
+     unrelated CSS this page has no use for). Overrides the shared design
+     tokens as CSS custom properties, which cascade into Header/Hero/Footer
+     through the real DOM regardless of Astro's per-component style scoping,
+     without touching those shared components' own color values (they're
+     also used on /map and /project-3..5, which must stay on the default
+     theme). Hero.astro's --glow-red/orange/yellow (its title-gradient and
+     ambient-glow tokens) are all pointed at the same single HUD red here,
+     rather than the old red-to-yellow fire gradient -- this theme uses one
+     accent color throughout, not a rainbow. */
   .landing-theme {
-    --color-bg: #0a0d12;
-    --color-bg-alt: #1b232c;
-    --color-text: #f2f5f8;
-    --color-text-muted: #8b96a3;
-    --color-accent: #ff7a1a;
-    --color-border: #2a3542;
-    --glow-red: #ff3c14;
-    --glow-orange: #ff7a1a;
-    --glow-yellow: #ffd23f;
-    background: var(--color-bg);
+    --color-bg: #0a0c0a;
+    --color-bg-alt: #141814;
+    --color-text: #e2e8de;
+    --color-text-muted: #8b9487;
+    --color-accent: #ff3c1e;
+    --color-border: rgb(255 255 255 / 9%);
+    --glow-red: #ff3c1e;
+    --glow-orange: #ff3c1e;
+    --glow-yellow: #ff3c1e;
+    background: radial-gradient(130% 70% at 50% 0%, #39423a 0%, #232a24 45%, #141814 100%);
     min-height: 100vh;
   }
 
   .version {
     padding-block: 0.75rem 0;
     color: var(--color-text-muted);
-    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  :global(.landing-theme header) {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  :global(.landing-theme .brand) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  :global(.landing-theme nav a) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  :global(.landing-theme nav a:hover) {
+    color: var(--color-accent);
+  }
+
+  /* Hero's ambient radial blur behind the headline, and the eyebrow's own
+     text-shadow glow -- both off for this page. Scoped to .landing-theme,
+     so Hero's default glow (used as-is on /map, /project-3..5) is
+     untouched. */
+  :global(.landing-theme section::before) {
+    display: none;
+  }
+
+  :global(.landing-theme .eyebrow) {
+    text-shadow: none;
+  }
+
+  /* Reskinned to the HUD's bordered/low-fill button language (see the
+     timer cards' "Reveal Key" button) instead of Hero's default solid
+     gradient-filled pill -- scoped to this page only via .landing-theme, so
+     Hero's own .cta rules (used as-is on /map, /project-3..5) are
+     untouched. The extra `a` element qualifier isn't just style: it also
+     guarantees this beats Hero's own scoped .cta rule on specificity,
+     regardless of stylesheet source order. */
+  :global(.landing-theme a.cta) {
+    background: rgb(255 60 30 / 12%);
+    border: 1px solid var(--color-accent);
+    border-radius: 0;
+    color: var(--color-accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    box-shadow: none;
+  }
+
+  :global(.landing-theme a.cta:hover) {
+    background: rgb(255 60 30 / 22%);
+    box-shadow: none;
+  }
+
+  :global(.landing-theme footer) {
+    border-top: 1px solid var(--color-border);
+  }
+
+  :global(.landing-theme footer p) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 </style>
 
