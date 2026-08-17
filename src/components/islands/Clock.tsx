@@ -49,8 +49,6 @@ function Colon({ blinking = false, lit = true }: { blinking?: boolean; lit?: boo
   );
 }
 
-const DAY_NAMES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-
 function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
@@ -79,7 +77,6 @@ export default function Clock() {
 
   return (
     <div className="digital-clock">
-      <div className="clock-day">{DAY_NAMES[now.getDay()]}</div>
       <div className="clock-row">
         <DigitGroup value={pad2(now.getHours())} />
         <Colon blinking lit={secondsDotsLit} />
