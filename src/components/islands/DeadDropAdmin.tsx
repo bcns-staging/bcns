@@ -132,8 +132,14 @@ function CreateForm({
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (pin.length < 4) {
-      setError("PIN must be at least 4 characters.");
+    if (pin.length < 6) {
+      // The pin is the only thing standing between "someone who has the
+      // link" and "someone who can read the message" (see deaddrop/crypto.ts) --
+      // ciphertext + link secret alone are enough for an attacker to brute-
+      // force a *short* pin completely offline, with zero server involvement
+      // and no rate limit to slow them down. 6+ chars (letters/digits, not
+      // just a 6-digit number) raises that cost substantially.
+      setError("PIN must be at least 6 characters.");
       return;
     }
     setBusy(true);
@@ -158,7 +164,11 @@ function CreateForm({
       // the server (see deaddrop/crypto.ts) and this component's state is
       // about to be torn down. This is the one and only chance to hand it
       // to the admin.
-      const link = `${window.location.origin}/deaddrop/view/?id=${encodeURIComponent(id)}#k=${key}`;
+      //
+      // /d, not /deaddrop/view -- and "i", not "id" -- so a shared link
+      // reads as an opaque token rather than announcing "this is a secret-
+      // message reveal page" to anyone who glances at it.
+      const link = `${window.location.origin}/d/?i=${encodeURIComponent(id)}#k=${key}`;
       onCreated(link, pin);
     } catch {
       setError("Request failed.");
@@ -187,10 +197,10 @@ function CreateForm({
         />
         <input
           type="password"
-          placeholder="PIN -- relay this to the recipient separately from the link"
+          placeholder="PIN (6+ chars) -- relay this to the recipient separately from the link"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
-          minLength={4}
+          minLength={6}
           maxLength={64}
           required
         />
@@ -209,7 +219,7 @@ function CreateForm({
           ))}
         </select>
         <div className="timer-admin-form-actions">
-          <button type="submit" disabled={busy || !secret.trim() || pin.length < 4}>
+          <button type="submit" disabled={busy || !secret.trim() || pin.length < 6}>
             {busy ? "Sealing…" : "Seal drop"}
           </button>
         </div>
