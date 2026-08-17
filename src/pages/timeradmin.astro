@@ -1,0 +1,143 @@
+---
+import "../styles/seven-segment-clock.css";
+// LoginPanel (reused from the file explorer's admin login) is styled by
+// this stylesheet -- not the file explorer's own page-height/grid layout
+// rules, just the shared .file-explorer-admin-login/input/button styles.
+// Deliberately not wrapped in .file-explorer-theme (that swaps in a
+// teal-accented palette specific to /fm) -- this page inherits the site's
+// normal default theme instead, which fits better outside the file
+// explorer.
+import "../styles/file-explorer.css";
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import TimerAdmin from "../components/islands/TimerAdmin.tsx";
+---
+
+<style>
+  section {
+    padding-block: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  :global(.timer-admin) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    max-width: 40rem;
+  }
+
+  :global(.timer-admin-form) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  :global(.timer-admin-form input) {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.85rem;
+  }
+
+  :global(.timer-admin-form input[type="text"]) {
+    flex: 1;
+    min-width: 12rem;
+  }
+
+  :global(.timer-admin-form button) {
+    padding: 0.5rem 1rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-bg);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  :global(.timer-admin-form button:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  :global(.timer-admin-error) {
+    color: var(--color-error);
+    font-size: 0.85rem;
+  }
+
+  :global(.timer-admin-empty) {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  :global(.timer-admin-list) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  :global(.timer-admin-item) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  :global(.timer-admin-item-header) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  :global(.timer-admin-item-header h3) {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  :global(.timer-admin-delete) {
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--color-error);
+    background: transparent;
+    color: var(--color-error);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+
+  :global(.timer-admin-expired) {
+    color: var(--color-error);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+</style>
+
+<Layout title="Timer Admin | 7 Beacons">
+  <Header />
+  <main>
+    <section class="container">
+      <TimerAdmin client:load />
+    </section>
+  </main>
+  <Footer />
+</Layout>

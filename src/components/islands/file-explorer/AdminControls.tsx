@@ -99,7 +99,7 @@ interface LoginPanelProps {
   onLoggedIn: () => void;
 }
 
-function LoginPanel({ onLoggedIn }: LoginPanelProps) {
+export function LoginPanel({ onLoggedIn }: LoginPanelProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
