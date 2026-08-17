@@ -196,6 +196,12 @@
 }
 
 .timer-admin-item {
+  position: relative;
+  /* Roots a stacking context here so the expired glow's z-index: -1 below
+     stays contained to this cell -- without it, a negative z-index on a
+     positioned descendant can escape and paint behind *sibling* cells
+     instead of just behind this cell's own title/clock. */
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -203,6 +209,62 @@
   padding: 1.25rem;
   border-right: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
+}
+
+/* Soft glow along the top of the cell -- colored by running/paused/
+   expired status. Lives here, on the cell itself (the "table box" a card
+   sits in), not on .timer-admin-clock: that element is the LED clock's
+   own opaque black housing and fills almost all of the cell, so a glow
+   behind it would mostly just be hidden -- this cell's own padding is
+   what actually gives it room to show. */
+.timer-admin-item.is-running {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(34 197 94 / 25%), transparent 65%), var(--color-bg-alt);
+}
+
+.timer-admin-item.is-paused {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(255 183 3 / 25%), transparent 65%), var(--color-bg-alt);
+}
+
+.timer-admin-item.is-expired {
+  background: var(--color-bg-alt);
+}
+
+/* Expired cells get a slow "breathing" glow instead of the flat status
+   color -- a separate layer with a *fixed* gradient, animating its
+   `opacity` rather than the gradient's own alpha. Browsers don't reliably
+   cross-fade between two different radial-gradient() values in a
+   @keyframes animation (it was landing as a hard on/off jump at each
+   keyframe instead of a smooth fade); opacity is a plain number and
+   always interpolates smoothly. z-index: -1 (scoped by the parent's
+   isolation: isolate above) keeps it behind the title/clock, which stay
+   at full visibility throughout -- only the glow itself pulses. Respects
+   prefers-reduced-motion -- purely decorative, never load-bearing for
+   reading a card's status (that's still the color itself, static for
+   anyone who'd rather not see it animate). */
+.timer-admin-item.is-expired::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgb(229 72 77 / 55%), transparent 65%);
+  opacity: 0.3;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timer-admin-item.is-expired::before {
+    animation: timer-expired-glow-breathe 4s ease-in-out infinite;
+  }
+}
+
+@keyframes timer-expired-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .timer-admin-item-title {
@@ -214,7 +276,6 @@
   letter-spacing: 0.02em;
   color: var(--color-text);
   text-align: center;
-  max-width: 100%;
   overflow-wrap: break-word;
 }
 
@@ -294,18 +355,20 @@
   align-items: center;
   gap: 1.1rem;
   border: 0;
-  background: transparent;
   padding: 0;
   font: inherit;
   font-size: 2.75rem;
   font-weight: 700;
-  color: var(--color-text);
   cursor: pointer;
-}
-
-.timer-reveal-button:hover,
-.timer-reveal-button:focus-visible {
-  color: var(--color-accent);
+  /* Gradient-filled text: the gradient becomes the background, then the
+     text itself is clipped to only show that background where the glyphs
+     are (-webkit-text-fill-color: transparent hides the actual glyph
+     color, letting the clipped background show through instead). */
+  background: linear-gradient(180deg, #ff6b6b 34%, #feca57 100%, #48dbfb 0%, #1dd1a1 100%);
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .timer-reveal-text {
@@ -340,3 +403,4 @@
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
 }
+

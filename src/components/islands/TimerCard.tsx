@@ -43,7 +43,15 @@ function daysHoursMinutesSeconds(msRemaining: number) {
 // even though nothing about the pause/resume math itself is wrong.
 // Server-supplied clockOffsetMs (see TimerList.tsx/TimerAdmin.tsx) cancels
 // that skew out so "now" here means the same instant the server means.
-export function TimerCountdown({ timer, clockOffsetMs = 0 }: { timer: Timer; clockOffsetMs?: number }) {
+export function TimerCountdown({
+  timer,
+  clockOffsetMs = 0,
+  title,
+}: {
+  timer: Timer;
+  clockOffsetMs?: number;
+  title: string;
+}) {
   const [now, setNow] = useState(() => Date.now());
   // The reveal text sits behind a "click to reveal" prompt even once the
   // countdown hits zero -- expiry unlocks it (see public_api.py's
@@ -91,46 +99,50 @@ export function TimerCountdown({ timer, clockOffsetMs = 0 }: { timer: Timer; clo
   // analog clock.
   const dotsLit = timer.paused || expired ? true : Math.floor(serverNow / 1000) % 2 === 0;
   const blinking = !timer.paused && !expired;
+  const status = expired ? "expired" : timer.paused ? "paused" : "running";
 
   return (
-    <div className="digital-clock timer-admin-clock">
-      {timer.paused && !expired && <span className="timer-admin-paused-badge">PAUSED</span>}
-      <div className="clock-row">
-        <DigitGroup value={pad2(days)} />
-        <Colon blinking={blinking} lit={dotsLit} />
-        <DigitGroup value={pad2(hours)} />
-        <Colon blinking={blinking} lit={dotsLit} />
-        <DigitGroup value={pad2(minutes)} />
-        <Colon blinking={blinking} lit={dotsLit} />
-        <DigitGroup value={pad2(seconds)} />
-      </div>
-      {expired && (
-        <div className="timer-reveal-footer">
-          {revealed ? (
-            <button
-              type="button"
-              className="timer-reveal-text"
-              onClick={() => copyRevealText(timer.reveal_text || "EXPIRED")}
-              title="Click to copy"
-            >
-              {copied ? "Copied!" : timer.reveal_text || "EXPIRED"}
-            </button>
-          ) : (
-            <button type="button" className="timer-reveal-button" onClick={() => setRevealed(true)}>
-              Reveal Text <span aria-hidden="true">👁</span>
-            </button>
-          )}
+    // Status class lives on this outer cell (the "table box" a card sits
+    // in), not on .timer-admin-clock -- that's the LED clock's own opaque
+    // black housing, which would just hide most of a background glow
+    // behind it. The cell around it has room (its own padding) for the
+    // glow to actually show.
+    <div className={`timer-admin-item is-${status}`}>
+      <span className="timer-admin-item-title">{title}</span>
+      <div className="digital-clock timer-admin-clock">
+        {timer.paused && !expired && <span className="timer-admin-paused-badge">PAUSED</span>}
+        <div className="clock-row">
+          <DigitGroup value={pad2(days)} />
+          <Colon blinking={blinking} lit={dotsLit} />
+          <DigitGroup value={pad2(hours)} />
+          <Colon blinking={blinking} lit={dotsLit} />
+          <DigitGroup value={pad2(minutes)} />
+          <Colon blinking={blinking} lit={dotsLit} />
+          <DigitGroup value={pad2(seconds)} />
         </div>
-      )}
+        {expired && (
+          <div className="timer-reveal-footer">
+            {revealed ? (
+              <button
+                type="button"
+                className="timer-reveal-text"
+                onClick={() => copyRevealText(timer.reveal_text || "EXPIRED")}
+                title="Click to copy"
+              >
+                {copied ? "Copied!" : timer.reveal_text || "EXPIRED"}
+              </button>
+            ) : (
+              <button type="button" className="timer-reveal-button" onClick={() => setRevealed(true)}>
+                Reveal Text <span aria-hidden="true">👁</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export function TimerCard({ timer, clockOffsetMs }: { timer: Timer; clockOffsetMs?: number }) {
-  return (
-    <div className="timer-admin-item">
-      <span className="timer-admin-item-title">{timer.title}</span>
-      <TimerCountdown timer={timer} clockOffsetMs={clockOffsetMs} />
-    </div>
-  );
+  return <TimerCountdown timer={timer} clockOffsetMs={clockOffsetMs} title={timer.title} />;
 }
