@@ -192,9 +192,23 @@ function Spinner() {
   return <span className="file-explorer-spinner" role="status" aria-label="Loading" />;
 }
 
-function Breadcrumbs({ currentFolder, onNavigate }: { currentFolder: string; onNavigate: (path: string) => void }) {
+// dirCount/fileCount are optional: the main toolbar's call site passes them
+// (current folder's own item counts, shown in the status bar), while the
+// preview pane header's call site (just a compact path indicator, not a
+// status bar) omits them and gets the bare crumb trail back.
+function Breadcrumbs({
+  currentFolder,
+  onNavigate,
+  dirCount,
+  fileCount,
+}: {
+  currentFolder: string;
+  onNavigate: (path: string) => void;
+  dirCount?: number;
+  fileCount?: number;
+}) {
   const segments = currentFolder ? currentFolder.split("/") : [];
-  return (
+  const crumbs = (
     <nav className="file-explorer-breadcrumbs" aria-label="Folder path">
       <button type="button" onClick={() => onNavigate("")} className="file-explorer-crumb">
         <HomeIcon size={14} />
@@ -212,6 +226,18 @@ function Breadcrumbs({ currentFolder, onNavigate }: { currentFolder: string; onN
         );
       })}
     </nav>
+  );
+
+  if (dirCount === undefined || fileCount === undefined) return crumbs;
+
+  return (
+    <div className="file-explorer-breadcrumb-bar">
+      <span className="file-explorer-status-dot" aria-hidden="true" />
+      {crumbs}
+      <span className="file-explorer-item-count">
+        {dirCount} {dirCount === 1 ? "dir" : "dirs"} · {fileCount} {fileCount === 1 ? "file" : "files"}
+      </span>
+    </div>
   );
 }
 
@@ -485,32 +511,39 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
     <div className={`file-explorer ${selected ? "has-preview" : ""}`}>
       <div className="file-explorer-browser">
         <div className="file-explorer-toolbar">
-          <Breadcrumbs currentFolder={currentFolder} onNavigate={navigateTo} />
+          <div className="file-explorer-toolbar-top">
+            <Breadcrumbs
+              currentFolder={currentFolder}
+              onNavigate={navigateTo}
+              dirCount={directoryContents.folders.length}
+              fileCount={directoryContents.files.length}
+            />
+            {showAdminControls && (
+              <SelectionToolbar
+                selectionMode={selectionMode}
+                onToggleSelectionMode={toggleSelectionMode}
+                selectedItems={selectedItemsResolved}
+                currentFolder={currentFolder}
+                clipboard={clipboard}
+                onSetClipboard={setClipboard}
+                onChanged={refreshAfterAdminChange}
+                onClearSelection={() => setSelectedItems([])}
+              />
+            )}
+            {!adminMode && (
+              <PublicSelectionToolbar
+                selectionMode={selectionMode}
+                onToggleSelectionMode={toggleSelectionMode}
+                selectedItems={selectedItems}
+              />
+            )}
+          </div>
           {adminMode && (
             <AdminControls
               isAdmin={isAdmin}
               currentFolder={currentFolder}
               onAuthChange={handleAuthChange}
               onChanged={refreshAfterAdminChange}
-            />
-          )}
-          {showAdminControls && (
-            <SelectionToolbar
-              selectionMode={selectionMode}
-              onToggleSelectionMode={toggleSelectionMode}
-              selectedItems={selectedItemsResolved}
-              currentFolder={currentFolder}
-              clipboard={clipboard}
-              onSetClipboard={setClipboard}
-              onChanged={refreshAfterAdminChange}
-              onClearSelection={() => setSelectedItems([])}
-            />
-          )}
-          {!adminMode && (
-            <PublicSelectionToolbar
-              selectionMode={selectionMode}
-              onToggleSelectionMode={toggleSelectionMode}
-              selectedItems={selectedItems}
             />
           )}
           <div className="file-explorer-toolbar-actions">
@@ -595,7 +628,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                         <span className="file-explorer-filename">{isSearching ? folder.path : folder.name}</span>
                         {isAdmin && visibility === "admin-only" && <HiddenBadge />}
                       </td>
-                      <td>Folder</td>
+                      <td className="file-explorer-type-cell file-explorer-type-dir">Dir</td>
                       <td>{formatSize(folderSizeBytes(files, folder.path, isAdmin === true))}</td>
                       <td>—</td>
                       {showCheckboxColumn && (
@@ -619,7 +652,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                         <span className="file-explorer-filename">{displayName(file.path)}</span>
                         {isAdmin && file.visibility === "admin-only" && <HiddenBadge />}
                       </td>
-                      <td>{categoryLabel(category)}</td>
+                      <td className={`file-explorer-type-cell file-explorer-type-${category}`}>{categoryLabel(category)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
                       <td>{formatDate(file.updated)}</td>
                       {showCheckboxColumn && (
@@ -650,7 +683,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                         <SelectionCheckbox checked={isItemSelected(folder.path)} />
                       </span>
                     )}
-                    <FolderIcon size={36} />
+                    <FolderIcon size={52} />
                     <span className="file-explorer-card-name">{isSearching ? folder.path : folder.name}</span>
                     <span className="file-explorer-card-size">{formatSize(folderSizeBytes(files, folder.path, isAdmin === true))}</span>
                     {isAdmin && visibility === "admin-only" && <HiddenBadge />}
@@ -686,7 +719,7 @@ export default function FileExplorer({ adminMode = false }: FileExplorerProps) {
                       </>
                     ) : (
                       <>
-                        <FileThumbnail file={file} size={36} />
+                        <FileThumbnail file={file} size={52} />
                         <span className="file-explorer-card-name">{displayName(file.path)}</span>
                         <span className="file-explorer-card-size">{formatSize(file.size_bytes)}</span>
                         {isAdmin && file.visibility === "admin-only" && <HiddenBadge />}

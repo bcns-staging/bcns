@@ -3,22 +3,39 @@
    global stylesheet so both pages can use it -- Astro's per-page scoped
    <style> can't be shared across two different .astro files. */
 
-/* Cool slate + teal "workspace" theme. `color` is set explicitly here, not
-   just `background`: global.css's `body { color: var(--color-text) }`
-   resolves using body's own (default-theme) environment, since this wrapper
-   is a *descendant* of body and can't retroactively change what body already
-   computed -- without re-declaring `color` here too, anything that relies on
-   inherited color (rather than its own `color: var(...)` rule) would
-   silently render in the wrong, near-invisible-on-this-background color. */
+/* "KeyVault" HUD theme, matching /timeradmin and /cypher (see
+   seven-segment-clock.css's :root --hud-* tokens -- same hex values,
+   hand-duplicated here rather than imported, since that stylesheet also
+   carries a lot of seven-segment-digit CSS this page has no use for).
+   `color` is set explicitly here, not just `background`: global.css's
+   `body { color: var(--color-text) }` resolves using body's own
+   (default-theme) environment, since this wrapper is a *descendant* of body
+   and can't retroactively change what body already computed -- without
+   re-declaring `color` here too, anything that relies on inherited color
+   (rather than its own `color: var(...)` rule) would silently render in the
+   wrong, near-invisible-on-this-background color. */
 .file-explorer-theme {
-  --color-bg: #0d1117;
-  --color-bg-alt: #151b23;
-  --color-text: #e6edf3;
-  --color-text-muted: #7d8998;
-  --color-accent: #2dd4bf;
-  --color-border: #26303c;
-  --color-error: #f85149;
-  background: var(--color-bg);
+  /* --color-bg (darkest) is the outer wrapper's hover/recessed-accent tone;
+     --color-bg-alt (a shade lighter) is the raised panel surface reused for
+     the toolbar, table header, cards, search box, and buttons -- same
+     relationship the previous teal theme had, just repointed to HUD hex
+     values. */
+  --color-bg: #0a0c0a;
+  --color-bg-alt: #141814;
+  --color-text: #e2e8de;
+  --color-text-muted: #8b9487;
+  --color-accent: #ff3c1e;
+  --color-border: rgb(255 255 255 / 9%);
+  --color-error: #ff3c1e;
+  --color-ready: #8fd18a;
+  --color-paused: #ffab1f;
+  --file-explorer-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* The full "KeyVault" radial gradient, not the flat --color-bg token --
+     --color-bg itself has to stay a plain solid color since it's also reused
+     on small elements (hover states, active toggles, badges) where a
+     gradient would recompute oddly per-element instead of reading as one
+     continuous page backdrop. */
+  background: radial-gradient(130% 70% at 50% 0%, #39423a 0%, #232a24 45%, #141814 100%);
   color: var(--color-text);
   height: 100dvh;
   overflow: hidden;
@@ -38,7 +55,12 @@
   display: grid;
   grid-template-columns: 1fr;
   height: 100%;
-  background: var(--color-bg-alt);
+  /* No background of its own -- .file-explorer-theme's gradient shows
+     through everywhere except the individual "panel" chrome pieces
+     (toolbar pills/buttons, cards, table header) that opt into their own
+     solid --color-bg-alt fill below, so the gradient reads as one
+     continuous backdrop behind floating HUD elements, matching the
+     reference design, instead of being fully covered by a flat rectangle. */
 }
 
 .file-explorer.has-preview {
@@ -68,8 +90,45 @@
   flex-direction: column;
   gap: 0.6rem;
   padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
+}
+
+/* Breadcrumbs (left) + Select/Download (right) share this row -- see
+   FileExplorer.tsx, which only renders AdminControls (the login form/admin
+   bar, often tall) below it, not squeezed into the same row. */
+.file-explorer-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.file-explorer-breadcrumb-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.9rem;
   background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  font-family: var(--file-explorer-mono);
+}
+
+.file-explorer-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px 2px rgb(255 60 30 / 65%);
+  flex-shrink: 0;
+}
+
+.file-explorer-item-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .file-explorer-breadcrumbs {
@@ -77,7 +136,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .file-explorer-crumb-group {
@@ -97,17 +156,19 @@
   gap: 0.3rem;
   border: 0;
   background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: 0.8rem;
-  padding: 0.15rem 0.35rem;
-  border-radius: 0.3rem;
+  color: var(--color-text);
+  font-family: var(--file-explorer-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.2rem;
   cursor: pointer;
 }
 
 .file-explorer-crumb:hover {
-  color: var(--color-text);
-  background: var(--color-bg);
+  color: var(--color-accent);
+  background: transparent;
 }
 
 .file-explorer-toolbar-actions {
@@ -123,9 +184,9 @@
   gap: 0.4rem;
   flex: 1;
   min-width: 8rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.55rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  background: var(--color-bg-alt);
   color: var(--color-text-muted);
 }
 
@@ -133,42 +194,49 @@
   border: 0;
   background: transparent;
   color: var(--color-text);
-  font: inherit;
-  font-size: 0.8rem;
+  font-family: var(--file-explorer-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   outline: none;
   width: 100%;
+}
+
+.file-explorer-search input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .file-explorer-view-toggle {
   display: flex;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
   overflow: hidden;
 }
 
 .file-explorer-view-toggle button {
   display: flex;
   align-items: center;
-  padding: 0.4rem 0.55rem;
+  padding: 0.5rem 0.7rem;
   border: 0;
-  background: transparent;
+  background: var(--color-bg-alt);
   color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .file-explorer-view-toggle button.is-active {
-  background: var(--color-bg);
+  background: rgb(255 60 30 / 22%);
   color: var(--color-accent);
 }
 
 .file-explorer-refresh {
-  padding: 0.4rem 0.7rem;
-  border-radius: 0.4rem;
+  padding: 0.5rem 0.9rem;
   border: 1px solid var(--color-border);
-  background: transparent;
+  background: var(--color-bg-alt);
   color: var(--color-text);
-  font: inherit;
-  font-size: 0.75rem;
+  font-family: var(--file-explorer-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -191,17 +259,15 @@
   flex-wrap: wrap;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
-  background: var(--color-bg);
+  background: var(--color-bg-alt);
 }
 
 .file-explorer-admin-login input {
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.3rem;
-  background: var(--color-bg-alt);
+  background: rgb(0 0 0 / 30%);
   color: var(--color-text);
-  font: inherit;
+  font-family: var(--file-explorer-mono);
   font-size: 0.8rem;
 }
 
@@ -240,13 +306,14 @@
 
 .file-explorer-admin-badge {
   padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border: 1px solid var(--color-accent);
+  background: rgb(255 60 30 / 12%);
   color: var(--color-accent);
+  font-family: var(--file-explorer-mono);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
 }
 
 .file-explorer-totp-settings {
@@ -256,8 +323,7 @@
   flex-wrap: wrap;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
-  background: var(--color-bg);
+  background: var(--color-bg-alt);
 }
 
 .file-explorer-totp-qr {
@@ -284,13 +350,13 @@
   align-items: center;
   gap: 0.2rem;
   padding: 0.05rem 0.4rem;
-  border-radius: 999px;
   border: 1px solid var(--color-error);
   color: var(--color-error);
+  font-family: var(--file-explorer-mono);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   flex-shrink: 0;
 }
 
@@ -390,7 +456,6 @@
 .file-explorer-error-block button {
   margin-top: 0.5rem;
   padding: 0.3rem 0.75rem;
-  border-radius: 0.4rem;
   border: 1px solid var(--color-error);
   background: transparent;
   color: var(--color-error);
@@ -430,6 +495,10 @@
   width: calc(100% - 2.5rem);
   margin: 1rem 1.25rem;
   border: 1px solid var(--color-border);
+  /* A solid dark fill, not the transparent-over-gradient look the toolbar
+     chrome uses -- rows sitting on the gradient's lighter stretches didn't
+     leave enough contrast against the muted text/type colors. */
+  background: var(--color-bg);
   /* Below this, columns get uncomfortably cramped (most noticeable with the
      preview pane open, which narrows this whole browser column down to as
      little as 20rem) -- the listing wrapper's overflow-x: auto takes over
@@ -500,11 +569,12 @@
   gap: 0.25rem;
   border: 0;
   background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: 0.75rem;
+  color: var(--color-ready);
+  font-family: var(--file-explorer-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   cursor: pointer;
   padding: 0;
 }
@@ -521,6 +591,8 @@
   padding: 0.65rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
+  font-family: var(--file-explorer-mono);
+  font-size: 0.8rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -530,11 +602,32 @@
   text-align: center;
 }
 
+/* Type column values -- DIR reads green, TEXT reads amber; every other
+   category (image/pdf/audio/video/archive/html) falls through to the
+   default muted td color, since there's no reference for those. */
+.file-explorer-type-cell {
+  letter-spacing: 0.08em;
+}
+
+.file-explorer-type-dir {
+  color: var(--color-ready);
+}
+
+.file-explorer-type-text {
+  color: var(--color-paused);
+}
+
 .file-explorer-name-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.file-explorer-name-cell > svg {
+  color: var(--color-text-muted);
 }
 
 .file-explorer-name-cell svg,
@@ -560,11 +653,11 @@
 }
 
 .file-explorer-row:hover {
-  background: var(--color-bg);
+  background: var(--color-bg-alt);
 }
 
 .file-explorer-row.is-selected {
-  background: var(--color-bg);
+  background: var(--color-bg-alt);
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
@@ -572,8 +665,8 @@
 
 .file-explorer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 1rem;
   padding: 1.25rem;
 }
 
@@ -581,26 +674,55 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.85rem 0.5rem;
+  gap: 0.7rem;
+  padding: 1.1rem 0.75rem;
   width: 100%;
   /* a real <button> now (no more nested RowActions buttons to avoid) --
      reset its browser-default font so it matches surrounding text */
   font: inherit;
-  /* barely-visible separator between cards, same token as the list
-     view's row lines, so grid and list read as the same "table" */
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: transparent;
+  background: var(--color-bg-alt);
   color: var(--color-text);
   cursor: pointer;
   text-align: center;
-  /* anchors the hidden-badge/admin-actions overlays on media tiles below */
+  /* anchors the hidden-badge/admin-actions overlays on media tiles below,
+     and the corner-bracket ::before/::after below */
   position: relative;
 }
 
+/* Small L-shaped targeting-corner accents, opposite corners only -- same
+   decoration as the timer cards on /timeradmin and /cypher. */
+.file-explorer-card::before,
+.file-explorer-card::after {
+  content: "";
+  position: absolute;
+  width: 0.8rem;
+  height: 0.8rem;
+  pointer-events: none;
+  border-color: #9fae9a;
+  border-style: solid;
+}
+
+.file-explorer-card::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+
+.file-explorer-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}
+
 .file-explorer-card:hover {
-  background: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+/* Icon reads dim/muted, distinct from the bright, bold name below it --
+   matches the reference design's thin muted folder/file glyphs. */
+.file-explorer-card > svg {
+  color: var(--color-text-muted);
 }
 
 .file-explorer-card.is-selected {
@@ -609,7 +731,8 @@
 }
 
 .file-explorer-card-name {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -618,7 +741,9 @@
 }
 
 .file-explorer-card-size {
+  font-family: var(--file-explorer-mono);
   font-size: 0.7rem;
+  letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
 
@@ -705,13 +830,15 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: 0.4rem;
+  padding: 0.5rem 0.9rem;
   border: 1px solid var(--color-border);
-  background: transparent;
+  background: var(--color-bg-alt);
   color: var(--color-text);
-  font: inherit;
-  font-size: 0.75rem;
+  font-family: var(--file-explorer-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
 }

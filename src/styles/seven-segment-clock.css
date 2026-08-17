@@ -26,6 +26,7 @@
   --hud-ready: #8fd18a;
   --hud-ready-bg: rgb(143 209 138 / 8%);
   --hud-ready-border: rgb(143 209 138 / 35%);
+  --hud-paused: #ffab1f;
   --hud-corner: #9fae9a;
   --hud-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --hud-gradient: radial-gradient(130% 70% at 50% 0%, var(--hud-bg-1) 0%, var(--hud-bg-2) 45%, var(--hud-bg-3) 100%);
@@ -184,14 +185,11 @@
    loaded only on these two pages, so this dark HUD look stays contained to
    the timer feature instead of leaking into the rest of the site's theme. */
 
-/* TimerHudTopBar.tsx -- "KEYVAULT ONLINE  N SEALED" status pill + a
-   compact live HH:MM:SS clock, sitting above the grid on both pages. */
+/* TimerHudTopBar.tsx -- "KEYVAULT ONLINE  N SEALED" status pill, sitting
+   above the grid on both pages. */
 .timer-hud-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .timer-hud-status {
@@ -226,18 +224,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--hud-text-dim);
-}
-
-/* A second, compact instance of .digital-clock -- overrides its padding/
-   zoom to fit a slim top-bar rather than a full showcase display. Source
-   order (after .digital-clock above) is what lets these overrides win at
-   equal specificity, same trick .timer-admin-clock already relies on. */
-.timer-hud-clock {
-  padding: 0.55rem 1rem;
-  background: rgb(0 0 0 / 55%);
-  border: 1px solid rgb(255 255 255 / 6%);
-  border-radius: 0.3rem;
-  zoom: 0.55;
 }
 
 /* Public /cypher wrapper -- same top-bar-then-grid rhythm as .timer-admin,
@@ -355,18 +341,17 @@
   white-space: nowrap;
 }
 
-/* Not a traffic-light mapping -- "LOCKED" (still counting down,
-   reveal_text inaccessible) reads neutral/muted, "READY" (expired,
-   reveal_text available) reads green, paused keeps the site's own accent
-   amber. */
+/* Traffic-light mapping -- "LOCKED" (still counting down, reveal_text
+   inaccessible) reads red, "READY" (expired, reveal_text available) reads
+   green, "PAUSED" reads amber. */
 .timer-hud-pill.is-running {
-  color: var(--hud-text-muted);
-  border: 1px solid var(--hud-border-hover);
+  color: var(--hud-accent);
+  border: 1px solid var(--hud-accent);
 }
 
 .timer-hud-pill.is-paused {
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
+  color: var(--hud-paused);
+  border: 1px solid var(--hud-paused);
 }
 
 .timer-hud-pill.is-expired {
