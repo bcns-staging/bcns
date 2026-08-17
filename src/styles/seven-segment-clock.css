@@ -238,15 +238,16 @@
      countdown display plus the reveal-text footer below it (see
      .timer-reveal-footer) -- 4 .clock-box digit groups (116px each) + 3
      .clock-colon separators (~19px each) + 6 clock-row gaps (8px each) for
-     width; 110px clock-row + 24px column gap + ~34px footer for height,
-     plus this element's own padding/border. Without a floor, a running
-     (footer-less) timer would shrink-to-fit a shorter box than an expired
-     one, so cards would change size the moment a timer hit zero -- this
-     keeps every card the same size in both states. min- (not fixed) so a
-     long custom reveal_text can still wrap and grow taller instead of
+     width; 110px clock-row + 24px column gap + ~80px footer (2.75rem text
+     at this element's 0.36 zoom, see .timer-reveal-button/-text) for
+     height, plus this element's own padding/border. Without a floor, a
+     running (footer-less) timer would shrink-to-fit a shorter box than an
+     expired one, so cards would change size the moment a timer hit zero --
+     this keeps every card the same size in both states. min- (not fixed)
+     so a long custom reveal_text can still wrap and grow taller instead of
      being clipped. */
   min-width: 611px;
-  min-height: 202px;
+  min-height: 250px;
   justify-content: center;
 }
 
@@ -271,7 +272,10 @@
    label. */
 .timer-reveal-footer {
   width: 100%;
-  padding-top: 0.6rem;
+  /* Sized in the same inflated-then-zoomed-down scale as the button/text
+     below -- see their comment for why these numbers look oversized on
+     their own (they're not, once .timer-admin-clock's 0.36 zoom applies). */
+  padding-top: 1.65rem;
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -279,36 +283,46 @@
   text-align: center;
 }
 
+/* font-size here (and on .timer-reveal-text below) is ~2.75rem, not the
+   ~1rem it visually reads as -- both sit inside .timer-admin-clock's
+   zoom: 0.36, so a plain 1rem rendered at effectively 0.36rem, way too
+   small to read (that was the actual bug, not a deliberate small design).
+   2.75rem here lands back around a normal ~1rem-equivalent on screen
+   (2.75 * 0.36 ~= 1), matching the timer title's size above the clock. */
 .timer-reveal-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 1.1rem;
   border: 0;
   background: transparent;
   padding: 0;
   font: inherit;
-  font-size: 1rem;
+  font-size: 2.75rem;
   font-weight: 700;
   color: var(--color-text);
   cursor: pointer;
-  /* Hazy/frosted look instead of plain solid-color text -- reads as "there's
-     something obscured here" rather than a normal crisp button label.
-     Sharpens a little on hover/focus as an interactive hint, but the click
-     itself is what actually reveals the real text (see TimerCard.tsx). */
-  filter: blur(2.5px);
-  transition: filter 0.15s ease;
 }
 
 .timer-reveal-button:hover,
 .timer-reveal-button:focus-visible {
-  filter: blur(0.75px);
+  color: var(--color-accent);
 }
 
 .timer-reveal-text {
-  font-size: 1rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 2.75rem;
   font-weight: 700;
   color: var(--color-text);
   word-break: break-word;
+  cursor: pointer;
+}
+
+.timer-reveal-text:hover,
+.timer-reveal-text:focus-visible {
+  color: var(--color-accent);
 }
 
 .timer-admin-paused-badge {

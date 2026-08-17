@@ -45,12 +45,27 @@ function daysHoursMinutesSeconds(msRemaining: number) {
 // that skew out so "now" here means the same instant the server means.
 export function TimerCountdown({ timer, clockOffsetMs = 0 }: { timer: Timer; clockOffsetMs?: number }) {
   const [now, setNow] = useState(() => Date.now());
-  // The reveal text is blurred behind a "click to reveal" prompt even once
-  // the countdown hits zero -- expiry unlocks it (see public_api.py's
+  // The reveal text sits behind a "click to reveal" prompt even once the
+  // countdown hits zero -- expiry unlocks it (see public_api.py's
   // list_timers), but showing it still takes a deliberate click rather
   // than just appearing, so it reads as unwrapping a surprise. Local,
-  // unpersisted state: reloading the page (or a fresh visitor) re-blurs it.
+  // unpersisted state: reloading the page (or a fresh visitor) re-hides it.
   const [revealed, setRevealed] = useState(false);
+  // Briefly shows "Copied!" in place of the text after a click -- reset by
+  // its own timeout, not tied to `revealed` (staying revealed is separate
+  // from this transient confirmation).
+  const [copied, setCopied] = useState(false);
+
+  async function copyRevealText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard permission denied or API unavailable -- nothing sensible
+      // to fall back to, so just skip the "Copied!" confirmation.
+    }
+  }
 
   useEffect(() => {
     // Still ticks once a second even while paused, purely so the blink
@@ -92,7 +107,14 @@ export function TimerCountdown({ timer, clockOffsetMs = 0 }: { timer: Timer; clo
       {expired && (
         <div className="timer-reveal-footer">
           {revealed ? (
-            <span className="timer-reveal-text">{timer.reveal_text || "EXPIRED"}</span>
+            <button
+              type="button"
+              className="timer-reveal-text"
+              onClick={() => copyRevealText(timer.reveal_text || "EXPIRED")}
+              title="Click to copy"
+            >
+              {copied ? "Copied!" : timer.reveal_text || "EXPIRED"}
+            </button>
           ) : (
             <button type="button" className="timer-reveal-button" onClick={() => setRevealed(true)}>
               Reveal Text <span aria-hidden="true">👁</span>
