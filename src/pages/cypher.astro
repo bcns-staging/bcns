@@ -70,13 +70,13 @@ import Clock from "../components/islands/Clock.tsx";
     justify-content: center;
     align-items: center;
     gap: 10px;
-    height: 70px;
+    height: 78px;
     margin: 0 0.4rem;
   }
 
   :global(.clock-colon-dot) {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #ff1a1a;
     box-shadow:
@@ -87,9 +87,13 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.digit) {
     position: relative;
     display: inline-block;
-    width: 40px;
-    height: 70px;
-    margin: 0 3px;
+    /* Thin-segment proportions matched to the reference photo: a tall,
+       narrow digit (width:height roughly 1:2.3) with a segment thickness
+       (5px) that's a much smaller fraction of the digit box than a typical
+       bold LED-clock rendering. */
+    width: 34px;
+    height: 78px;
+    margin: 0 2px;
     /* The italic-leaning LED look -- skews the whole digit as one unit, so
        its 7 child segments (each individually positioned/clipped) tilt
        together rather than needing their own per-segment transforms. */
@@ -114,16 +118,16 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.seg-a),
   :global(.seg-g),
   :global(.seg-d) {
-    left: 5px;
-    right: 5px;
-    height: 8px;
+    left: 3px;
+    right: 3px;
+    height: 6px;
     clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
   }
   :global(.seg-a) {
     top: 0;
   }
   :global(.seg-g) {
-    top: 31px;
+    top: 36px;
   }
   :global(.seg-d) {
     bottom: 0;
@@ -136,25 +140,28 @@ import Clock from "../components/islands/Clock.tsx";
   :global(.seg-b),
   :global(.seg-e),
   :global(.seg-c) {
-    width: 8px;
-    height: 29px;
+    width: 6px;
     clip-path: polygon(0% 15%, 50% 0%, 100% 15%, 100% 85%, 50% 100%, 0% 85%);
   }
   :global(.seg-f) {
-    top: 6px;
+    top: 4px;
     left: 0;
+    height: 32px;
   }
   :global(.seg-b) {
-    top: 6px;
+    top: 4px;
     right: 0;
+    height: 32px;
   }
   :global(.seg-e) {
-    bottom: 6px;
+    bottom: 4px;
     left: 0;
+    height: 32px;
   }
   :global(.seg-c) {
-    bottom: 6px;
+    bottom: 4px;
     right: 0;
+    height: 32px;
   }
 
   @media (max-width: 30rem) {
