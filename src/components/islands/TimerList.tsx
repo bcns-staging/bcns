@@ -11,6 +11,11 @@ const REFRESH_INTERVAL_MS = 5000;
 
 export default function TimerList() {
   const [timers, setTimers] = useState<Timer[] | null>(null);
+  // How far the browser's clock is from the server's (serverTime -
+  // Date.now() at fetch time) -- see TimerCard.tsx's TimerCountdown for why
+  // a live (non-paused) countdown needs this to avoid jumping the instant a
+  // timer resumes.
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -19,8 +24,11 @@ export default function TimerList() {
       try {
         const resp = await fetch(`${API_BASE}/api/timers`, { cache: "no-store" });
         if (!resp.ok) return;
-        const data = (await resp.json()) as { timers: Timer[] };
-        if (!cancelled) setTimers(data.timers);
+        const data = (await resp.json()) as { timers: Timer[]; server_time: string };
+        if (!cancelled) {
+          setTimers(data.timers);
+          setClockOffsetMs(new Date(data.server_time).getTime() - Date.now());
+        }
       } catch {
         // Silently keep whatever was last successfully loaded -- a
         // transient network hiccup shouldn't blank out a page someone's
@@ -43,7 +51,7 @@ export default function TimerList() {
       <h2 className="timer-admin-listing-heading">Timers</h2>
       <div className="timer-admin-grid">
         {timers.map((timer) => (
-          <TimerCard key={timer.id} timer={timer} />
+          <TimerCard key={timer.id} timer={timer} clockOffsetMs={clockOffsetMs} />
         ))}
       </div>
     </div>

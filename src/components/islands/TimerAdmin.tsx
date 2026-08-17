@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { LoginPanel } from "./file-explorer/AdminControls";
-import { API_BASE, adminFetch, checkAdminSession } from "./file-explorer/utils";
+import { adminFetch, checkAdminSession } from "./file-explorer/utils";
 import { TimerCard, type Timer } from "./TimerCard";
 
 // A local <input type="datetime-local"> value ("2030-01-01T22:45") has no
@@ -31,6 +31,7 @@ interface TimerFormProps {
 function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelEdit }: TimerFormProps) {
   const [title, setTitle] = useState("");
   const [targetTime, setTargetTime] = useState("");
+  const [revealText, setRevealText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -38,9 +39,11 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelE
     if (editingTimer) {
       setTitle(editingTimer.title);
       setTargetTime(isoToLocalInput(editingTimer.target_time));
+      setRevealText(editingTimer.reveal_text ?? "");
     } else {
       setTitle("");
       setTargetTime("");
+      setRevealText("");
     }
     setError(null);
   }, [editingTimer]);
@@ -54,7 +57,7 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelE
       const resp = await adminFetch(path, {
         method: editingTimer ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, target_time: localInputToIso(targetTime) }),
+        body: JSON.stringify({ title, target_time: localInputToIso(targetTime), reveal_text: revealText }),
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
@@ -103,6 +106,13 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelE
         required
       />
       <input type="datetime-local" value={targetTime} onChange={(e) => setTargetTime(e.target.value)} required />
+      <textarea
+        placeholder="Text to show once the timer reaches zero (optional -- defaults to &quot;EXPIRED&quot;)"
+        value={revealText}
+        onChange={(e) => setRevealText(e.target.value)}
+        maxLength={300}
+        rows={2}
+      />
       <div className="timer-admin-form-actions">
         <button type="submit" disabled={busy}>
           {busy ? "Saving…" : editingTimer ? "Update timer" : "Create timer"}
@@ -136,6 +146,10 @@ export default function TimerAdmin() {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // See TimerCard.tsx's TimerCountdown -- corrects for browser/server clock
+  // skew so a resumed timer's live countdown doesn't jump relative to its
+  // frozen paused value.
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,12 +163,17 @@ export default function TimerAdmin() {
 
   async function refreshTimers() {
     try {
-      // Public endpoint (no adminFetch needed) -- same data an anonymous
-      // visitor would see, since timers have no admin-only concept.
-      const resp = await fetch(`${API_BASE}/api/timers`, { cache: "no-store" });
+      // adminFetch (not plain fetch), unlike most other reads on this page
+      // used to be: /api/timers now redacts reveal_text for anonymous
+      // callers until a timer actually expires (see mcp-fileserver's
+      // public_api.py), and the edit form needs to show/edit that value
+      // before expiry -- sending the session cookie is what makes this
+      // request count as an admin request server-side.
+      const resp = await adminFetch("/api/timers", { cache: "no-store" });
       if (!resp.ok) throw new Error(`${resp.status}`);
-      const data = (await resp.json()) as { timers: Timer[] };
+      const data = (await resp.json()) as { timers: Timer[]; server_time: string };
       setTimers(data.timers);
+      setClockOffsetMs(new Date(data.server_time).getTime() - Date.now());
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load timers.");
@@ -211,7 +230,7 @@ export default function TimerAdmin() {
         {timers.length === 0 && <p className="timer-admin-empty">No timers yet.</p>}
         <div className="timer-admin-grid">
           {timers.map((timer) => (
-            <TimerCard key={timer.id} timer={timer} />
+            <TimerCard key={timer.id} timer={timer} clockOffsetMs={clockOffsetMs} />
           ))}
         </div>
       </div>

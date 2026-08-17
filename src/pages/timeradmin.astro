@@ -64,7 +64,8 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     background: var(--color-bg-alt);
   }
 
-  :global(.timer-admin-form input) {
+  :global(.timer-admin-form input),
+  :global(.timer-admin-form textarea) {
     display: block;
     width: 100%;
     padding: 0.5rem 0.75rem;
@@ -74,6 +75,10 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     color: var(--color-text);
     font: inherit;
     font-size: 0.85rem;
+  }
+
+  :global(.timer-admin-form textarea) {
+    resize: vertical;
   }
 
   :global(.timer-admin-form-actions) {

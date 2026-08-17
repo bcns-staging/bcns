@@ -184,7 +184,15 @@
 .timer-admin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 1.5rem;
+  /* No gap -- spacing now comes from each item's own padding, so the
+     border-right/border-bottom below (see .timer-admin-item) sit flush in
+     the middle of that space as real separator lines between cells,
+     table-style, instead of floating in an empty gap. */
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  /* Clips the sharp-cornered edge items to the grid's own rounded corners. */
+  overflow: hidden;
 }
 
 .timer-admin-item {
@@ -192,21 +200,58 @@
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
+  padding: 1.25rem;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .timer-admin-item-title {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
+  /* Sits above the clock now (was a muted caption below it) -- reads as a
+     real title, not an afterthought, so full text color and real weight
+     instead of the small muted caption style. */
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
   text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 /* Smaller than the main /cypher showcase clock -- several of these sit
    side by side in a grid, so the full-size digits (tuned for one clock
-   alone) would overwhelm it. */
+   alone) would overwhelm it.
+
+   Uses `zoom`, not `transform: scale`, deliberately: transform is paint-only
+   and never changes layout, so .clock-row's flex-wrap still sees the full
+   pre-shrink width and wraps into two rows (days+hours on one line,
+   minutes+seconds on another) once a 4-group DD:HH:MM:SS timer is squeezed
+   into a ~15rem grid card -- the box then gets scaled down *after* already
+   wrapping into that squarish shape. zoom shrinks the box before layout, so
+   .clock-row perceives a proportionally larger available width and never
+   needs to wrap -- the card stays one flat row, just smaller. */
 .timer-admin-clock {
   position: relative;
   padding: 1rem 1.25rem;
-  transform: scale(0.55);
+  zoom: 0.36;
+  /* Pinned to the natural (pre-zoom) footprint of the full DD:HH:MM:SS
+     countdown display plus the reveal-text footer below it (see
+     .timer-reveal-footer) -- 4 .clock-box digit groups (116px each) + 3
+     .clock-colon separators (~19px each) + 6 clock-row gaps (8px each) for
+     width; 110px clock-row + 24px column gap + ~34px footer for height,
+     plus this element's own padding/border. Without a floor, a running
+     (footer-less) timer would shrink-to-fit a shorter box than an expired
+     one, so cards would change size the moment a timer hit zero -- this
+     keeps every card the same size in both states. min- (not fixed) so a
+     long custom reveal_text can still wrap and grow taller instead of
+     being clipped. */
+  min-width: 611px;
+  min-height: 202px;
+  justify-content: center;
+}
+
+.timer-admin-clock .clock-row {
+  flex-wrap: nowrap;
 }
 
 .timer-admin-expired {
@@ -215,6 +260,55 @@
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.1em;
+}
+
+/* Sits below the clock-row, inside the same box, once a timer expires --
+   the digits themselves stay at 00:00:00:00 (see TimerCard.tsx) rather
+   than being replaced, so only this footer changes between running and
+   expired. Reveal still takes a deliberate click even after expiry (expiry
+   alone only unlocks reveal_text server-side, see mcp-fileserver's
+   public_api.py) -- it reads as unwrapping a surprise, not a plain status
+   label. */
+.timer-reveal-footer {
+  width: 100%;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.timer-reveal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+  /* Hazy/frosted look instead of plain solid-color text -- reads as "there's
+     something obscured here" rather than a normal crisp button label.
+     Sharpens a little on hover/focus as an interactive hint, but the click
+     itself is what actually reveals the real text (see TimerCard.tsx). */
+  filter: blur(2.5px);
+  transition: filter 0.15s ease;
+}
+
+.timer-reveal-button:hover,
+.timer-reveal-button:focus-visible {
+  filter: blur(0.75px);
+}
+
+.timer-reveal-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  word-break: break-word;
 }
 
 .timer-admin-paused-badge {
