@@ -117,6 +117,21 @@ import DeadDropAdmin from "../components/islands/DeadDropAdmin.tsx";
     padding-inline: 1.25rem;
   }
 
+  :global(.deaddrop-created-pin) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-text);
+  }
+
+  :global(.deaddrop-created-pin code) {
+    padding: 0.15rem 0.5rem;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--hud-border);
+    color: var(--hud-ready);
+    font-family: var(--hud-mono);
+    letter-spacing: 0.1em;
+  }
+
   :global(.deaddrop-created-done) {
     align-self: flex-start;
     padding: 0.5rem 1.25rem;
