@@ -114,8 +114,15 @@ function DeadDropCard({ drop, onRevoke }: { drop: DeadDrop; onRevoke: () => void
   );
 }
 
-function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void; onClose: () => void }) {
+function CreateForm({
+  onCreated,
+  onClose,
+}: {
+  onCreated: (link: string, pin: string) => void;
+  onClose: () => void;
+}) {
   const [secret, setSecret] = useState("");
+  const [pin, setPin] = useState("");
   const [label, setLabel] = useState("");
   const [expiresHours, setExpiresHours] = useState(24);
   const [error, setError] = useState<string | null>(null);
@@ -123,10 +130,17 @@ function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (pin.length < 4) {
+      setError("PIN must be at least 4 characters.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const { ciphertext, iv, key } = await encryptSecret(secret);
+      // The pin is mixed into the actual encryption key (see
+      // deaddrop/crypto.ts) -- like the key itself, it's never sent to the
+      // server in any form, not even hashed.
+      const { ciphertext, iv, key } = await encryptSecret(secret, pin);
       const resp = await adminFetch("/api/admin/deaddrop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,7 +157,7 @@ function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void;
       // about to be torn down. This is the one and only chance to hand it
       // to the admin.
       const link = `${window.location.origin}/deaddrop/view/?id=${encodeURIComponent(id)}#k=${key}`;
-      onCreated(link);
+      onCreated(link, pin);
     } catch {
       setError("Request failed.");
     } finally {
@@ -170,6 +184,15 @@ function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void;
           autoFocus
         />
         <input
+          type="password"
+          placeholder="PIN -- relay this to the recipient separately from the link"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          minLength={4}
+          maxLength={64}
+          required
+        />
+        <input
           type="text"
           placeholder="Label (optional, admin-only -- never sent to the recipient)"
           value={label}
@@ -184,7 +207,7 @@ function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void;
           ))}
         </select>
         <div className="timer-admin-form-actions">
-          <button type="submit" disabled={busy || !secret.trim()}>
+          <button type="submit" disabled={busy || !secret.trim() || pin.length < 4}>
             {busy ? "Sealing…" : "Seal drop"}
           </button>
         </div>
@@ -194,7 +217,7 @@ function CreateForm({ onCreated, onClose }: { onCreated: (link: string) => void;
   );
 }
 
-function CreatedPanel({ link, onDone }: { link: string; onDone: () => void }) {
+function CreatedPanel({ link, pin, onDone }: { link: string; pin: string; onDone: () => void }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -212,7 +235,8 @@ function CreatedPanel({ link, onDone }: { link: string; onDone: () => void }) {
       <p className="deaddrop-created-title">Drop sealed</p>
       <p className="deaddrop-created-warning">
         This link contains the only copy of the decryption key. It is not stored anywhere -- copy it now, because it
-        cannot be shown again.
+        cannot be shown again. Send the PIN below to the recipient through a <em>different</em> channel than the
+        link -- that's the whole point of having one.
       </p>
       <div className="deaddrop-created-link-row">
         <code className="deaddrop-created-link">{link}</code>
@@ -220,6 +244,9 @@ function CreatedPanel({ link, onDone }: { link: string; onDone: () => void }) {
           {copied ? "Copied!" : "Copy Link"}
         </button>
       </div>
+      <p className="deaddrop-created-pin">
+        PIN: <code>{pin}</code>
+      </p>
       <button type="button" className="timer-admin-cancel deaddrop-created-done" onClick={onDone}>
         Done
       </button>
@@ -232,7 +259,7 @@ export default function DeadDropAdmin() {
   const [drops, setDrops] = useState<DeadDrop[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [justCreatedLink, setJustCreatedLink] = useState<string | null>(null);
+  const [justCreated, setJustCreated] = useState<{ link: string; pin: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -297,19 +324,20 @@ export default function DeadDropAdmin() {
         </div>
       </div>
 
-      {justCreatedLink ? (
+      {justCreated ? (
         <CreatedPanel
-          link={justCreatedLink}
+          link={justCreated.link}
+          pin={justCreated.pin}
           onDone={() => {
-            setJustCreatedLink(null);
+            setJustCreated(null);
             refreshDrops();
           }}
         />
       ) : formOpen ? (
         <CreateForm
-          onCreated={(link) => {
+          onCreated={(link, pin) => {
             setFormOpen(false);
-            setJustCreatedLink(link);
+            setJustCreated({ link, pin });
           }}
           onClose={() => setFormOpen(false)}
         />

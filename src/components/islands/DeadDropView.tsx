@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { API_BASE } from "./file-explorer/utils";
 import { decryptSecret } from "./deaddrop/crypto";
 
-type Phase = "sealed" | "revealing" | "revealed" | "error";
+type Phase = "pin-entry" | "decrypting" | "revealed" | "error";
+
+// Purely cosmetic -- the actual PBKDF2 + AES-GCM work below takes well
+// under 100ms, too fast to read as "decrypting" happening at all. This
+// floors how long that phase is shown, run in parallel with the real work,
+// not stacked on top of it.
+const MIN_DECRYPT_ANIMATION_MS = 900;
 
 function readLocation(): { id: string | null; key: string | null } {
   if (typeof window === "undefined") return { id: null, key: null };
@@ -16,47 +22,67 @@ function readLocation(): { id: string | null; key: string | null } {
   return { id, key };
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function DeadDropView() {
   const [{ id, key }] = useState(readLocation);
-  const [phase, setPhase] = useState<Phase>(id && key ? "sealed" : "error");
+  const [phase, setPhase] = useState<Phase>(id && key ? "pin-entry" : "error");
   const [errorMessage, setErrorMessage] = useState(
     id && key ? "" : "This link is missing its id or key -- it may have been copied or forwarded incorrectly.",
   );
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
+  // The one and only fetch happens on the first PIN attempt (see submit()
+  // below) -- the server burns the drop right then, regardless of whether
+  // the PIN turns out to be right. Caching the result here is what lets a
+  // *wrong* PIN be retried without needing (or being able to get) a second
+  // fetch: the drop is already consumed either way.
+  const [fetched, setFetched] = useState<{ ciphertext: string; iv: string } | null>(null);
   const [plaintext, setPlaintext] = useState("");
   const [copied, setCopied] = useState(false);
 
-  async function reveal() {
+  async function submit(e: FormEvent) {
+    e.preventDefault();
     if (!id || !key) return;
-    setPhase("revealing");
+    setPinError(null);
+    setPhase("decrypting");
+    const minDelay = wait(MIN_DECRYPT_ANIMATION_MS);
+
     try {
-      const resp = await fetch(`${API_BASE}/api/deaddrop/${encodeURIComponent(id)}`, { cache: "no-store" });
-      const body = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        const status = body.status as string | undefined;
-        setErrorMessage(
-          status === "burned"
-            ? "This message has already been opened and destroyed. It can only ever be read once."
-            : status === "expired"
-              ? "This message expired before anyone opened it, and has been destroyed."
-              : "This link doesn't exist -- it may have been revoked, or never existed.",
-        );
-        setPhase("error");
-        return;
+      let payload = fetched;
+      if (!payload) {
+        const resp = await fetch(`${API_BASE}/api/deaddrop/${encodeURIComponent(id)}`, { cache: "no-store" });
+        const body = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          await minDelay;
+          const status = body.status as string | undefined;
+          setErrorMessage(
+            status === "burned"
+              ? "This message has already been opened and destroyed. It can only ever be read once."
+              : status === "expired"
+                ? "This message expired before anyone opened it, and has been destroyed."
+                : "This link doesn't exist -- it may have been revoked, or never existed.",
+          );
+          setPhase("error");
+          return;
+        }
+        payload = { ciphertext: body.ciphertext, iv: body.iv };
+        setFetched(payload);
       }
-      // The read above already burned it server-side, win or lose from here
-      // on -- a decrypt failure past this point (wrong/incomplete key) is
-      // unfortunately unrecoverable, the same tradeoff every one-time-secret
-      // link service makes: the alternative (only burning on successful
-      // decrypt) would let an attacker retry indefinitely against a
-      // captured ciphertext.
-      const text = await decryptSecret(body.ciphertext, body.iv, key);
+
+      const text = await decryptSecret(payload.ciphertext, payload.iv, key, pin);
+      await minDelay;
       setPlaintext(text);
       setPhase("revealed");
     } catch {
-      setErrorMessage(
-        "Couldn't decrypt this message -- the link's key looks incomplete. The message has already been destroyed and cannot be retried.",
-      );
-      setPhase("error");
+      await minDelay;
+      // Wrong PIN (or a mangled key fragment) -- if `fetched` is now set,
+      // the ciphertext is cached and this is retryable purely client-side,
+      // no further contact with the server needed.
+      setPinError("Incorrect PIN -- try again.");
+      setPhase("pin-entry");
     }
   }
 
@@ -84,19 +110,36 @@ export default function DeadDropView() {
         </span>
       </div>
 
-      {phase === "sealed" && (
+      {phase === "pin-entry" && (
         <>
           <p className="deaddrop-view-copy">
             This message can be opened once. Once revealed, it is permanently destroyed -- there is no second chance
             to read it.
           </p>
-          <button type="button" className="timer-reveal-button deaddrop-view-reveal" onClick={reveal}>
-            Reveal Message <span aria-hidden="true">▸</span>
-          </button>
+          <form className="deaddrop-view-pin-form" onSubmit={submit}>
+            <input
+              type="password"
+              inputMode="text"
+              placeholder="Enter PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              autoFocus
+              required
+            />
+            <button type="submit" className="timer-reveal-button deaddrop-view-reveal" disabled={!pin}>
+              Decrypt <span aria-hidden="true">▸</span>
+            </button>
+          </form>
+          {pinError && <p className="deaddrop-view-error">{pinError}</p>}
         </>
       )}
 
-      {phase === "revealing" && <p className="deaddrop-view-copy">Decrypting…</p>}
+      {phase === "decrypting" && (
+        <div className="deaddrop-decrypting">
+          <span className="deaddrop-decrypting-label">Decrypting…</span>
+          <span className="deaddrop-decrypting-bar" aria-hidden="true" />
+        </div>
+      )}
 
       {phase === "error" && <p className="deaddrop-view-error">{errorMessage}</p>}
 
