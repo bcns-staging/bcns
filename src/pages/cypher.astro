@@ -9,7 +9,10 @@ import Clock from "../components/islands/Clock.tsx";
   section {
     padding-block: 3rem;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 2rem;
   }
 
   /* Everything below targets Clock.tsx's rendered output -- Astro's <style>
@@ -51,14 +54,6 @@ import Clock from "../components/islands/Clock.tsx";
     border: 2px solid #1c1c1c;
     border-radius: 10px;
     padding: 14px 12px;
-  }
-
-  /* Rectangular variant: one shared sharp-cornered housing for the whole
-     time string instead of three separately-rounded per-group boxes. */
-  :global(.clock-box-rect) {
-    gap: 0;
-    border-radius: 0;
-    padding: 16px 20px;
   }
 
   :global(.clock-colon) {
@@ -183,7 +178,6 @@ import Clock from "../components/islands/Clock.tsx";
     <section class="container">
       <Clock client:load />
       <Clock client:load showDate={false} />
-      <Clock client:load showDate={false} rectangular />
     </section>
   </main>
   <Footer />
