@@ -1,7 +1,7 @@
 ---
-import "../../styles/seven-segment-clock.css";
-import Layout from "../../layouts/Layout.astro";
-import DeadDropView from "../../components/islands/DeadDropView.tsx";
+import "../styles/seven-segment-clock.css";
+import Layout from "../layouts/Layout.astro";
+import DeadDropView from "../components/islands/DeadDropView.tsx";
 ---
 
 <style>
@@ -14,7 +14,11 @@ import DeadDropView from "../../components/islands/DeadDropView.tsx";
      runtime, long after this page was built -- a static shell that reads
      both from window.location and fetches mcp-fileserver directly is the
      same architecture every other dynamic page on this site already uses
-     (TimerList.tsx, FileExplorer.tsx). */
+     (TimerList.tsx, FileExplorer.tsx).
+
+     Deliberately named "d", not "deaddrop/view" -- a link someone shares
+     this URL over (chat, email) reads as an opaque token, not a
+     self-describing "this is a secret-message reveal page" path. */
   :global(body) {
     background: var(--hud-gradient);
   }
@@ -182,7 +186,7 @@ import DeadDropView from "../../components/islands/DeadDropView.tsx";
   }
 </style>
 
-<Layout title="Dead Drop | 7 Beacons">
+<Layout title="7 Beacons">
   <main>
     <DeadDropView client:load />
   </main>

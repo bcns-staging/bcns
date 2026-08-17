@@ -12,7 +12,7 @@ const MIN_DECRYPT_ANIMATION_MS = 900;
 
 function readLocation(): { id: string | null; key: string | null } {
   if (typeof window === "undefined") return { id: null, key: null };
-  const id = new URLSearchParams(window.location.search).get("id");
+  const id = new URLSearchParams(window.location.search).get("i");
   // Not URLSearchParams on the hash -- "#k=<base64url>" is deliberately the
   // only thing ever put there (see DeadDropAdmin.tsx), and base64url's own
   // alphabet (A-Za-z0-9-_) never needs URL-decoding, so a plain slice is
