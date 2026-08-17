@@ -29,14 +29,12 @@ function SevenSegmentDigit({ char }: { char: string }) {
   );
 }
 
-function DigitGroup({ value }: { value: string }) {
-  return (
-    <span className="clock-box">
-      {value.split("").map((ch, i) => (
-        <SevenSegmentDigit key={i} char={ch} />
-      ))}
-    </span>
-  );
+// bare: skip this group's own boxed housing -- used when a parent (the
+// rectangular layout) already wraps the whole row in one shared box, so
+// each group doesn't get its own nested one too.
+function DigitGroup({ value, bare = false }: { value: string; bare?: boolean }) {
+  const digits = value.split("").map((ch, i) => <SevenSegmentDigit key={i} char={ch} />);
+  return bare ? <>{digits}</> : <span className="clock-box">{digits}</span>;
 }
 
 function Colon({ blinking = false, lit = true }: { blinking?: boolean; lit?: boolean }) {
@@ -53,7 +51,13 @@ function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-export default function Clock({ showDate = true }: { showDate?: boolean }) {
+export default function Clock({
+  showDate = true,
+  rectangular = false,
+}: {
+  showDate?: boolean;
+  rectangular?: boolean;
+}) {
   // Starts null, set on mount: the server-rendered/prerendered version of
   // this page has no notion of "now" (there is no server for a static
   // site), so the first real render has to happen client-side or every
@@ -78,11 +82,26 @@ export default function Clock({ showDate = true }: { showDate?: boolean }) {
   return (
     <div className="digital-clock">
       <div className="clock-row">
-        <DigitGroup value={pad2(now.getHours())} />
-        <Colon blinking lit={secondsDotsLit} />
-        <DigitGroup value={pad2(now.getMinutes())} />
-        <Colon blinking lit={secondsDotsLit} />
-        <DigitGroup value={pad2(now.getSeconds())} />
+        {rectangular ? (
+          // One shared rectangular housing for the whole time string,
+          // instead of each HH/MM/SS pair getting its own separately
+          // boxed/rounded group.
+          <span className="clock-box clock-box-rect">
+            <DigitGroup value={pad2(now.getHours())} bare />
+            <Colon blinking lit={secondsDotsLit} />
+            <DigitGroup value={pad2(now.getMinutes())} bare />
+            <Colon blinking lit={secondsDotsLit} />
+            <DigitGroup value={pad2(now.getSeconds())} bare />
+          </span>
+        ) : (
+          <>
+            <DigitGroup value={pad2(now.getHours())} />
+            <Colon blinking lit={secondsDotsLit} />
+            <DigitGroup value={pad2(now.getMinutes())} />
+            <Colon blinking lit={secondsDotsLit} />
+            <DigitGroup value={pad2(now.getSeconds())} />
+          </>
+        )}
       </div>
       {showDate && (
         <div className="clock-row clock-date-row">

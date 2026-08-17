@@ -53,6 +53,14 @@ import Clock from "../components/islands/Clock.tsx";
     padding: 14px 12px;
   }
 
+  /* Rectangular variant: one shared sharp-cornered housing for the whole
+     time string instead of three separately-rounded per-group boxes. */
+  :global(.clock-box-rect) {
+    gap: 0;
+    border-radius: 0;
+    padding: 16px 20px;
+  }
+
   :global(.clock-colon) {
     display: inline-flex;
     flex-direction: column;
@@ -175,6 +183,7 @@ import Clock from "../components/islands/Clock.tsx";
     <section class="container">
       <Clock client:load />
       <Clock client:load showDate={false} />
+      <Clock client:load showDate={false} rectangular />
     </section>
   </main>
   <Footer />
