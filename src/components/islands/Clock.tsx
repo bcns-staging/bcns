@@ -53,7 +53,7 @@ function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-export default function Clock() {
+export default function Clock({ showDate = true }: { showDate?: boolean }) {
   // Starts null, set on mount: the server-rendered/prerendered version of
   // this page has no notion of "now" (there is no server for a static
   // site), so the first real render has to happen client-side or every
@@ -84,13 +84,15 @@ export default function Clock() {
         <Colon blinking lit={secondsDotsLit} />
         <DigitGroup value={pad2(now.getSeconds())} />
       </div>
-      <div className="clock-row clock-date-row">
-        <DigitGroup value={pad2(now.getDate())} />
-        <Colon />
-        <DigitGroup value={pad2(now.getMonth() + 1)} />
-        <Colon />
-        <DigitGroup value={now.getFullYear().toString()} />
-      </div>
+      {showDate && (
+        <div className="clock-row clock-date-row">
+          <DigitGroup value={pad2(now.getDate())} />
+          <Colon />
+          <DigitGroup value={pad2(now.getMonth() + 1)} />
+          <Colon />
+          <DigitGroup value={now.getFullYear().toString()} />
+        </div>
+      )}
     </div>
   );
 }
