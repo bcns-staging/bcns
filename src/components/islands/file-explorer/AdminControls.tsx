@@ -9,6 +9,7 @@ import {
   FolderPlusIcon,
   PasteIcon,
   SelectIcon,
+  ShareIcon,
   TrashIcon,
   UploadIcon,
 } from "./icons";
@@ -765,6 +766,11 @@ export function SelectionToolbar({
   // just skips any folders mixed into the selection rather than blocking on them.
   const downloadableItems = selectedItems.filter((it) => !it.isFolder);
   const [zipping, setZipping] = useState(false);
+  // Share links are single-file JWTs (see mcp-fileserver's share_links.py) --
+  // no folder support, and no bulk-share, so this only lights up for exactly
+  // one non-folder selection.
+  const shareableItem = selectedItems.length === 1 && !selectedItems[0].isFolder ? selectedItems[0] : null;
+  const [sharing, setSharing] = useState(false);
 
   async function handleDownload() {
     if (downloadableItems.length === 0) return;
@@ -778,6 +784,39 @@ export function SelectionToolbar({
       );
     } finally {
       setZipping(false);
+    }
+  }
+
+  async function handleShare() {
+    if (!shareableItem) return;
+    const ttlInput = window.prompt("Link expires after how many minutes?", "60");
+    if (ttlInput === null) return;
+    const ttlMinutes = Number(ttlInput);
+    if (!Number.isFinite(ttlMinutes) || ttlMinutes <= 0) {
+      window.alert("Enter a positive number of minutes.");
+      return;
+    }
+    setSharing(true);
+    try {
+      const resp = await adminFetch("/api/admin/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: shareableItem.path, ttl_minutes: ttlMinutes }),
+      });
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        window.alert(body.error ?? `Couldn't create share link (${resp.status})`);
+        return;
+      }
+      const shareUrl = `${window.location.origin}/s?token=${encodeURIComponent(body.token)}`;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        window.prompt("Share link (copied to clipboard):", shareUrl);
+      } catch {
+        window.prompt("Share link:", shareUrl);
+      }
+    } finally {
+      setSharing(false);
     }
   }
 
@@ -920,6 +959,15 @@ export function SelectionToolbar({
       >
         <DownloadIcon size={14} />
         {zipping ? "Zipping…" : downloadableItems.length > 1 ? `Download (${downloadableItems.length})` : "Download"}
+      </button>
+      <button
+        type="button"
+        className="file-explorer-icon-button"
+        onClick={handleShare}
+        disabled={actionsDisabled || sharing || !shareableItem}
+      >
+        <ShareIcon size={14} />
+        {sharing ? "Sharing…" : "Share"}
       </button>
       <button type="button" className="file-explorer-icon-button" onClick={handleCopy} disabled={actionsDisabled || !hasSelection}>
         <CopyIcon size={14} />

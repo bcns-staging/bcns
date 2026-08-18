@@ -155,6 +155,14 @@ export function CopyIcon({ size = 14, className }: IconProps) {
   );
 }
 
+export function ShareIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base} width={size} height={size} className={className} aria-hidden="true">
+      <path d="M10.59 13.41a1 1 0 0 1 0 1.42 1 1 0 0 1-1.42 0 5 5 0 0 1 0-7.07l3.54-3.54a5 5 0 0 1 7.07 0 5 5 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a3 3 0 0 0 0-4.24 3 3 0 0 0-4.24 0l-3.53 3.53a3 3 0 0 0 0 4.24zm2.82-4.24a1 1 0 0 1 1.42 0 5 5 0 0 1 0 7.07l-3.54 3.54a5 5 0 0 1-7.07 0 5 5 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a3 3 0 0 0 0 4.24 3 3 0 0 0 4.24 0l3.53-3.53a3 3 0 0 0 0-4.24 1 1 0 0 1 0-1.42z" />
+    </svg>
+  );
+}
+
 export function LockIcon({ size = 12, className }: IconProps) {
   return (
     <svg {...base} width={size} height={size} className={className} aria-hidden="true">
