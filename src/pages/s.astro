@@ -1,0 +1,82 @@
+---
+import "../styles/seven-segment-clock.css";
+import Layout from "../layouts/Layout.astro";
+import ShareView from "../components/islands/ShareView.tsx";
+---
+
+<style>
+  /* Same opaque-token-page pattern as /d (see its comment for the full
+     rationale) -- static shell, the token is read from the URL query string
+     at runtime by ShareView.tsx rather than an Astro dynamic route param,
+     since share links are minted by the admin long after this page was
+     built and the site ships with zero server-side rendering. */
+  :global(body) {
+    background: var(--hud-gradient);
+  }
+
+  main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+  }
+
+  :global(.share-view-item) {
+    max-width: 32rem;
+    margin-inline: auto;
+    padding: 1.75rem;
+  }
+
+  :global(.share-view-filename) {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--hud-text);
+    word-break: break-word;
+  }
+
+  :global(.share-view-copy) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-text-muted);
+    line-height: 1.6;
+  }
+
+  :global(.share-view-error) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-accent);
+    line-height: 1.6;
+  }
+
+  :global(.share-view-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  :global(.share-view-action) {
+    flex: 1;
+    min-width: 8rem;
+    width: auto;
+    text-decoration: none;
+  }
+
+  :global(.share-view-hint) {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--hud-text-dim);
+    text-align: center;
+    line-height: 1.5;
+  }
+</style>
+
+<Layout title="7 Beacons">
+  <main>
+    <ShareView client:load />
+  </main>
+</Layout>
