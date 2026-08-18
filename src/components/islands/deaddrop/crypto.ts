@@ -97,3 +97,42 @@ export async function decryptSecret(ciphertext: string, iv: string, keyB64: stri
   const plainBuf = await crypto.subtle.decrypt({ name: AES_GCM, iv: ivBytes }, cryptoKey, cipherBytes);
   return new TextDecoder().decode(plainBuf);
 }
+
+// Upper/lower/digits/symbols -- deliberately everything, for an admin who'd
+// rather not think of a PIN themselves and just wants the strongest one
+// possible to relay verbatim.
+const STRONG_PIN_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}";
+
+/** crypto.getRandomValues -- a real CSPRNG, not Math.random() (which isn't
+ * cryptographically secure and has no business generating anything security-
+ * sensitive) -- with rejection sampling, not a plain `byte % charset.length`:
+ * 256 isn't a multiple of the charset size, so a naive modulo would make the
+ * first few characters very slightly more likely than the rest. Discarding
+ * any byte that falls in that leftover, unevenly-sized remainder before
+ * taking the modulo makes every surviving character exactly equally likely,
+ * so the result is genuinely uniform over the whole charset, not just
+ * "look-random". At 80 characters and 51 of them, that's roughly log2(80)
+ * * 51 ≈ 322 bits of entropy -- offline brute-forcing this is not a
+ * realistic threat at any conceivable computing scale. */
+// crypto.getRandomValues rejects any request over 65,536 bytes (a real Web
+// Crypto spec limit, not just an engine quirk) -- irrelevant at the 51
+// characters this is actually called with, but batching keeps the function
+// correct for any length instead of quietly relying on callers never
+// asking for a lot at once.
+const RANDOM_BATCH_MAX = 1024;
+
+export function generateStrongPin(length: number): string {
+  const charsetSize = STRONG_PIN_CHARSET.length;
+  const maxUnbiased = 256 - (256 % charsetSize);
+  let result = "";
+  while (result.length < length) {
+    const batchSize = Math.min(length - result.length, RANDOM_BATCH_MAX);
+    const batch = crypto.getRandomValues(new Uint8Array(batchSize));
+    for (const byte of batch) {
+      if (byte >= maxUnbiased) continue; // reroll -- would bias the low end of the charset
+      result += STRONG_PIN_CHARSET[byte % charsetSize];
+      if (result.length === length) break;
+    }
+  }
+  return result;
+}

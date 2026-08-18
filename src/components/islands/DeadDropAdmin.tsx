@@ -2,7 +2,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { LoginPanel } from "./file-explorer/AdminControls";
 import { adminFetch, checkAdminSession } from "./file-explorer/utils";
 import { Colon, DigitGroup, pad2 } from "./SevenSegment";
-import { encryptSecret } from "./deaddrop/crypto";
+import { encryptSecret, generateStrongPin } from "./deaddrop/crypto";
+
+const STRONG_PIN_LENGTH = 51;
 
 export interface DeadDrop {
   id: string;
@@ -125,10 +127,33 @@ function CreateForm({
 }) {
   const [secret, setSecret] = useState("");
   const [pin, setPin] = useState("");
+  // Masked while the admin is typing their own pin (shoulder-surfing
+  // protection); flipped to visible the moment a strong one is generated,
+  // since a 51-char random string is meant to be copied and verified by
+  // eye, not memorized or typed twice for confirmation.
+  const [pinVisible, setPinVisible] = useState(false);
+  const [pinCopied, setPinCopied] = useState(false);
   const [label, setLabel] = useState("");
   const [expiresHours, setExpiresHours] = useState(24);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  function generatePin() {
+    setPin(generateStrongPin(STRONG_PIN_LENGTH));
+    setPinVisible(true);
+  }
+
+  async function copyPin() {
+    if (!pin) return;
+    try {
+      await navigator.clipboard.writeText(pin);
+      setPinCopied(true);
+      setTimeout(() => setPinCopied(false), 1500);
+    } catch {
+      // no sensible fallback -- the field is visible/selectable when a pin
+      // has been generated, so it can still be copied by hand
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -196,14 +221,27 @@ function CreateForm({
           autoFocus
         />
         <input
-          type="password"
+          type={pinVisible ? "text" : "password"}
           placeholder="PIN (6+ chars) -- relay this to the recipient separately from the link"
           value={pin}
-          onChange={(e) => setPin(e.target.value)}
+          onChange={(e) => {
+            setPin(e.target.value);
+            setPinVisible(false);
+          }}
           minLength={6}
-          maxLength={64}
+          maxLength={128}
           required
         />
+        <div className="deaddrop-pin-tools">
+          <button type="button" className="timer-reveal-hide" onClick={generatePin}>
+            Generate strong PIN ({STRONG_PIN_LENGTH} chars)
+          </button>
+          {pin && (
+            <button type="button" className="timer-reveal-hide" onClick={copyPin}>
+              {pinCopied ? "Copied!" : "Copy PIN"}
+            </button>
+          )}
+        </div>
         <input
           type="text"
           placeholder="Label (optional, admin-only -- never sent to the recipient)"
