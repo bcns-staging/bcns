@@ -4,6 +4,7 @@ import { checkAdminSession } from "./file-explorer/utils";
 import FileExplorer from "./FileExplorer";
 import { TimerAdminContent } from "./TimerAdmin";
 import { DeadDropAdminContent } from "./DeadDropAdmin";
+import AdminSettings from "./AdminSettings";
 
 // One login for all three admin tools -- checked exactly once here, rather
 // than each tool's own component independently re-checking the session
@@ -14,12 +15,13 @@ import { DeadDropAdminContent } from "./DeadDropAdmin";
 // own internal admin check is soft (adminMode + a logged-out session just
 // hides the mutating controls, it doesn't block the whole component the
 // way the other two do), so embedding it as-is here is safe.
-type Tab = "files" | "timers" | "deaddrop";
+type Tab = "files" | "timers" | "deaddrop" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "files", label: "File Manager" },
   { id: "timers", label: "Timer Admin" },
   { id: "deaddrop", label: "Dead Drop" },
+  { id: "settings", label: "Settings" },
 ];
 
 function readTabFromUrl(): Tab {
@@ -90,6 +92,18 @@ export default function AdminConsole() {
         )}
         {activeTab === "timers" && <TimerAdminContent />}
         {activeTab === "deaddrop" && <DeadDropAdminContent />}
+        {activeTab === "settings" && (
+          // .file-explorer-theme, not because this is file-explorer content,
+          // but because it's the wrapper that carries the HUD-repointed
+          // --color-* tokens the reused file-explorer-icon-button/
+          // TotpSettings classes render against (see file-explorer.css) --
+          // without it they'd fall back to the site's unrelated default
+          // theme, since custom properties only inherit to descendants of
+          // wherever they're declared.
+          <div className="file-explorer-theme">
+            <AdminSettings onLoggedOut={() => setIsAdmin(false)} />
+          </div>
+        )}
       </div>
     </div>
   );

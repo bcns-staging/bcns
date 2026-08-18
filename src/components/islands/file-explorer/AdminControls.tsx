@@ -7,7 +7,6 @@ import {
   EyeIcon,
   EyeOffIcon,
   FolderPlusIcon,
-  LogOutIcon,
   PasteIcon,
   SelectIcon,
   TrashIcon,
@@ -399,7 +398,6 @@ function ResetPasswordPanel({ token, onCancel, onSuccess }: ResetPasswordPanelPr
 interface AdminBarProps {
   currentFolder: string;
   onChanged: () => void;
-  onLoggedOut: () => void;
 }
 
 // Keep in sync with mcp-fileserver's MCP_ADMIN_MAX_UPLOAD_BYTES (deploy.sh) --
@@ -408,16 +406,11 @@ interface AdminBarProps {
 // round trip, or worse, partway through a 200MB PUT.
 const MAX_UPLOAD_BYTES = 250 * 1024 * 1024;
 
-function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
+function AdminBar({ currentFolder, onChanged }: AdminBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  async function logout() {
-    await adminFetch("/api/admin/logout", { method: "POST" });
-    onLoggedOut();
-  }
 
   async function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
     const fileList = e.target.files;
@@ -488,20 +481,16 @@ function AdminBar({ currentFolder, onChanged, onLoggedOut }: AdminBarProps) {
         <FolderPlusIcon size={14} />
         New folder
       </button>
-      <button type="button" className="file-explorer-icon-button" onClick={logout}>
-        <LogOutIcon size={14} />
-        Log out
-      </button>
       {error && <span className="file-explorer-error">{error}</span>}
     </div>
   );
 }
 
 // 2FA management -- only reachable once already logged in (via password
-// alone if 2FA isn't set up yet), a separate block from AdminBar since its
-// expanded states (QR code, confirm/disable code fields) need real vertical
-// space, not another button crammed into that single-line toolbar.
-function TotpSettings() {
+// alone if 2FA isn't set up yet). Exported for AdminSettings.tsx (the
+// Settings tab of /admin) -- lives here, not there, since it's genuinely
+// file-explorer/admin-auth machinery, same as LoginPanel above.
+export function TotpSettings() {
   const [enabled, setEnabled] = useState<boolean | null>(null); // null = status not loaded yet
   const [setupData, setSetupData] = useState<{ secret: string; otpauth_url: string } | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -714,12 +703,7 @@ export default function AdminControls({ isAdmin, currentFolder, onAuthChange, on
 
   if (isAdmin === null) return null;
   if (!isAdmin) return <LoginPanel onLoggedIn={() => onAuthChange(true)} />;
-  return (
-    <>
-      <AdminBar currentFolder={currentFolder} onChanged={onChanged} onLoggedOut={() => onAuthChange(false)} />
-      <TotpSettings />
-    </>
-  );
+  return <AdminBar currentFolder={currentFolder} onChanged={onChanged} />;
 }
 
 export interface SelectedItem {
