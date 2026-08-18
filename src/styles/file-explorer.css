@@ -1,4 +1,5 @@
-/* Shared by /fm and /fm/admin (src/pages/fm/index.astro, src/pages/fm/admin.astro).
+/* Shared by /fm (src/pages/fm/index.astro) and the File Manager tab of
+   /admin (src/pages/admin.astro, via AdminConsole.tsx -> FileExplorer.tsx).
    Previously a scoped <style> block on fm.astro alone; extracted to a plain
    global stylesheet so both pages can use it -- Astro's per-page scoped
    <style> can't be shared across two different .astro files. */

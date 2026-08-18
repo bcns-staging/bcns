@@ -156,8 +156,12 @@ function TimerForm({ editingTimer, onSaved, onDeleted, onStateChanged, onCancelE
   );
 }
 
-export default function TimerAdmin() {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+// The authenticated view -- everything TimerAdmin renders once a session is
+// confirmed. Split out so AdminConsole.tsx (the consolidated /admin page)
+// can render this directly under its own single login gate, instead of
+// each admin tool re-checking the session and flashing its own login
+// screen independently.
+export function TimerAdminContent() {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -169,16 +173,6 @@ export default function TimerAdmin() {
   // skew so a resumed timer's live countdown doesn't jump relative to its
   // frozen paused value.
   const [clockOffsetMs, setClockOffsetMs] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    checkAdminSession().then((authenticated) => {
-      if (!cancelled) setIsAdmin(authenticated);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function refreshTimers() {
     try {
@@ -200,17 +194,8 @@ export default function TimerAdmin() {
   }
 
   useEffect(() => {
-    if (isAdmin) refreshTimers();
-  }, [isAdmin]);
-
-  if (isAdmin === null) return null;
-  if (!isAdmin) {
-    return (
-      <div className="timer-admin-login-wrap">
-        <LoginPanel onLoggedIn={() => setIsAdmin(true)} />
-      </div>
-    );
-  }
+    refreshTimers();
+  }, []);
 
   const editingTimer = timers.find((t) => t.id === editingId) ?? null;
 
@@ -271,4 +256,34 @@ export default function TimerAdmin() {
       )}
     </div>
   );
+}
+
+// Standalone entry point (own login check + gate) for anywhere
+// TimerAdminContent isn't already sitting under a shared one -- currently
+// nothing imports this directly (the consolidated /admin console renders
+// TimerAdminContent itself), kept for a standalone /timeradmin-style embed
+// if that's ever useful again.
+export default function TimerAdmin() {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    checkAdminSession().then((authenticated) => {
+      if (!cancelled) setIsAdmin(authenticated);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (isAdmin === null) return null;
+  if (!isAdmin) {
+    return (
+      <div className="timer-admin-login-wrap">
+        <LoginPanel onLoggedIn={() => setIsAdmin(true)} />
+      </div>
+    );
+  }
+
+  return <TimerAdminContent />;
 }
