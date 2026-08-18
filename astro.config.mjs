@@ -7,6 +7,14 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://www.7beacons.com',
   integrations: [react()],
+  // The three admin tools used to be three separate pages/logins; now
+  // they're tabs on one console. These keep old bookmarks/muscle memory
+  // landing somewhere useful instead of a dead 404.
+  redirects: {
+    '/fm/admin': '/admin?tab=files',
+    '/timeradmin': '/admin?tab=timers',
+    '/deaddrop': '/admin?tab=deaddrop',
+  },
   security: {
     csp: {
       // Astro auto-hashes its own inline scripts/styles (including island

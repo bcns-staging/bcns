@@ -243,7 +243,8 @@ function Breadcrumbs({
 
 export interface FileExplorerProps {
   /** Renders the login form / upload / mkdir / delete / rename / visibility
-   * controls (src/pages/fm/admin.astro). The plain /fm page omits this --
+   * controls (the File Manager tab of src/pages/admin.astro). The plain /fm
+   * page omits this --
    * an already-logged-in admin still sees hidden files and the "Hidden"
    * badge there (isAdmin below is checked unconditionally), just not the
    * mutating controls, keeping /fm itself strictly browse-only. */

@@ -3,25 +3,18 @@ import "../styles/seven-segment-clock.css";
 // LoginPanel (reused from the file explorer's admin login) is styled by
 // this stylesheet -- not the file explorer's own page-height/grid layout
 // rules, just the shared .file-explorer-admin-login/input/button styles.
-// Deliberately not wrapped in .file-explorer-theme (that swaps in a
-// teal-accented palette specific to /fm) -- this page inherits the site's
-// normal default theme instead, which fits better outside the file
-// explorer.
+// Also carries the File Manager tab's own theme (.file-explorer-theme and
+// everything under it).
 import "../styles/file-explorer.css";
 import Layout from "../layouts/Layout.astro";
-import TimerAdmin from "../components/islands/TimerAdmin.tsx";
+import AdminConsole from "../components/islands/AdminConsole.tsx";
 ---
 
 <style>
-  /* Full-bleed "KeyVault" HUD dashboard -- no site header/footer chrome on
-     this page at all, per the reference design. --hud-* tokens come from
-     seven-segment-clock.css's :root block, imported above.
-
-     The gradient goes on :global(body), not just main -- body is the
-     actual full-height, full-bleed element (Layout.astro's, not this
-     page's own template, hence :global), so there's no seam of the site's
-     default dark-blue background showing past main's own box in any
-     scenario (overscroll, a shorter-than-viewport content flash, etc). */
+  /* Full-bleed "KeyVault" HUD dashboard -- one page, one login, three
+     switchable tabs (File Manager / Timer Admin / Dead Drop), replacing
+     the three separate admin pages this site used to have. --hud-* tokens
+     come from seven-segment-clock.css's :root block, imported above. */
   :global(body) {
     background: var(--hud-gradient);
   }
@@ -30,6 +23,52 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     display: block;
     min-height: 100vh;
     padding-block: 2.5rem;
+  }
+
+  :global(.admin-tabs) {
+    display: flex;
+    margin-bottom: 1.5rem;
+  }
+
+  :global(.admin-tabs button) {
+    flex: 1;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--hud-border);
+    background: var(--hud-panel-bg);
+    color: var(--hud-text-muted);
+    font-family: var(--hud-mono);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  :global(.admin-tabs button + button) {
+    border-left: 0;
+  }
+
+  :global(.admin-tabs button:hover:not(.is-active)) {
+    color: var(--hud-text);
+    border-color: var(--hud-border-hover);
+  }
+
+  :global(.admin-tabs button.is-active) {
+    background: var(--hud-bg-2);
+    color: var(--hud-text);
+    border-color: var(--hud-accent);
+    box-shadow: inset 0 -2px 0 var(--hud-accent);
+  }
+
+  /* File Manager tab: .file-explorer-theme normally fills the whole
+     viewport (height: 100dvh, its own internal scroll region) for its
+     standalone use on /fm -- inside a tab panel that already has the tab
+     bar above it, that would badly overflow. Scoped to .admin-tab-panel
+     only, so /fm's own page is untouched. */
+  :global(.admin-tab-panel .file-explorer-theme) {
+    height: auto;
+    min-height: 32rem;
+    overflow: visible;
   }
 
   :global(.timer-admin-login-wrap) {
@@ -46,9 +85,6 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     width: 100%;
   }
 
-  /* Matches the reference design's "+ DEPLOY NEW TIMER" button -- a lone,
-     centered, dashed-border pill below the grid rather than a toolbar
-     above it. */
   :global(.timer-admin-add) {
     align-self: center;
     padding: 0.85rem 1.75rem;
@@ -66,6 +102,100 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
   :global(.timer-admin-add:hover) {
     border-color: var(--hud-text-muted);
     color: var(--hud-text);
+  }
+
+  :global(.deaddrop-revoke) {
+    align-self: center;
+    margin-top: 0.2rem;
+  }
+
+  :global(.deaddrop-pin-tools) {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: -0.35rem;
+  }
+
+  /* "Drop sealed -- copy this link now" panel, shown exactly once right
+     after creation. Green/"ready" toned, not the neutral form-panel style --
+     this is a success state, and the warning is the whole point of it. */
+  :global(.deaddrop-created-panel) {
+    align-self: center;
+    width: 100%;
+    max-width: 32rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border: 1px solid var(--hud-ready-border);
+    background: var(--hud-ready-bg);
+  }
+
+  :global(.deaddrop-created-title) {
+    margin: 0;
+    font-family: var(--hud-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hud-ready);
+  }
+
+  :global(.deaddrop-created-warning) {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--hud-text-muted);
+    line-height: 1.5;
+  }
+
+  :global(.deaddrop-created-link-row) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  :global(.deaddrop-created-link) {
+    flex: 1;
+    min-width: 12rem;
+    padding: 0.5rem 0.7rem;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--hud-border);
+    font-family: var(--hud-mono);
+    font-size: 0.75rem;
+    color: var(--hud-text);
+    word-break: break-all;
+  }
+
+  :global(.deaddrop-created-link-row .timer-reveal-button) {
+    width: auto;
+    white-space: nowrap;
+    padding-inline: 1.25rem;
+  }
+
+  :global(.deaddrop-created-pin) {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--hud-text);
+  }
+
+  :global(.deaddrop-created-pin code) {
+    padding: 0.15rem 0.5rem;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--hud-border);
+    color: var(--hud-ready);
+    font-family: var(--hud-mono);
+    letter-spacing: 0.1em;
+  }
+
+  :global(.deaddrop-created-done) {
+    align-self: flex-start;
+    padding: 0.5rem 1.25rem;
+    font-family: var(--hud-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
   }
 
   :global(.timer-admin-form-panel) {
@@ -117,7 +247,8 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
   }
 
   :global(.timer-admin-form input),
-  :global(.timer-admin-form textarea) {
+  :global(.timer-admin-form textarea),
+  :global(.timer-admin-form select) {
     display: block;
     width: 100%;
     padding: 0.5rem 0.75rem;
@@ -128,19 +259,21 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     font-size: 0.85rem;
   }
 
+  :global(.timer-admin-form textarea) {
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
   :global(.timer-admin-form input::placeholder),
   :global(.timer-admin-form textarea::placeholder) {
     color: var(--hud-text-dimmer);
   }
 
   :global(.timer-admin-form input:focus),
-  :global(.timer-admin-form textarea:focus) {
+  :global(.timer-admin-form textarea:focus),
+  :global(.timer-admin-form select:focus) {
     outline: none;
     border-color: var(--hud-border-hover);
-  }
-
-  :global(.timer-admin-form textarea) {
-    resize: vertical;
   }
 
   :global(.timer-admin-form-actions) {
@@ -170,21 +303,9 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     background: rgb(255 60 30 / 22%);
   }
 
-  :global(.timer-admin-pause) {
-    border: 1px solid var(--hud-border-hover);
-    background: transparent;
-    color: var(--hud-text-muted);
-  }
-
-  :global(.timer-admin-pause:hover) {
-    color: var(--hud-text);
-    border-color: var(--hud-text-muted);
-  }
-
-  :global(.timer-admin-delete) {
-    border: 1px solid var(--hud-accent);
-    background: transparent;
-    color: var(--hud-accent);
+  :global(.timer-admin-form-actions button:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   :global(.timer-admin-cancel) {
@@ -193,21 +314,12 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
     color: var(--hud-text-dim);
   }
 
-  :global(.timer-admin-form-actions button:disabled) {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
   :global(.timer-admin-error) {
     color: var(--hud-accent);
     font-size: 0.85rem;
   }
 
-  /* Login gate -- reuses the file explorer's shared LoginPanel component
-     (see file-explorer.css's .file-explorer-admin-login* rules), scoped
-     overrides here so it matches the HUD theme on this page specifically
-     without touching those shared rules (which /fm/admin also relies on,
-     with its own teal palette). */
+  /* Login gate. */
   :global(.timer-admin-login-wrap .file-explorer-admin-login) {
     border: 1px solid var(--hud-border);
     border-radius: 0;
@@ -267,10 +379,10 @@ import TimerAdmin from "../components/islands/TimerAdmin.tsx";
   }
 </style>
 
-<Layout title="Timer Admin | 7 Beacons">
+<Layout title="Admin | 7 Beacons">
   <main>
     <div class="container">
-      <TimerAdmin client:load />
+      <AdminConsole client:load />
     </div>
   </main>
 </Layout>

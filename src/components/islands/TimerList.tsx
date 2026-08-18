@@ -3,11 +3,11 @@ import { API_BASE } from "./file-explorer/utils";
 import { TimerCard, type Timer } from "./TimerCard";
 import { TimerHudTopBar } from "./TimerHudTopBar";
 
-// Public, read-only mirror of whatever's managed in /timeradmin -- no
-// login, same /api/timers endpoint the admin page's own listing reads
-// from. Polls every 5s (independent of each card's own 1s countdown tick)
-// so a timer created/edited/paused/deleted in timeradmin shows up here
-// without needing a page reload.
+// Public, read-only mirror of whatever's managed in /admin's Timer Admin
+// tab -- no login, same /api/timers endpoint the admin console's own
+// listing reads from. Polls every 5s (independent of each card's own 1s
+// countdown tick) so a timer created/edited/paused/deleted in the admin
+// console shows up here without needing a page reload.
 const REFRESH_INTERVAL_MS = 5000;
 
 export default function TimerList() {

@@ -304,22 +304,16 @@ function CreatedPanel({ link, pin, onDone }: { link: string; pin: string; onDone
   );
 }
 
-export default function DeadDropAdmin() {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+// The authenticated view -- everything DeadDropAdmin renders once a session
+// is confirmed. Split out so AdminConsole.tsx (the consolidated /admin
+// page) can render this directly under its own single login gate, instead
+// of each admin tool re-checking the session and flashing its own login
+// screen independently.
+export function DeadDropAdminContent() {
   const [drops, setDrops] = useState<DeadDrop[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [justCreated, setJustCreated] = useState<{ link: string; pin: string } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    checkAdminSession().then((authenticated) => {
-      if (!cancelled) setIsAdmin(authenticated);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function refreshDrops() {
     try {
@@ -334,21 +328,12 @@ export default function DeadDropAdmin() {
   }
 
   useEffect(() => {
-    if (isAdmin) refreshDrops();
-  }, [isAdmin]);
+    refreshDrops();
+  }, []);
 
   async function revoke(id: string) {
     await adminFetch(`/api/admin/deaddrop/${encodeURIComponent(id)}`, { method: "DELETE" });
     refreshDrops();
-  }
-
-  if (isAdmin === null) return null;
-  if (!isAdmin) {
-    return (
-      <div className="timer-admin-login-wrap">
-        <LoginPanel onLoggedIn={() => setIsAdmin(true)} />
-      </div>
-    );
   }
 
   return (
@@ -398,4 +383,34 @@ export default function DeadDropAdmin() {
       )}
     </div>
   );
+}
+
+// Standalone entry point (own login check + gate) for anywhere
+// DeadDropAdminContent isn't already sitting under a shared one --
+// currently nothing imports this directly (the consolidated /admin console
+// renders DeadDropAdminContent itself), kept for a standalone
+// /deaddrop-style embed if that's ever useful again.
+export default function DeadDropAdmin() {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    checkAdminSession().then((authenticated) => {
+      if (!cancelled) setIsAdmin(authenticated);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (isAdmin === null) return null;
+  if (!isAdmin) {
+    return (
+      <div className="timer-admin-login-wrap">
+        <LoginPanel onLoggedIn={() => setIsAdmin(true)} />
+      </div>
+    );
+  }
+
+  return <DeadDropAdminContent />;
 }
