@@ -37,6 +37,11 @@ export default defineConfig({
         // mcp-fileserver route, since Cloud Run doesn't support the HTTP
         // Range requests video playback/seeking needs.
         "media-src 'self' https://mcp-fileserver-751371770492.us-central1.run.app https://storage.googleapis.com",
+        // /dbs loads Barlow Condensed + JetBrains Mono from Google Fonts --
+        // fonts.googleapis.com serves the @font-face CSS (see styleDirective
+        // below for that stylesheet link itself), fonts.gstatic.com serves
+        // the actual woff2 files those @font-face rules point at.
+        "font-src 'self' https://fonts.gstatic.com",
         "worker-src blob:",
         // YouTube Live embed for /project-4's public wildlife cam; mcp-fileserver
         // origin added for /fm's PDF preview via <iframe> (not
@@ -64,7 +69,9 @@ export default defineConfig({
         resources: ["'self'", "https://challenges.cloudflare.com"],
       },
       styleDirective: {
-        resources: ["'self'", "https://challenges.cloudflare.com"],
+        // fonts.googleapis.com is /dbs's Google Fonts stylesheet link (see
+        // font-src above for the actual font files that stylesheet points at).
+        resources: ["'self'", "https://challenges.cloudflare.com", "https://fonts.googleapis.com"],
       },
     },
   },
