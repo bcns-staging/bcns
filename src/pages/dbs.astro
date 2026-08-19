@@ -1,0 +1,726 @@
+---
+import "../styles/seven-segment-clock.css";
+import "flag-icons/css/flag-icons.min.css";
+import Layout from "../layouts/Layout.astro";
+import PersonnelDatabase from "../components/islands/PersonnelDatabase.tsx";
+---
+
+<style>
+  /* Same "KeyVault" HUD theme as /admin, /cypher, /d, /fm, /s (see
+     seven-segment-clock.css's --hud-* tokens) -- a real, cloud-backed
+     rebuild of a "Personnel Database" mockup, reusing the site's existing
+     dark tactical-HUD design system rather than introducing a second one.
+
+     Typography matches the source mockup exactly: Barlow Condensed for all
+     display text (names, labels, buttons, headings) via --dbs-display, and
+     JetBrains Mono for data values (IDs, timestamps, sizes, field values)
+     via --dbs-mono -- both loaded from Google Fonts (see the <Fragment
+     slot="head"> below), the one deliberate external dependency this
+     otherwise zero-third-party-request site carries, scoped to this page
+     alone. Form controls (button/input) don't inherit font-family from
+     ancestors by default, so every text-bearing rule below sets one of
+     these two explicitly rather than relying on inheritance. */
+  :global(body) {
+    background: var(--hud-gradient);
+  }
+
+  main {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  :global(.dbs-root) {
+    --dbs-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+    --dbs-mono: "JetBrains Mono", var(--hud-mono);
+    width: 100%;
+    max-width: 68rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  :global(.dbs-topbar) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  /* .timer-hud-status/-dot are reused as-is from seven-segment-clock.css;
+     only the two text children need a font override here, since that
+     shared component defaults to the timer pages' pure-monospace look. */
+  :global(.dbs-topbar .timer-hud-status-label) {
+    font-family: var(--dbs-display);
+  }
+
+  :global(.dbs-topbar .timer-hud-status-count) {
+    font-family: var(--dbs-mono);
+  }
+
+  /* Status/tone pills (ONLINE/AWAY/OFFLINE on cards and the identity
+     banner, REGULATED/RESTRICTED/STANDARD in the category header) all
+     reuse .timer-hud-pill -- one override here covers every instance. */
+  :global(.dbs-root .timer-hud-pill) {
+    font-family: var(--dbs-display);
+  }
+
+  /* .dbs-filter-btn is also reused by the dossier's "BACK TO ROSTER" button
+     and the asset-view modal's "CLOSE" button -- kept even though the
+     ALL/ONLINE/AWAY/OFFLINE filter row itself (.dbs-filters, .is-active) is
+     gone along with the status field it filtered on. */
+  :global(.dbs-filter-btn) {
+    background: var(--hud-panel-bg);
+    border: 1px solid var(--hud-border);
+    color: var(--hud-text-muted);
+    font-family: var(--dbs-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+  }
+
+  :global(.dbs-filter-btn:hover) {
+    border-color: var(--hud-border-hover);
+  }
+
+  :global(.dbs-searchbar) {
+    background: var(--hud-panel-bg);
+    border: 1px solid var(--hud-border);
+    padding: 0.15rem 1rem;
+  }
+
+  :global(.dbs-searchbar input) {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    padding: 0.75rem 0;
+  }
+
+  :global(.dbs-searchbar input::placeholder) {
+    color: var(--hud-text-dimmer);
+  }
+
+  :global(.dbs-error) {
+    color: var(--hud-accent);
+    font-family: var(--dbs-display);
+    font-size: 0.85rem;
+  }
+
+  :global(.dbs-empty) {
+    border: 1px dashed var(--hud-border);
+    color: var(--hud-text-dim);
+    font-family: var(--dbs-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-align: center;
+    padding: 2.5rem 0;
+  }
+
+  :global(.dbs-loading) {
+    color: var(--hud-text-muted);
+    font-family: var(--dbs-display);
+    font-size: 0.9rem;
+  }
+
+  /* Roster cards -- .timer-admin-item/.timer-admin-item-editable already
+     supply the panel background, border, hover state, and corner-bracket
+     hooks; this is just the card's own internal layout, plus making a
+     <button> look unstyled enough to still read as a card. */
+  :global(.dbs-card) {
+    align-items: center;
+    text-align: center;
+    background: var(--hud-panel-bg);
+    font: inherit;
+    color: inherit;
+  }
+
+  :global(.dbs-card-avatar) {
+    width: 3.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 55%);
+    border: 1px solid var(--hud-border);
+    color: var(--hud-accent);
+    font-family: var(--dbs-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  :global(.dbs-card-name) {
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  :global(.dbs-card-uid) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
+  :global(.dbs-dossier-topbar) {
+    display: flex;
+  }
+
+  :global(.dbs-panel) {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  :global(.dbs-identity-banner) {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--hud-border);
+    background: rgb(0 0 0 / 25%);
+  }
+
+  :global(.dbs-identity-flag) {
+    position: absolute;
+    top: 0.85rem;
+    right: 1.5rem;
+    display: block;
+    line-height: 0;
+    border: 1px solid var(--hud-border-hover);
+  }
+
+  /* flag-icons' .fi sizes itself off font-size (width: 1.333333em for the
+     default 4:3 flags) -- this is the one place controlling how big the
+     rendered flag is. */
+  :global(.dbs-identity-flag .fi) {
+    font-size: 1.6rem;
+  }
+
+  :global(.dbs-identity-avatar) {
+    width: 4.5rem;
+    height: 4.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 55%);
+    border: 1px solid var(--hud-border);
+    color: var(--hud-accent);
+    font-family: var(--dbs-display);
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  :global(.dbs-identity-main) {
+    flex: 1;
+    min-width: 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  :global(.dbs-identity-name) {
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  :global(.dbs-identity-meta) {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  :global(.dbs-identity-uid) {
+    color: var(--hud-text-dim);
+    font-family: var(--dbs-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+  }
+
+  :global(.dbs-body) {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+  }
+
+  @media (max-width: 42rem) {
+    :global(.dbs-body) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  :global(.dbs-catnav) {
+    border-right: 1px solid var(--hud-border);
+    padding-block: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    max-height: 36rem;
+    overflow-y: auto;
+  }
+
+  :global(.dbs-catnav-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: transparent;
+    border: none;
+    border-left: 2px solid transparent;
+    color: var(--hud-text-muted);
+    font: inherit;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+
+  :global(.dbs-catnav-item:hover) {
+    background: rgb(255 255 255 / 4%);
+  }
+
+  :global(.dbs-catnav-item.is-active) {
+    background: rgb(255 255 255 / 5%);
+    color: var(--hud-text);
+  }
+
+  :global(.dbs-catnav-item.is-active.dbs-tone-sens) {
+    border-left-color: var(--hud-accent);
+  }
+
+  :global(.dbs-catnav-item.is-active.dbs-tone-semi) {
+    border-left-color: var(--hud-paused);
+  }
+
+  :global(.dbs-catnav-item.is-active.dbs-tone-std) {
+    border-left-color: var(--hud-ready);
+  }
+
+  :global(.dbs-catnav-num) {
+    font-family: var(--dbs-mono);
+    font-size: 0.68rem;
+    color: var(--hud-text-dimmer);
+    width: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbs-catnav-name) {
+    flex: 1;
+    font-family: var(--dbs-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  :global(.dbs-catnav-lock) {
+    color: var(--hud-accent);
+    font-size: 0.6rem;
+  }
+
+  :global(.dbs-catbody) {
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 22rem;
+  }
+
+  :global(.dbs-catbody-header) {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border-bottom: 1px solid var(--hud-border);
+    padding-bottom: 0.85rem;
+  }
+
+  :global(.dbs-catbody-num) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-mono);
+    font-size: 0.85rem;
+  }
+
+  :global(.dbs-catbody-name) {
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  :global(.dbs-catbody-spacer) {
+    flex: 1;
+  }
+
+  :global(.dbs-reveal-btn) {
+    background: rgb(255 60 30 / 7%);
+    border: 1px solid rgb(255 60 30 / 45%);
+    color: #ff8a70;
+    font-family: var(--dbs-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+  }
+
+  :global(.dbs-reveal-btn:hover) {
+    background: rgb(255 60 30 / 16%);
+  }
+
+  :global(.dbs-regulated-banner) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgb(255 60 30 / 7%);
+    border: 1px solid rgb(255 60 30 / 30%);
+    color: #d8a79b;
+    font-family: var(--dbs-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.6rem 1rem;
+  }
+
+  :global(.dbs-media-empty) {
+    color: var(--hud-text-dim);
+    font-family: var(--dbs-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    padding: 2rem 0;
+    text-align: center;
+  }
+
+  :global(.dbs-media-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  :global(.dbs-media-tile) {
+    border: 1px solid var(--hud-border);
+    background: rgb(0 0 0 / 45%);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  :global(.dbs-media-tile:hover) {
+    border-color: var(--hud-border-hover);
+  }
+
+  :global(.dbs-media-tile-kind) {
+    height: 5.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: repeating-linear-gradient(
+      -45deg,
+      rgb(159 174 154 / 8%) 0 6px,
+      transparent 6px 12px
+    );
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  :global(.dbs-media-tile-thumb) {
+    height: 5.5rem;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  :global(.dbs-media-tile-footer) {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    border-top: 1px solid var(--hud-border);
+  }
+
+  :global(.dbs-media-tile-label) {
+    color: var(--hud-text-muted);
+    font-family: var(--dbs-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  :global(.dbs-media-tile-meta) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-mono);
+    font-size: 0.62rem;
+  }
+
+  :global(.dbs-fields) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem 1.5rem;
+  }
+
+  @media (max-width: 34rem) {
+    :global(.dbs-fields) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  :global(.dbs-field) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    border-bottom: 1px solid rgb(255 255 255 / 6%);
+    padding-block: 0.4rem 0.55rem;
+  }
+
+  :global(.dbs-field-label) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: var(--hud-text-dim);
+    font-family: var(--dbs-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  :global(.dbs-field-label-text) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  :global(.dbs-field-sensitive-tag) {
+    color: var(--hud-accent);
+    font-family: var(--dbs-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    border: 1px solid rgb(255 60 30 / 45%);
+    padding: 0 0.35rem;
+  }
+
+  :global(.dbs-field-assets-toggle) {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbs-field-assets-count) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  :global(.dbs-field-assets-btn) {
+    width: 1.15rem;
+    height: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--hud-panel-bg);
+    border: 1px solid var(--hud-border-hover);
+    color: var(--hud-text-muted);
+    font-family: var(--dbs-display);
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  :global(.dbs-field-assets-btn:hover) {
+    border-color: var(--hud-ready-border);
+    color: var(--hud-ready);
+  }
+
+  :global(.dbs-field-assets-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    padding: 0.5rem;
+    background: rgb(0 0 0 / 35%);
+    border: 1px solid var(--hud-border);
+  }
+
+  :global(.dbs-field-assets-empty) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-display);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.1rem;
+  }
+
+  :global(.dbs-field-asset-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    padding: 0.3rem 0.4rem;
+    cursor: pointer;
+  }
+
+  :global(.dbs-field-asset-item:hover) {
+    background: rgb(255 255 255 / 5%);
+  }
+
+  :global(.dbs-field-asset-kind) {
+    color: var(--hud-ready);
+    font-family: var(--dbs-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    border: 1px solid var(--hud-ready-border);
+    padding: 0.05rem 0.35rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbs-field-asset-label) {
+    flex: 1;
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 0.75rem;
+  }
+
+  :global(.dbs-field-asset-meta) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-mono);
+    font-size: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbs-asset-modal-backdrop) {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 65%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 50;
+  }
+
+  :global(.dbs-asset-modal) {
+    position: relative;
+    width: 100%;
+    max-width: 28rem;
+    background: var(--hud-bg-3);
+    border: 1px solid var(--hud-border-hover);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  :global(.dbs-asset-modal-kind) {
+    color: var(--hud-ready);
+    font-family: var(--dbs-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    border: 1px solid var(--hud-ready-border);
+    padding: 0.15rem 0.6rem;
+  }
+
+  :global(.dbs-asset-modal-label) {
+    color: var(--hud-text);
+    font-family: var(--dbs-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  :global(.dbs-asset-modal-meta) {
+    color: var(--hud-text-dim);
+    font-family: var(--dbs-mono);
+    font-size: 0.78rem;
+  }
+
+  :global(.dbs-asset-modal-note) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--dbs-display);
+    font-size: 0.7rem;
+    line-height: 1.5;
+    margin: 0.5rem 0 0.25rem;
+  }
+
+  :global(.dbs-asset-modal-preview) {
+    width: 100%;
+    max-height: 20rem;
+    object-fit: contain;
+    background: rgb(0 0 0 / 45%);
+    border: 1px solid var(--hud-border);
+    margin: 0.25rem 0;
+  }
+
+  :global(.dbs-asset-modal-download) {
+    display: inline-block;
+    margin: 0.5rem 0 0.25rem;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--hud-ready-border);
+    background: var(--hud-ready-bg);
+    color: var(--hud-ready);
+    font-family: var(--dbs-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  :global(.dbs-asset-modal-download:hover) {
+    background: rgb(143 209 138 / 18%);
+  }
+
+  :global(.dbs-field-value) {
+    color: #d5dcd2;
+    font-family: var(--dbs-mono);
+    font-size: 0.85rem;
+  }
+
+  :global(.dbs-field-value.is-masked) {
+    color: #5a4540;
+    letter-spacing: 0.15em;
+  }
+</style>
+
+<Layout title="7 Beacons">
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+  </Fragment>
+  <main>
+    <PersonnelDatabase client:load />
+  </main>
+</Layout>

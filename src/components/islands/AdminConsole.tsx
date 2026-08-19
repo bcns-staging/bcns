@@ -4,23 +4,26 @@ import { checkAdminSession } from "./file-explorer/utils";
 import FileExplorer from "./FileExplorer";
 import { TimerAdminContent } from "./TimerAdmin";
 import { DeadDropAdminContent } from "./DeadDropAdmin";
+import { PersonnelAdminContent } from "./PersonnelAdmin";
 import AdminSettings from "./AdminSettings";
 
-// One login for all three admin tools -- checked exactly once here, rather
+// One login for all four admin tools -- checked exactly once here, rather
 // than each tool's own component independently re-checking the session
 // (and each briefly flashing its own login screen) every time it's the
-// active tab. TimerAdminContent/DeadDropAdminContent are the "already
-// authenticated" halves of TimerAdmin.tsx/DeadDropAdmin.tsx, split out for
-// exactly this reason; FileExplorer.tsx isn't split the same way since its
-// own internal admin check is soft (adminMode + a logged-out session just
-// hides the mutating controls, it doesn't block the whole component the
-// way the other two do), so embedding it as-is here is safe.
-type Tab = "files" | "timers" | "deaddrop" | "settings";
+// active tab. TimerAdminContent/DeadDropAdminContent/PersonnelAdminContent
+// are the "already authenticated" halves of their respective standalone
+// components, split out for exactly this reason; FileExplorer.tsx isn't
+// split the same way since its own internal admin check is soft (adminMode
+// + a logged-out session just hides the mutating controls, it doesn't
+// block the whole component the way the other three do), so embedding it
+// as-is here is safe.
+type Tab = "files" | "timers" | "deaddrop" | "personnel" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "files", label: "File Manager" },
   { id: "timers", label: "Timer Admin" },
   { id: "deaddrop", label: "Dead Drop" },
+  { id: "personnel", label: "Personnel DB" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -92,6 +95,7 @@ export default function AdminConsole() {
         )}
         {activeTab === "timers" && <TimerAdminContent />}
         {activeTab === "deaddrop" && <DeadDropAdminContent />}
+        {activeTab === "personnel" && <PersonnelAdminContent />}
         {activeTab === "settings" && (
           // .file-explorer-theme, not because this is file-explorer content,
           // but because it's the wrapper that carries the HUD-repointed

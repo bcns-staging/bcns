@@ -405,6 +405,504 @@ import AdminConsole from "../components/islands/AdminConsole.tsx";
     color: var(--hud-accent);
     font-family: var(--hud-mono);
   }
+
+  /* Personnel DB tab (PersonnelAdmin.tsx) -- "dbsa-" prefix (not "dbs-",
+     which belongs to the public /dbs page's own styles) so the two never
+     collide even though both render against the same --hud-* tokens. */
+  :global(.dbsa-admin) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  :global(.dbsa-error) {
+    color: var(--hud-accent);
+    font-size: 0.85rem;
+  }
+
+  :global(.dbsa-empty),
+  :global(.dbsa-loading) {
+    color: var(--hud-text-muted);
+    font-family: var(--hud-mono);
+    font-size: 0.85rem;
+  }
+
+  :global(.dbsa-roster) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  :global(.dbsa-roster-item) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    background: var(--hud-panel-bg);
+    border: 1px solid var(--hud-border);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-roster-item:hover) {
+    border-color: var(--hud-accent);
+  }
+
+  :global(.dbsa-roster-name) {
+    flex: 1 1 100%;
+    color: var(--hud-text);
+    font-family: var(--hud-mono);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  :global(.dbsa-roster-uid) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+  }
+
+  :global(.dbsa-add) {
+    align-self: flex-start;
+    padding: 0.7rem 1.5rem;
+    border: 1px dashed var(--hud-border-hover);
+    background: transparent;
+    color: var(--hud-text-muted);
+    font-family: var(--hud-mono);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-add:hover) {
+    border-color: var(--hud-text-muted);
+    color: var(--hud-text);
+  }
+
+  :global(.dbsa-form-panel) {
+    border: 1px solid var(--hud-border);
+    background: var(--hud-panel-bg);
+  }
+
+  :global(.dbsa-form-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--hud-border);
+  }
+
+  :global(.dbsa-form-title) {
+    font-family: var(--hud-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hud-text-dim);
+  }
+
+  :global(.dbsa-form-close) {
+    border: 1px solid var(--hud-border-hover);
+    background: transparent;
+    color: var(--hud-text-muted);
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 1;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-form-close:hover) {
+    color: var(--hud-text);
+    border-color: var(--hud-text-muted);
+  }
+
+  :global(.dbsa-form) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  :global(.dbsa-form input),
+  :global(.dbsa-form select) {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--hud-border);
+    background: rgb(0 0 0 / 30%);
+    color: var(--hud-text);
+    font-family: var(--hud-mono);
+    font-size: 0.82rem;
+    margin-top: 0.3rem;
+  }
+
+  :global(.dbsa-form input:focus),
+  :global(.dbsa-form select:focus) {
+    outline: none;
+    border-color: var(--hud-border-hover);
+  }
+
+  :global(.dbsa-form input:disabled) {
+    opacity: 0.6;
+  }
+
+  :global(.dbsa-form label) {
+    display: flex;
+    flex-direction: column;
+    color: var(--hud-text-dim);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  :global(.dbsa-top-fields) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1rem;
+  }
+
+  :global(.dbsa-body) {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    border: 1px solid var(--hud-border);
+  }
+
+  @media (max-width: 40rem) {
+    :global(.dbsa-body) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  :global(.dbsa-catnav) {
+    border-right: 1px solid var(--hud-border);
+    padding-block: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    max-height: 28rem;
+    overflow-y: auto;
+  }
+
+  :global(.dbsa-catnav-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    border-left: 2px solid transparent;
+    color: var(--hud-text-muted);
+    font: inherit;
+    text-align: left;
+    padding: 0.45rem 0.85rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-catnav-item:hover) {
+    background: rgb(255 255 255 / 4%);
+  }
+
+  :global(.dbsa-catnav-item.is-active) {
+    background: rgb(255 255 255 / 5%);
+    border-left-color: var(--hud-accent);
+    color: var(--hud-text);
+  }
+
+  :global(.dbsa-catnav-num) {
+    font-family: var(--hud-mono);
+    font-size: 0.62rem;
+    color: var(--hud-text-dimmer);
+    width: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbsa-catnav-name) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  :global(.dbsa-catbody) {
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 28rem;
+    overflow-y: auto;
+  }
+
+  :global(.dbsa-field) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  :global(.dbsa-field-label) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--hud-text-dim);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  :global(.dbsa-field-sensitive-tag) {
+    color: var(--hud-accent);
+    font-size: 0.58rem;
+    border: 1px solid rgb(255 60 30 / 45%);
+    padding: 0 0.35rem;
+  }
+
+  :global(.dbsa-field input) {
+    margin-top: 0;
+  }
+
+  /* Remove-entirely button for a per-profile custom field (built-in fields
+     can only be blanked, so they never show this) -- pushed to the end of
+     the label row via margin-left: auto. */
+  :global(.dbsa-field-remove) {
+    margin-left: auto;
+    border: 1px solid var(--hud-border-hover);
+    background: transparent;
+    color: var(--hud-text-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    line-height: 1;
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-field-remove:hover) {
+    color: var(--hud-accent);
+    border-color: var(--hud-accent);
+  }
+
+  :global(.dbsa-addfield-trigger) {
+    align-self: flex-start;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px dashed var(--hud-border-hover);
+    background: transparent;
+    color: var(--hud-text-muted);
+    font-family: var(--hud-mono);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-addfield-trigger:hover) {
+    border-color: var(--hud-text-muted);
+    color: var(--hud-text);
+  }
+
+  :global(.dbsa-addfield-form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.6rem;
+    background: rgb(0 0 0 / 25%);
+    border: 1px solid var(--hud-border);
+  }
+
+  :global(.dbsa-addfield-form input[type="text"]) {
+    margin-top: 0;
+    width: auto;
+    flex: 1;
+    min-width: 8rem;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  :global(.dbsa-addfield-toggle) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--hud-text-muted);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  :global(.dbsa-addfield-form > button) {
+    border: 1px solid var(--hud-ready-border);
+    background: var(--hud-ready-bg);
+    color: var(--hud-ready);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-addfield-form > button:hover) {
+    background: rgb(143 209 138 / 18%);
+  }
+
+  :global(.dbsa-addfield-form > button.dbsa-cancel) {
+    border: 1px solid var(--hud-border-hover) !important;
+    background: transparent !important;
+    color: var(--hud-text-dim) !important;
+  }
+
+  :global(.dbsa-assets) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.2rem;
+    padding: 0.5rem;
+    background: rgb(0 0 0 / 25%);
+    border: 1px solid var(--hud-border);
+  }
+
+  :global(.dbsa-asset-row) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  :global(.dbsa-asset-kind) {
+    color: var(--hud-ready);
+    font-family: var(--hud-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    border: 1px solid var(--hud-ready-border);
+    padding: 0.05rem 0.35rem;
+    flex-shrink: 0;
+  }
+
+  :global(.dbsa-asset-label) {
+    flex: 1;
+    font-size: 0.75rem;
+    color: var(--hud-text);
+  }
+
+  :global(.dbsa-asset-meta) {
+    color: var(--hud-text-dimmer);
+    font-family: var(--hud-mono);
+    font-size: 0.65rem;
+  }
+
+  :global(.dbsa-asset-remove) {
+    border: 1px solid var(--hud-border-hover);
+    background: transparent;
+    color: var(--hud-text-muted);
+    width: 1.2rem;
+    height: 1.2rem;
+    line-height: 1;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  :global(.dbsa-asset-remove:hover) {
+    color: var(--hud-accent);
+    border-color: var(--hud-accent);
+  }
+
+  :global(.dbsa-asset-add) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+  }
+
+  :global(.dbsa-asset-add select),
+  :global(.dbsa-asset-add input) {
+    margin-top: 0;
+    width: auto;
+    flex: 1;
+    min-width: 6rem;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  :global(.dbsa-asset-add button) {
+    border: 1px solid var(--hud-ready-border);
+    background: var(--hud-ready-bg);
+    color: var(--hud-ready);
+    font-family: var(--hud-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0 0.75rem;
+    cursor: pointer;
+  }
+
+  :global(.dbsa-asset-add button:hover) {
+    background: rgb(143 209 138 / 18%);
+  }
+
+  :global(.dbsa-asset-add button:disabled),
+  :global(.dbsa-asset-add select:disabled),
+  :global(.dbsa-asset-add input:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  :global(.dbsa-form-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--hud-border);
+  }
+
+  :global(.dbsa-form-actions button) {
+    padding: 0.5rem 1.25rem;
+    font-family: var(--hud-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid var(--hud-accent);
+    background: rgb(255 60 30 / 12%);
+    color: var(--hud-accent);
+  }
+
+  :global(.dbsa-form-actions button:hover) {
+    background: rgb(255 60 30 / 22%);
+  }
+
+  :global(.dbsa-form-actions button:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  :global(.dbsa-delete),
+  :global(.dbsa-cancel) {
+    border: 1px solid var(--hud-border-hover) !important;
+    background: transparent !important;
+    color: var(--hud-text-dim) !important;
+  }
+
+  :global(.dbsa-delete:hover) {
+    border-color: var(--hud-accent) !important;
+    color: var(--hud-accent) !important;
+  }
+
+  :global(.dbsa-cancel:hover) {
+    color: var(--hud-text) !important;
+  }
 </style>
 
 <Layout title="Admin | 7 Beacons">
