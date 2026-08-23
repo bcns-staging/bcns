@@ -28,23 +28,99 @@ const labs = [
     description:
       "Play through realistic incidents — ransomware, business email compromise, and more — balancing containment, compliance, reputation, and financial impact with every decision.",
   },
+  {
+    name: "Tenable One Field Guide",
+    href: "/tenable-one-field-guide.html",
+    description:
+      "A sixteen-sheet interactive field manual for deploying Tenable One across IT, OT and facility systems in a global data center — architecture, sensor placement, the Purdue model, tagging, SLAs, and a drill room with a scored exam.",
+  },
 ];
 ---
 
 <style>
+  /* "KeyVault" HUD theme, matching /admin, /cypher, /d, /fm and the
+     homepage -- same hex values as those pages' tokens, hand-duplicated
+     here rather than imported (see index.astro's .landing-theme for the
+     original comment explaining why). Overrides the shared design tokens
+     as CSS custom properties, which cascade into Header/Footer through the
+     real DOM regardless of Astro's per-component style scoping. */
+  .labs-hud-theme {
+    --color-bg: #0a0c0a;
+    --color-bg-alt: #141814;
+    --color-text: #e2e8de;
+    --color-text-muted: #8b9487;
+    --color-accent: #ff3c1e;
+    --color-border: rgb(255 255 255 / 9%);
+    --hud-panel-bg: rgb(10 12 10 / 72%);
+    --hud-border-hover: rgb(255 255 255 / 22%);
+    --hud-corner: #9fae9a;
+    --hud-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: radial-gradient(130% 70% at 50% 0%, #39423a 0%, #232a24 45%, #141814 100%);
+    min-height: 100vh;
+  }
+
+  :global(.labs-hud-theme header) {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  :global(.labs-hud-theme .brand) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  :global(.labs-hud-theme nav a) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  :global(.labs-hud-theme nav a:hover) {
+    color: var(--color-accent);
+  }
+
+  :global(.labs-hud-theme footer) {
+    border-top: 1px solid var(--color-border);
+  }
+
+  :global(.labs-hud-theme footer p) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
   section {
-    padding-block: 2rem 3rem;
+    padding-block: 2.5rem 3rem;
+  }
+
+  .eyebrow {
+    font-family: var(--hud-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin: 0 0 0.6rem;
   }
 
   h1 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-family: var(--hud-mono);
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     margin: 0 0 0.5rem;
   }
 
   .intro {
     color: var(--color-text-muted);
     max-width: 60ch;
-    margin: 0 0 2rem;
+    margin: 0 0 2.25rem;
   }
 
   .labs {
@@ -54,22 +130,62 @@ const labs = [
   }
 
   .lab-card {
+    position: relative;
     display: block;
-    padding: 1.25rem;
+    padding: 1.25rem 1.35rem;
+    background: var(--hud-panel-bg);
     border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
+    border-radius: 0;
     text-decoration: none;
     color: inherit;
     transition: border-color 0.15s ease;
   }
 
   .lab-card:hover {
-    border-color: var(--color-accent);
+    border-color: var(--hud-border-hover);
+  }
+
+  .lab-card:focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Small L-shaped targeting-corner accents, opposite corners only -- pure
+     decoration, matching the reference HUD design's card framing used on
+     the timer/admin cards. */
+  .hud-corner {
+    position: absolute;
+    width: 0.85rem;
+    height: 0.85rem;
+    pointer-events: none;
+  }
+
+  .hud-corner-tl {
+    top: -1px;
+    left: -1px;
+    border-top: 2px solid var(--hud-corner);
+    border-left: 2px solid var(--hud-corner);
+  }
+
+  .hud-corner-br {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 2px solid var(--hud-corner);
+    border-right: 2px solid var(--hud-corner);
   }
 
   .lab-card h2 {
-    font-size: 1.125rem;
-    margin: 0 0 0.5rem;
+    font-family: var(--hud-mono);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 0.6rem;
+    color: var(--color-text);
+  }
+
+  .lab-card:hover h2 {
+    color: var(--color-accent);
   }
 
   .lab-card p {
@@ -80,25 +196,30 @@ const labs = [
 </style>
 
 <Layout title="Project 5 | 7 Beacons">
-  <Header />
-  <main>
-    <section class="container">
-      <h1>Project 5: Security labs</h1>
-      <p class="intro">
-        Four interactive, hands-on security labs — each a full standalone
-        app. Click through to explore any of them.
-      </p>
-      <div class="labs">
-        {
-          labs.map((lab) => (
-            <a class="lab-card" href={lab.href} target="_blank" rel="noopener noreferrer">
-              <h2>{lab.name}</h2>
-              <p>{lab.description}</p>
-            </a>
-          ))
-        }
-      </div>
-    </section>
-  </main>
-  <Footer />
+  <div class="labs-hud-theme">
+    <Header />
+    <main>
+      <section class="container">
+        <p class="eyebrow">// Project 5</p>
+        <h1>Security labs</h1>
+        <p class="intro">
+          Four interactive, hands-on security labs plus a field guide — each
+          a full standalone resource. Click through to explore any of them.
+        </p>
+        <div class="labs">
+          {
+            labs.map((lab) => (
+              <a class="lab-card" href={lab.href} target="_blank" rel="noopener noreferrer">
+                <span class="hud-corner hud-corner-tl" />
+                <span class="hud-corner hud-corner-br" />
+                <h2>{lab.name}</h2>
+                <p>{lab.description}</p>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+    </main>
+    <Footer />
+  </div>
 </Layout>
