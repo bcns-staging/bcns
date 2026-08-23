@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tenable One — Field Drawing Set for the Deploying Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E4E1D8;
+  --sheet:#F2F0E9;
+  --sheet-2:#EAE7DE;
+  --ink:#161F1D;
+  --ink-2:#4C554F;
+  --ink-3:#79807A;
+  --rule:#C4C0B2;
+  --rule-hard:#9DA093;
+  --blue:#17495B;
+  --blue-2:#2C7189;
+  --blue-wash:#DCE6E9;
+  --amber:#8A5D00;
+  --amber-fill:#E3A81E;
+  --amber-wash:#F0E4C4;
+  --oxide:#973520;
+  --oxide-wash:#EFDCD4;
+  --green:#2C6349;
+  --green-wash:#D8E5DC;
+  --shadow:0 1px 0 rgba(22,31,29,.10), 0 12px 34px -22px rgba(22,31,29,.55);
+  --d:'IBM Plex Sans Condensed', 'Archivo Narrow', 'Helvetica Neue', sans-serif;
+  --b:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --m:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font-family:var(--b);
+  font-size:15.5px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(rgba(22,31,29,.030) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22,31,29,.030) 1px, transparent 1px);
+  background-size:26px 26px;
+}
+::selection{background:var(--amber-fill);color:var(--ink)}
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:262px minmax(0,1fr);gap:0;max-width:1420px;margin:0 auto;min-height:100vh}
+.rail{
+  position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--rule-hard);
+  background:linear-gradient(180deg,var(--sheet) 0%, var(--sheet-2) 100%);padding:22px 0 0;
+}
+.rail::-webkit-scrollbar{width:8px}.rail::-webkit-scrollbar-thumb{background:var(--rule)}
+.main{padding:26px 34px 120px;min-width:0}
+
+/* ---------- rail head ---------- */
+.markhead{padding:0 18px 16px;border-bottom:1px solid var(--rule)}
+.mark{font-family:var(--d);font-weight:700;font-size:19px;letter-spacing:.10em;text-transform:uppercase;line-height:1.15}
+.mark span{color:var(--blue)}
+.marksub{font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+
+/* progress */
+.prog{padding:12px 18px;border-bottom:1px solid var(--rule)}
+.progbar{height:5px;background:var(--rule);position:relative;overflow:hidden}
+.progbar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--blue);transition:width .35s ease}
+.progtxt{font-family:var(--m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:7px;display:flex;justify-content:space-between}
+
+/* sheet index */
+.idx{padding:10px 0 26px}
+.idx-h{font-family:var(--m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);padding:8px 18px 6px}
+.nav{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;
+  padding:7px 16px 7px 15px;cursor:pointer;font-family:var(--b);font-size:13.4px;color:var(--ink-2);
+  display:grid;grid-template-columns:30px 1fr 14px;gap:8px;align-items:baseline;line-height:1.3}
+.nav:hover{background:rgba(23,73,91,.07);color:var(--ink)}
+.nav .n{font-family:var(--m);font-size:11px;color:var(--ink-3)}
+.nav.on{background:var(--blue-wash);border-left-color:var(--blue);color:var(--ink);font-weight:600}
+.nav.on .n{color:var(--blue)}
+.nav .tick{font-size:11px;color:var(--green);opacity:0;font-family:var(--m)}
+.nav.done .tick{opacity:1}
+.nav:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+
+/* title block */
+.titleblock{border:1px solid var(--rule-hard);background:var(--sheet);margin:18px 14px 0;padding:10px 12px;
+  font-family:var(--m);font-size:10px;line-height:1.6;color:var(--ink-2)}
+.titleblock b{color:var(--ink);font-weight:600}
+.tbrow{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--rule);padding:3px 0}
+.tbrow:last-child{border:0}
+
+/* ---------- sheets ---------- */
+.sheet{display:none;animation:fade .3s ease}
+.sheet.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.sheethead{border:1px solid var(--rule-hard);background:var(--sheet);box-shadow:var(--shadow);margin-bottom:22px}
+.sheethead .top{display:grid;grid-template-columns:88px minmax(0,1fr) auto;align-items:stretch}
+.sheetno{border-right:1px solid var(--rule-hard);padding:16px 10px;text-align:center;background:var(--ink);color:var(--sheet)}
+.sheetno em{display:block;font-family:var(--m);font-size:9px;letter-spacing:.16em;font-style:normal;opacity:.6}
+.sheetno b{font-family:var(--d);font-size:34px;font-weight:700;letter-spacing:.02em;line-height:1.1}
+.sheettitle{padding:14px 18px}
+.sheettitle h1{font-family:var(--d);font-weight:700;text-transform:uppercase;letter-spacing:.045em;font-size:27px;margin:0;line-height:1.12}
+.sheettitle p{margin:6px 0 0;font-size:14px;color:var(--ink-2);max-width:66ch}
+.disc{border-left:1px solid var(--rule-hard);padding:14px 16px;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:120px}
+.tag{font-family:var(--m);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;padding:3px 7px;border:1px solid;display:inline-block;white-space:nowrap;text-align:center}
+.t-it{color:var(--blue);border-color:var(--blue);background:var(--blue-wash)}
+.t-ot{color:var(--amber);border-color:var(--amber);background:var(--amber-wash)}
+.t-ops{color:var(--green);border-color:var(--green);background:var(--green-wash)}
+.t-risk{color:var(--oxide);border-color:var(--oxide);background:var(--oxide-wash)}
+
+/* body blocks */
+.block{background:var(--sheet);border:1px solid var(--rule);padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.block > :first-child{margin-top:0}
+.block > :last-child{margin-bottom:0}
+h2{font-family:var(--d);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:16.5px;margin:0 0 12px;
+  padding-bottom:7px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:10px}
+h2 .hn{font-family:var(--m);font-size:11px;color:var(--blue);letter-spacing:.1em;font-weight:500}
+h3{font-family:var(--d);font-weight:600;font-size:14px;letter-spacing:.09em;text-transform:uppercase;margin:22px 0 8px;color:var(--blue)}
+h4{font-family:var(--b);font-weight:600;font-size:14.5px;margin:16px 0 5px}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:20px}
+li{margin-bottom:6px}
+li::marker{color:var(--blue)}
+b,strong{font-weight:600}
+em.q{font-style:italic;color:var(--ink-2)}
+code{font-family:var(--m);font-size:.88em;background:var(--sheet-2);border:1px solid var(--rule);padding:1px 5px;color:var(--blue)}
+a{color:var(--blue)}
+hr{border:0;border-top:1px dashed var(--rule);margin:18px 0}
+
+/* lede */
+.lede{font-size:16.5px;line-height:1.6;border-left:3px solid var(--amber-fill);padding-left:16px;color:var(--ink-2)}
+
+/* callouts */
+.note{border:1px solid var(--rule);border-left-width:4px;padding:13px 16px;margin:14px 0;font-size:14.4px;background:var(--sheet-2)}
+.note .lbl{font-family:var(--m);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;display:block;margin-bottom:5px}
+.n-risk{border-left-color:var(--oxide);background:var(--oxide-wash)}.n-risk .lbl{color:var(--oxide)}
+.n-ot{border-left-color:var(--amber-fill);background:var(--amber-wash)}.n-ot .lbl{color:var(--amber)}
+.n-tip{border-left-color:var(--blue);background:var(--blue-wash)}.n-tip .lbl{color:var(--blue)}
+.n-say{border-left-color:var(--green);background:var(--green-wash)}.n-say .lbl{color:var(--green)}
+
+/* hazard rule — used to mark OT boundaries */
+.hazard{height:9px;background:repeating-linear-gradient(135deg,var(--amber-fill) 0 9px,var(--ink) 9px 18px);margin:16px 0;opacity:.85}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13.6px;margin:12px 0}
+.tbl th{font-family:var(--m);font-size:10px;letter-spacing:.11em;text-transform:uppercase;text-align:left;
+  background:var(--ink);color:var(--sheet);padding:7px 9px;font-weight:500}
+.tbl td{border:1px solid var(--rule);padding:8px 9px;vertical-align:top}
+.tbl tr:nth-child(even) td{background:var(--sheet-2)}
+.tbl td:first-child{font-weight:600}
+.scroller{overflow-x:auto}
+
+/* key-value grid */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
+.kv div{border:1px solid var(--rule);border-top:3px solid var(--blue);padding:11px 13px;background:var(--sheet-2)}
+.kv h5{margin:0 0 4px;font-family:var(--d);text-transform:uppercase;letter-spacing:.07em;font-size:12.5px}
+.kv p{margin:0;font-size:13.4px;color:var(--ink-2)}
+
+/* accordion */
+.acc{border:1px solid var(--rule);margin-bottom:8px;background:var(--sheet-2)}
+.acc summary{cursor:pointer;padding:10px 14px;font-family:var(--d);font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;font-size:13px;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary::after{content:'+';font-family:var(--m);color:var(--blue);font-size:16px}
+.acc[open] summary::after{content:'−'}
+.acc summary:hover{background:var(--blue-wash)}
+.acc .accbody{padding:2px 16px 14px;font-size:14.3px;border-top:1px solid var(--rule)}
+.acc .accbody > :first-child{margin-top:12px}
+
+/* checklists */
+.chk{list-style:none;padding:0;margin:12px 0}
+.chk li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--rule);margin:0}
+.chk input{margin-top:4px;accent-color:var(--blue);width:15px;height:15px;flex:none}
+.chk label{cursor:pointer;font-size:14.2px}
+.chk input:checked + label{color:var(--ink-3);text-decoration:line-through}
+
+/* buttons */
+.btn{font-family:var(--d);text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;font-weight:600;
+  background:var(--sheet);border:1px solid var(--ink);color:var(--ink);padding:7px 14px;cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--sheet)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.pri:hover{background:var(--ink);border-color:var(--ink)}
+.btn:focus-visible{outline:2px solid var(--amber-fill);outline-offset:2px}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+
+/* mono panel */
+.mono{font-family:var(--m);font-size:12.6px;background:var(--ink);color:#D9DED9;padding:14px 16px;overflow-x:auto;line-height:1.55;border-left:4px solid var(--amber-fill)}
+.mono .c{color:#8FA39B}
+.mono .k{color:var(--amber-fill)}
+.codewrap{position:relative;margin:12px 0}
+.copy{position:absolute;top:8px;right:8px;font-family:var(--m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid #55635C;color:#B9C4BE;padding:3px 8px;cursor:pointer}
+.copy:hover{background:var(--amber-fill);color:var(--ink);border-color:var(--amber-fill)}
+
+/* footer nav */
+.pagenav{display:flex;justify-content:space-between;gap:12px;margin-top:26px;flex-wrap:wrap}
+
+
+/* ---------- figures ---------- */
+.fig{border:1px solid var(--rule-hard);background:var(--sheet);padding:15px 16px 11px;margin:18px 0}
+.fig svg{width:100%;height:auto;display:block;overflow:visible}
+.figcap{font-family:var(--m);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  margin-top:11px;border-top:1px dotted var(--rule);padding-top:7px}
+.figcap b{color:var(--blue);font-weight:500}
+.fig text{font-family:'IBM Plex Sans',system-ui,sans-serif;fill:var(--ink);font-size:13px}
+.fig .fm{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;fill:var(--ink-3);letter-spacing:.07em}
+.fig .hd{font-family:'IBM Plex Sans Condensed','Archivo Narrow',sans-serif;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;font-size:12.5px}
+.fig .sm{font-size:11.5px;fill:var(--ink-2)}
+.fig .xs{font-size:10.5px;fill:var(--ink-3)}
+.fig .bx{fill:var(--sheet-2);stroke:var(--rule-hard);stroke-width:1}
+.fig .bb{fill:var(--blue-wash);stroke:var(--blue);stroke-width:1}
+.fig .ba{fill:var(--amber-wash);stroke:var(--amber);stroke-width:1}
+.fig .bo{fill:var(--oxide-wash);stroke:var(--oxide);stroke-width:1}
+.fig .bg{fill:var(--green-wash);stroke:var(--green);stroke-width:1}
+.fig .bk{fill:var(--ink);stroke:var(--ink)}
+.fig .ln{stroke:var(--ink-2);stroke-width:1.3;fill:none;marker-end:url(#ar)}
+.fig .lb{stroke:var(--blue);stroke-width:1.3;fill:none;marker-end:url(#arb)}
+.fig .la{stroke:var(--amber);stroke-width:1.3;fill:none;marker-end:url(#ara)}
+.fig .lo{stroke:var(--oxide);stroke-width:1.5;fill:none;marker-end:url(#aro)}
+.fig .dsh{stroke-dasharray:5 4}
+.fig .plain{marker-end:none}
+@media (max-width:760px){
+  .fig{overflow-x:auto;padding:13px 12px 9px}
+  .fig svg{min-width:640px}
+  .fig::after{content:'';display:block}
+  .figcap{position:sticky;left:0}
+}
+
+/* mobile */
+.railtoggle{display:none}
+@media (max-width:980px){
+  .wrap{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule-hard)}
+  .main{padding:20px 16px 90px}
+  .sheethead .top{grid-template-columns:64px minmax(0,1fr)}
+  .disc{grid-column:1/-1;border-left:0;border-top:1px solid var(--rule-hard);flex-direction:row;flex-wrap:wrap}
+  .sheettitle h1{font-size:21px}
+  .block{padding:16px 15px}
+  .idx{max-height:260px;overflow-y:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= RAIL ================= -->
+<aside class="rail">
+  <div class="markhead">
+    <div class="mark">Tenable&nbsp;One<br><span>Field Drawing Set</span></div>
+    <div class="marksub">Sr. Cybersecurity Engineer · DFW · 9-mo build</div>
+  </div>
+
+  <div class="prog">
+    <div class="progbar"><i id="pbar"></i></div>
+    <div class="progtxt"><span>Sheets reviewed</span><span id="ptxt">0 / 16</span></div>
+  </div>
+
+  <nav class="idx" id="idx">
+    <div class="idx-h">Sheet index</div>
+  </nav>
+
+  <div class="titleblock">
+    <div class="tbrow"><span>PROJECT</span><b>Global DC + Colo</b></div>
+    <div class="tbrow"><span>SCOPE</span><b>IT · OT/IoT</b></div>
+    <div class="tbrow"><span>PHASE</span><b>Design — Handoff</b></div>
+    <div class="tbrow"><span>REV</span><b>A · 2026-08</b></div>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main class="main" id="main">
+<svg width="0" height="0" style="position:absolute;left:-9999px" aria-hidden="true"><defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4C554F"/></marker>
+<marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#17495B"/></marker>
+<marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A5D00"/></marker>
+<marker id="aro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#973520"/></marker>
+<marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2C6349"/></marker>
+</defs></svg>
+
+
+<!-- ============ SHEET 00 ============ -->
+<section class="sheet on" id="s0" data-title="Read this first" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>00</b></div>
+    <div class="sheettitle">
+      <h1>Read this first</h1>
+      <p>What the job description is actually buying, how to use this set, and the one sentence that has to be true at the end of nine months.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Orientation</span><span class="tag t-it">All scopes</span></div>
+  </div></div>
+
+  <div class="block">
+    <p class="lede">This is not a "deploy a scanner" role. It is a <b>consulting engagement disguised as an engineering role</b>: you arrive at a global data center operator, design an exposure management program that spans server racks and chiller controllers, build it, prove it produces numbers an executive will trust, and then leave it running in somebody else's hands. The nine-month duration is the tell — the deliverable is a <em class="q">program</em>, not a platform.</p>
+
+    <h3>Decoding the posting</h3>
+    <div class="scroller"><table class="tbl">
+      <tr><th>What it says</th><th>What it means on the ground</th></tr>
+      <tr><td>"Lead architecture, deployment and operationalization"</td><td>Nobody above you owns the technical design. You write the target-state doc, you defend it, you build it. There is no architect to escalate to.</td></tr>
+      <tr><td>"Global data center and colocation environment"</td><td>Sites you do not own the network for, change windows in other time zones, bandwidth you must not saturate, and segments where inbound connections are simply not allowed.</td></tr>
+      <tr><td>"Building management systems, power and cooling"</td><td>BACnet, Modbus, Niagara/Tridium, UPS and PDU controllers, CRAC/CRAH units, generator and ATS controllers. Fragile, unpatched, warranty-bound, and owned by Facilities — not IT.</td></tr>
+      <tr><td>"Advise on passive vs. active collection"</td><td>They have been burned, or they are afraid of being burned. The correct answer is never "we scan everything."</td></tr>
+      <tr><td>"Hands-on senior individual contributor"</td><td>You will personally write the Terraform/Ansible, fix the credential failures, and build the ServiceNow integration. There is no team to delegate to.</td></tr>
+      <tr><td>"Hand off a running, measurable program"</td><td>Your exit criteria are documentation, trained analysts, and a metric trending in the right direction — not a green dashboard on your last day.</td></tr>
+    </table></div>
+
+    <h3>The sentence that must be true at month nine</h3>
+    <div class="note n-say"><span class="lbl">Say this in the interview</span>
+      "At handoff, this customer's security operations team can answer three questions without me: <b>what do we own</b>, <b>what is dangerous about it right now</b>, and <b>is anyone fixing it fast enough</b> — and they can answer for the chiller controllers, not just the servers."</div>
+
+    <h3>How this set is organised</h3>
+    <p>Sixteen sheets, ordered the way the engagement runs: theory — architecture — deployment — operations — handoff. Sheets 04, 06, 07 and 10 carry the interactive tools — the sensor placement board, the Purdue exercise, the tag builder and the SLA matrix. Sheet 15 has the drill questions and the exam.</p>
+    <p>Eighteen numbered figures run through the set — Fig 5.1 is the full reference architecture, Fig 6.1 is the Purdue placement map to take into the facilities meeting, and Fig 10.1 is the remediation workflow. On a narrow screen the wider diagrams scroll sideways.</p>
+    <p>Mark a sheet reviewed with the button at its foot; the rail tracks your progress. Nothing is saved when you close the file, so if you are studying across days, work top to bottom.</p>
+
+    <div class="note n-tip"><span class="lbl">A note on naming</span>Tenable renames things frequently. Recent documentation is migrating to <b>Tenable Exposure Management</b> as the umbrella and <b>Tenable One Vulnerability Management</b> for the VM module, and OT Security appears in newer docs as <b>Tenable One OT Exposure</b>. The customer will say "Tenable One," "Tenable.io," "Security Center" and "SC" interchangeably. Learn the architecture; treat the names as a moving target and confirm them against current docs at kickoff.</div>
+  </div>
+
+  <div class="pagenav"><span></span><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 01 ============ -->
+<section class="sheet" id="s1" data-title="Vulnerability — exposure management" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>01</b></div>
+    <div class="sheettitle">
+      <h1>Vulnerability — exposure management</h1>
+      <p>The conceptual shift the platform is built around, and why the distinction matters commercially as well as technically.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Fundamentals</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">1.1</span> What changed, and why</h2>
+    <p>Classic vulnerability management is a loop around a <b>finding</b>: scan a subnet, produce CVEs, sort by CVSS, send a spreadsheet to whoever owns the box, repeat monthly. It fails in three predictable ways — it only sees what you already knew to scan, it treats a lab VM and a domain controller identically, and it produces more critical findings than any team can ever close.</p>
+    <p>Exposure management is a loop around an <b>asset and its context</b>. The unit of work is not "CVE-2024-XXXX on 10.4.2.9" but "this internet-reachable jump host, which has a path to the identity tier, has a weakness an attacker is actively using." Vulnerabilities are one input; misconfigurations, excessive identity privilege, unmanaged external assets and network reachability are the others.</p>
+
+    <div class="kv">
+      <div><h5>Asset-centric</h5><p>One record per real thing, enriched from every sensor and from the CMDB — not one record per scan result.</p></div>
+      <div><h5>Context-weighted</h5><p>Business criticality and exploitability shift priority, so a "medium" on a control system can outrank a "critical" on a test box.</p></div>
+      <div><h5>Path-aware</h5><p>Attack path analysis asks what a weakness <em>enables</em>, not just how bad it scores in isolation.</p></div>
+      <div><h5>Continuous</h5><p>Discovery and assessment run constantly; the quarterly scan cycle is the thing being replaced.</p></div>
+    </div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 268" role="img" aria-label="Comparison of finding-centric vulnerability management and asset-centric exposure management">
+  <text class="hd" x="0" y="14">Finding-centric — classic VM</text>
+  <text class="hd" x="440" y="14" fill="#17495B">Asset-centric — exposure management</text>
+  <line x1="415" y1="0" x2="415" y2="260" stroke="#C4C0B2" stroke-dasharray="4 4"/>
+
+  <rect class="bx" x="0" y="30" width="330" height="34"/><text x="14" y="52">Scan a subnet on a schedule</text>
+  <path class="ln" d="M165 66 L165 84"/>
+  <rect class="bx" x="0" y="88" width="330" height="34"/><text x="14" y="110">Emit one row per CVE per host</text>
+  <path class="ln" d="M165 124 L165 142"/>
+  <rect class="bx" x="0" y="146" width="330" height="34"/><text x="14" y="168">Sort by CVSS severity</text>
+  <path class="ln" d="M165 182 L165 200"/>
+  <rect class="bo" x="0" y="204" width="330" height="46"/>
+  <text x="14" y="224" font-weight="600" fill="#973520">9,412 &#8220;critical&#8221; findings</text>
+  <text class="sm" x="14" y="241">No basis to choose. The list is ignored.</text>
+
+  <rect class="bx" x="440" y="30" width="112" height="26"/><text class="sm" x="450" y="47">Vulnerabilities</text>
+  <rect class="bx" x="440" y="60" width="112" height="26"/><text class="sm" x="450" y="77">Misconfigurations</text>
+  <rect class="bx" x="440" y="90" width="112" height="26"/><text class="sm" x="450" y="107">Identity privilege</text>
+  <rect class="bx" x="440" y="120" width="112" height="26"/><text class="sm" x="450" y="137">External exposure</text>
+  <rect class="bx" x="440" y="150" width="112" height="26"/><text class="sm" x="450" y="167">Reachability / paths</text>
+  <rect class="bx" x="440" y="180" width="112" height="26"/><text class="sm" x="450" y="197">CMDB context</text>
+  <path class="lb" d="M556 43 C 590 43, 592 105, 618 112"/>
+  <path class="lb" d="M556 73 C 590 73, 596 105, 618 114"/>
+  <path class="lb" d="M556 103 L 616 114"/>
+  <path class="lb" d="M556 133 L 616 120"/>
+  <path class="lb" d="M556 163 C 590 163, 596 128, 618 122"/>
+  <path class="lb" d="M556 193 C 592 193, 594 130, 618 124"/>
+
+  <rect class="bb" x="624" y="92" width="180" height="52"/>
+  <text class="hd" x="636" y="112" fill="#17495B">Asset record</text>
+  <text class="sm" x="636" y="131">one thing, fully enriched</text>
+  <path class="lb" d="M714 148 L714 174"/>
+  <rect class="bg" x="624" y="178" width="180" height="52"/>
+  <text x="636" y="199" font-weight="600" fill="#2C6349">42 assets to fix</text>
+  <text class="sm" x="636" y="217">ranked, owned, actionable</text>
+</svg>
+<div class="figcap"><b>Fig 1.1</b> — The unit of work changes from the finding to the asset. Same sensors, same CVEs; a completely different conversation with the team that has to act.</div>
+</div>
+<h2><span class="hn">1.2</span> CTEM — the operating loop underneath</h2>
+    <p>Gartner's Continuous Threat Exposure Management framing is the vocabulary your stakeholders will have read. Learn the five stages because they map cleanly onto your work plan and give you a defensible structure for the roadmap:</p>
+    <ol>
+      <li><b>Scoping</b> — decide what is in the program. For this engagement: which sites, which VLANs, which facility systems, which cloud accounts. This is where OT gets included or quietly dropped.</li>
+      <li><b>Discovery</b> — find assets and their weaknesses. Sensors, connectors, CMDB reconciliation.</li>
+      <li><b>Prioritization</b> — rank by exploitability plus business impact, not raw severity.</li>
+      <li><b>Validation</b> — confirm the exposure is real and reachable, and that the fix worked. Attack path analysis and re-scan verification live here.</li>
+      <li><b>Mobilization</b> — get humans to act. Workflows, SLAs, ownership, tickets. This is where most programs die, and where the JD spends most of its "Operationalization" bullets.</li>
+    </ol>
+    <div class="note n-tip"><span class="lbl">Framing that lands</span>Stages 1–4 are a tooling problem and you can finish them in a quarter. Stage 5 is an organisational problem and it is the reason the contract is nine months long. Say that out loud early — it sets expectations and it demonstrates you have done this before.</div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 200" role="img" aria-label="The five stages of the continuous threat exposure management loop">
+  <g>
+    <rect class="bx" x="0" y="34" width="140" height="62"/>
+    <text class="fm" x="12" y="52">STAGE 1</text><text class="hd" x="12" y="70">Scoping</text>
+    <text class="xs" x="12" y="87">what is in the program</text>
+    <rect class="bx" x="164" y="34" width="140" height="62"/>
+    <text class="fm" x="176" y="52">STAGE 2</text><text class="hd" x="176" y="70">Discovery</text>
+    <text class="xs" x="176" y="87">assets + weaknesses</text>
+    <rect class="bx" x="328" y="34" width="140" height="62"/>
+    <text class="fm" x="340" y="52">STAGE 3</text><text class="hd" x="340" y="70">Prioritization</text>
+    <text class="xs" x="340" y="87">exploitability — impact</text>
+    <rect class="bx" x="492" y="34" width="140" height="62"/>
+    <text class="fm" x="504" y="52">STAGE 4</text><text class="hd" x="504" y="70">Validation</text>
+    <text class="xs" x="504" y="87">is it real, did it work</text>
+    <rect class="ba" x="656" y="34" width="164" height="62"/>
+    <text class="fm" x="668" y="52" fill="#8A5D00">STAGE 5</text><text class="hd" x="668" y="70" fill="#8A5D00">Mobilization</text>
+    <text class="xs" x="668" y="87">humans actually fix things</text>
+  </g>
+  <path class="ln" d="M142 65 L162 65"/><path class="ln" d="M306 65 L326 65"/>
+  <path class="ln" d="M470 65 L490 65"/><path class="la" d="M634 65 L654 65"/>
+  <path class="ln dsh" d="M738 100 L738 140 L70 140 L70 100"/>
+  <text class="fm" x="330" y="134">CONTINUOUS — NOT AN ANNUAL CYCLE</text>
+  <text class="sm" x="0" y="176">Stages 1–4 are a tooling problem — a quarter of work.</text>
+  <text class="sm" x="0" y="194" fill="#8A5D00" font-weight="600">Stage 5 is an organisational problem — this is why the contract is nine months long.</text>
+</svg>
+<div class="figcap"><b>Fig 1.2</b> — The CTEM loop. Say out loud in week one which stage you think the customer is stuck at; it is almost always stage 5.</div>
+</div>
+<h2><span class="hn">1.3</span> Where the data center context bites</h2>
+    <ul>
+      <li><b>Availability outranks confidentiality.</b> In a colo, downtime is a contractual penalty. Any control you propose gets evaluated against "could this cause an outage" first. Your scanning design must lead with blast-radius reasoning.</li>
+      <li><b>Split ownership.</b> IT owns servers; Facilities owns the plant; the colo customer may own gear inside your building that you cannot touch. Scope boundaries need to be written down before the first scan, and demarcation disputes are the most common source of program stall.</li>
+      <li><b>Long-lived, unpatchable assets.</b> A BMS controller commissioned in 2013 with a firmware update that requires a vendor engineer on site is not going to be remediated in 30 days. Your operating model needs a credible <em>mitigation and exception</em> track, or the OT scope becomes a permanent red number on the dashboard that everyone learns to ignore.</li>
+      <li><b>Compliance overlay.</b> Expect SOC 2, ISO 27001, PCI (if customers process card data in the space), and increasingly NIS2/NERC-adjacent expectations depending on geography. These drive evidence requirements — scan coverage proof, remediation timelines, exception approvals — so build reporting that produces audit evidence as a by-product.</li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 02 ============ -->
+<section class="sheet" id="s2" data-title="The prioritization math" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>02</b></div>
+    <div class="sheettitle">
+      <h1>The prioritization math</h1>
+      <p>CVSS, VPR, EPSS, ACR, AES and the Cyber Exposure Score — what each one measures, and which argument to use with which audience.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Fundamentals</span><span class="tag t-ops">Reporting</span></div>
+  </div></div>
+
+  <div class="block">
+    <p class="lede">Every serious conversation in this role eventually becomes an argument about what to fix first. If you can explain these six numbers cleanly — including their weaknesses — you will win most of those arguments.</p>
+
+    <div class="scroller"><table class="tbl">
+      <tr><th>Score</th><th>Measures</th><th>Range</th><th>Use it for</th><th>Its blind spot</th></tr>
+      <tr><td>CVSS</td><td>Theoretical severity of the flaw itself</td><td>0–10</td><td>Compliance language, audit mapping, vendor SLAs</td><td>Static, no threat context; over half the CVE corpus is "High" or "Critical," so it cannot prioritise</td></tr>
+      <tr><td>EPSS</td><td>Probability the CVE is exploited in the wild in the next 30 days</td><td>0–1</td><td>Sanity-checking, cross-vendor arguments</td><td>Probabilistic and volatile; says nothing about your environment</td></tr>
+      <tr><td>VPR</td><td>Tenable's threat-informed severity: exploit availability, exploit maturity, chatter, age, plus CVSS</td><td>0–10</td><td>The default lens for "which vulnerability matters"</td><td>Still vulnerability-centric — ignores whose asset it is</td></tr>
+      <tr><td>ACR</td><td>Asset Criticality Rating — how much the asset matters to the business</td><td>1–10</td><td>Injecting business context; the single highest-leverage tuning you do</td><td>Defaults are guesses. Uncurated ACR silently ruins everything downstream</td></tr>
+      <tr><td>AES</td><td>Asset Exposure Score — combines the asset's vulnerabilities (VPR) with its ACR</td><td>0–1000</td><td>Ranking <em>assets</em> for remediation, assigning work to owners</td><td>Only as good as the ACR and the scan coverage feeding it</td></tr>
+      <tr><td>CES</td><td>Cyber Exposure Score — aggregate AES across a scope, weighted</td><td>0–1000</td><td>Executive trending, business-unit comparison, benchmarking</td><td>Moves when coverage changes, not just when risk changes — explain this before the first board slide</td></tr>
+    </table></div>
+
+    <div class="note n-risk"><span class="lbl">The trap everyone falls into</span>You onboard 4,000 new assets in month three. CES jumps. The CISO asks why security got worse. It did not — visibility improved. <b>Publish a coverage line on every exposure chart</b> so score movement is always read against asset count, and annotate onboarding events on the trend line from day one.</div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="How CVSS builds up into VPR, AES and the Cyber Exposure Score">
+  <text class="fm" x="640" y="20">AUDIENCE</text>
+  <line x1="0" y1="26" x2="820" y2="26" stroke="#C4C0B2"/>
+
+  <rect class="bx" x="0" y="38" width="230" height="46"/>
+  <text class="hd" x="14" y="58">CVSS</text><text class="xs" x="14" y="75">severity of the flaw, in a vacuum</text>
+  <text class="sm" x="640" y="66">Auditors, contracts</text>
+
+  <text x="248" y="70" class="hd" fill="#4C554F">+</text>
+  <rect class="bx" x="272" y="38" width="230" height="46"/>
+  <text class="sm" x="286" y="58">exploit availability, maturity,</text><text class="sm" x="286" y="74">chatter, age</text>
+  <path class="ln" d="M115 88 L115 106"/><path class="ln" d="M387 88 L387 106"/>
+
+  <rect class="bb" x="0" y="110" width="502" height="46"/>
+  <text class="hd" x="14" y="130" fill="#17495B">VPR</text><text class="xs" x="14" y="147">threat-informed severity of the vulnerability</text>
+  <text class="sm" x="640" y="138">Analysts</text>
+
+  <text x="518" y="140" class="hd" fill="#4C554F">—</text>
+  <rect class="ba" x="540" y="110" width="180" height="46"/>
+  <text class="hd" x="554" y="130" fill="#8A5D00">ACR</text><text class="xs" x="554" y="147">how much the asset matters</text>
+  <path class="ln" d="M251 160 L251 178"/><path class="la" d="M630 160 L630 172 L300 172 L300 178"/>
+
+  <rect class="bb" x="0" y="182" width="720" height="46"/>
+  <text class="hd" x="14" y="202" fill="#17495B">AES · Asset Exposure Score</text>
+  <text class="xs" x="14" y="219">ranks assets, not findings — this is what you assign to an owner</text>
+  <text class="sm" x="640" y="256">Owners</text>
+  <path class="ln" d="M360 232 L360 250"/>
+
+  <rect class="bg" x="0" y="254" width="720" height="42"/>
+  <text class="hd" x="14" y="274" fill="#2C6349">CES · Cyber Exposure Score</text>
+  <text class="xs" x="14" y="290">aggregated across a scope — always publish with a coverage line</text>
+  <text class="sm" x="640" y="290" fill="#2C6349">Executives</text>
+</svg>
+<div class="figcap"><b>Fig 2.1</b> — Each layer adds context the layer below cannot see. The amber block is the only input you own: uncurated ACR silently corrupts everything above it.</div>
+</div>
+<h3>Turning scores into a decision</h3>
+    <p>Scores rank; they do not decide. The decision rule you will write into the operating model looks more like this, and it is deliberately readable by a non-specialist:</p>
+    <div class="codewrap"><button class="copy" data-copy>Copy</button><pre class="mono"><span class="c"># Remediation priority — plain-language rule</span>
+<span class="k">P1</span>  exploited-in-the-wild  <span class="c">AND</span>  asset is internet-facing or Tier-0 identity
+<span class="k">P2</span>  VPR >= 9.0             <span class="c">AND</span>  ACR >= 8   <span class="c"># crown jewels, weaponised bug</span>
+<span class="k">P3</span>  VPR >= 7.0             <span class="c">AND</span>  ACR >= 5
+<span class="k">P4</span>  everything else that is not suppressed
+<span class="k">--</span>  OT assets never auto-assign; they route to the facilities triage queue</pre></div>
+
+    <h3>Exposure signals and attack paths</h3>
+    <p>The platform's differentiator is combining domains. <b>Exposure signals</b> surface toxic combinations — a vulnerable host that also holds a privileged credential that also has a route to a critical system. <b>Attack path analysis</b> renders those relationships as a graph mapped to MITRE ATT&amp;CK and identifies <em>choke points</em>: single nodes that appear across many paths.</p>
+
+<div class="fig">
+<svg viewBox="0 0 820 260" role="img" aria-label="Attack path graph showing a choke point node where many paths converge">
+  <text class="hd" x="0" y="14">Entry points</text>
+  <text class="hd" x="330" y="14" fill="#973520">Choke point</text>
+  <text class="hd" x="650" y="14" fill="#17495B">Critical assets</text>
+
+  <rect class="bx" x="0" y="34" width="150" height="34"/><text class="sm" x="12" y="55">Exposed VPN appliance</text>
+  <rect class="bx" x="0" y="82" width="150" height="34"/><text class="sm" x="12" y="103">Phished user laptop</text>
+  <rect class="bx" x="0" y="130" width="150" height="34"/><text class="sm" x="12" y="151">Forgotten web host</text>
+  <rect class="bx" x="0" y="178" width="150" height="34"/><text class="sm" x="12" y="199">Vendor remote access</text>
+
+  <rect class="bx" x="196" y="58" width="120" height="30"/><text class="xs" x="206" y="77">File server</text>
+  <rect class="bx" x="196" y="108" width="120" height="30"/><text class="xs" x="206" y="127">Build agent</text>
+  <rect class="bx" x="196" y="158" width="120" height="30"/><text class="xs" x="206" y="177">Jump host</text>
+
+  <path class="ln" d="M152 51 L194 71"/><path class="ln" d="M152 99 L194 76"/>
+  <path class="ln" d="M152 99 L194 122"/><path class="ln" d="M152 147 L194 128"/>
+  <path class="ln" d="M152 147 L194 172"/><path class="ln" d="M152 195 L194 178"/>
+
+  <rect class="bo" x="356" y="98" width="164" height="60" stroke-width="2"/>
+  <text class="hd" x="370" y="120" fill="#973520">Unpatched DC</text>
+  <text class="xs" x="370" y="138">cached admin credential</text>
+  <text class="xs" x="370" y="151">reachable from all four</text>
+
+  <path class="lo" d="M318 73 L354 118"/><path class="lo" d="M318 123 L354 126"/><path class="lo" d="M318 173 L354 140"/>
+
+  <rect class="bb" x="640" y="52" width="160" height="34"/><text class="sm" x="652" y="73">Domain admin</text>
+  <rect class="bb" x="640" y="100" width="160" height="34"/><text class="sm" x="652" y="121">DCIM / BMS bridge</text>
+  <rect class="bb" x="640" y="148" width="160" height="34"/><text class="sm" x="652" y="169">Customer data store</text>
+  <path class="lo" d="M522 118 L638 72"/><path class="lo" d="M522 128 L638 117"/><path class="lo" d="M522 140 L638 162"/>
+
+  <rect class="bg" x="356" y="196" width="444" height="40"/>
+  <text x="370" y="221" font-weight="600" fill="#2C6349">Fix one node — every path above it collapses.</text>
+</svg>
+<div class="figcap"><b>Fig 2.2</b> — Why a choke point is the most persuasive slide you own: it converts an unbounded backlog into a finite list a team will actually finish.</div>
+</div>
+<div class="note n-tip"><span class="lbl">Why choke points sell</span>"Fix these six things and you break 400 attack paths" is the most persuasive slide in the platform, because it converts a remediation ask into a small, finite list. Build your first executive readout around a choke-point story rather than a CVE count.</div>
+
+    <h3>ACR curation — do this early or pay later</h3>
+    <ul>
+      <li>Derive criticality from something that already exists and is maintained: the CMDB's business-service mapping, the DR tier, or the customer's own site-criticality register. Do not invent a parallel taxonomy.</li>
+      <li>Agree a small number of bands (e.g. 10 = life-safety and power/cooling control, 9 = Tier-0 identity, 7 = revenue-bearing production, 4 = internal supporting, 2 = lab/dev) and write down the definition of each.</li>
+      <li>Automate the assignment by tag so it survives asset churn, and re-run it on a schedule. Manual per-asset ACR does not survive contact with 30,000 assets.</li>
+      <li>Get the band definitions signed off by someone who owns budget. ACR is where security judgement and business judgement meet, and it should not be your opinion alone.</li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+<!-- ============ SHEET 03 ============ -->
+<section class="sheet" id="s3" data-title="Platform anatomy" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>03</b></div>
+    <div class="sheettitle">
+      <h1>Platform anatomy</h1>
+      <p>Every module named in the posting, what it is for, what it costs you to run, and the one architectural fork you must resolve in week one.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Architecture</span><span class="tag t-ot">OT module</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">3.1</span> The modules</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Component</th><th>Job</th><th>Deployment shape</th><th>What it needs from you</th></tr>
+      <tr><td>Vulnerability Management (VM)</td><td>Cloud-hosted assessment of IT assets via scanners and agents</td><td>SaaS console + on-prem Nessus scanners + agents</td><td>Sensor placement, scan policy design, credential plumbing</td></tr>
+      <tr><td>Security Center (SC)</td><td>On-prem console for environments that cannot send data to SaaS</td><td>Self-hosted app + scanners; SC Director for multi-console</td><td>Servers, patching, backups, storage sizing — you now run infrastructure</td></tr>
+      <tr><td>Nessus scanner</td><td>Active network assessment engine</td><td>VM/appliance per site or segment; linked to VM or SC</td><td>Placement, sizing, outbound connectivity, credential vault access</td></tr>
+      <tr><td>Nessus Agent</td><td>Local assessment on the host, no credentials over the wire</td><td>Package deployed by your existing endpoint tooling</td><td>Packaging, linking key management, group strategy, upgrade path</td></tr>
+      <tr><td>OT Security</td><td>Passive discovery plus protocol-native active query for industrial and facility systems</td><td>ICP appliance per site + sensors per switch; SPAN/TAP fed</td><td>Network engineering, SPAN ports, facilities buy-in</td></tr>
+      <tr><td>Identity Exposure</td><td>Continuous AD/Entra misconfiguration and attack-path detection</td><td>On-prem collector against domain controllers</td><td>Read access to AD, tight coordination with the identity team</td></tr>
+      <tr><td>Attack Surface Management</td><td>External, unauthenticated discovery of internet-facing assets</td><td>Pure SaaS — no deployment</td><td>Seed domains/IP ranges and an owner for "what is this and who runs it?"</td></tr>
+      <tr><td>Web App Scanning</td><td>DAST against web applications and APIs</td><td>SaaS scanners, or internal scanner for private apps</td><td>Auth recordings, scope fencing, app-owner coordination</td></tr>
+      <tr><td>Inventory / Exposure View / Attack Path</td><td>The unifying layer: one asset record, business-aligned views, path graph</td><td>SaaS, fed by everything above plus third-party connectors</td><td>Tagging discipline and asset reconciliation — nothing else matters as much</td></tr>
+    </table></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="Three layer model: collection sensors, assessment modules, unified exposure layer">
+  <rect class="bg" x="0" y="0" width="820" height="72"/>
+  <text class="fm" x="14" y="20" fill="#2C6349">LAYER 3 — UNIFY, SCORE ACROSS DOMAINS, REPORT</text>
+  <rect class="bx" x="14" y="28" width="180" height="32"/><text class="sm" x="26" y="49">Inventory</text>
+  <rect class="bx" x="206" y="28" width="180" height="32"/><text class="sm" x="218" y="49">Exposure View / CES</text>
+  <rect class="bx" x="398" y="28" width="180" height="32"/><text class="sm" x="410" y="49">Attack Path Analysis</text>
+  <rect class="bx" x="590" y="28" width="216" height="32"/><text class="sm" x="602" y="49">Exposure Signals</text>
+
+  <path class="lb" d="M120 108 L120 76"/><path class="lb" d="M300 108 L300 76"/>
+  <path class="lb" d="M480 108 L480 76"/><path class="lb" d="M660 108 L660 76"/>
+
+  <rect class="bb" x="0" y="112" width="820" height="72"/>
+  <text class="fm" x="14" y="132" fill="#17495B">LAYER 2 — ASSESS AND SCORE WITHIN A DOMAIN</text>
+  <rect class="bx" x="14" y="140" width="152" height="32"/><text class="sm" x="26" y="161">Vuln Management</text>
+  <rect class="bx" x="178" y="140" width="152" height="32"/><text class="sm" x="190" y="161">Security Center</text>
+  <rect class="ba" x="342" y="140" width="152" height="32"/><text class="sm" x="354" y="161" fill="#8A5D00">OT Security</text>
+  <rect class="bx" x="506" y="140" width="140" height="32"/><text class="sm" x="518" y="161">Identity Exposure</text>
+  <rect class="bx" x="658" y="140" width="148" height="32"/><text class="sm" x="670" y="161">ASM / Web App</text>
+
+  <path class="ln" d="M120 220 L120 188"/><path class="ln" d="M300 220 L300 188"/>
+  <path class="la" d="M420 220 L420 188"/><path class="ln" d="M580 220 L580 188"/><path class="ln" d="M720 220 L720 188"/>
+
+  <rect class="bx" x="0" y="224" width="820" height="76"/>
+  <text class="fm" x="14" y="244">LAYER 1 — COLLECT · WHERE 90% OF DEPLOYMENT FAILURES LIVE</text>
+  <rect class="bx" x="14" y="252" width="120" height="32"/><text class="xs" x="24" y="272">Nessus scanners</text>
+  <rect class="bx" x="146" y="252" width="120" height="32"/><text class="xs" x="156" y="272">Nessus Agents</text>
+  <rect class="ba" x="278" y="252" width="120" height="32"/><text class="xs" x="288" y="272" fill="#8A5D00">OT ICP + sensors</text>
+  <rect class="bx" x="410" y="252" width="120" height="32"/><text class="xs" x="420" y="272">AD collector</text>
+  <rect class="bx" x="542" y="252" width="120" height="32"/><text class="xs" x="552" y="272">Cloud connectors</text>
+  <rect class="bx" x="674" y="252" width="132" height="32"/><text class="xs" x="684" y="272">CMDB / 3rd party</text>
+</svg>
+<div class="figcap"><b>Fig 3.1</b> — Read failures downward. Nonsense in layer 3 is nearly always a coverage or credential fault in layer 1.</div>
+</div>
+<div class="note n-tip"><span class="lbl">The mental model</span>Three layers. <b>Sensors</b> collect (scanners, agents, OT appliances, collectors, connectors). <b>Modules</b> assess and score within a domain. <b>The exposure layer</b> unifies, scores across domains, and reports. Most deployment failures are sensor-layer failures — coverage gaps and bad credentials — that only become visible as nonsense in the top layer.</div>
+
+    <h2><span class="hn">3.2</span> The fork: Vulnerability Management or Security Center?</h2>
+    <p>This is the first real architecture decision, it is expensive to reverse, and interviewers ask about it because it separates people who have deployed from people who have read the datasheet.</p>
+    <div class="kv">
+      <div><h5>Choose VM (cloud) when—</h5><p>Sites are globally distributed, ops headcount is thin, you want ASM/Web App/Identity and attack paths natively, and outbound 443 from each site is achievable.</p></div>
+      <div><h5>Choose Security Center when—</h5><p>Data residency or contractual terms forbid findings leaving the estate, air-gapped enclaves exist, or a regulator requires on-prem retention.</p></div>
+      <div><h5>Hybrid is normal</h5><p>SC for the restricted enclave, VM everywhere else, both surfaced in the exposure layer via connector. Say "hybrid" and explain the seam — do not pretend one console fits all.</p></div>
+      <div><h5>The seam to watch</h5><p>Duplicate asset records across consoles. Reconciliation keys and tag parity have to be designed before the second console exists, not after.</p></div>
+    </div>
+    <p>In a global colo footprint the default is VM, because distributed sites plus a small ops team is exactly the case SaaS wins. Argue for Security Center only where a specific written requirement forces it — and make the customer show you the requirement.</p>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 04 ============ -->
+<section class="sheet" id="s4" data-title="Sensor placement board" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>04</b></div>
+    <div class="sheettitle">
+      <h1>Sensor placement board</h1>
+      <p>The core skill of this role: matching a collection method to a zone. Work the board, then read the reasoning.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Design</span><span class="tag t-ot">Design</span><span class="tag t-risk">Blast radius</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">4.1</span> The five ways Tenable One sees an asset</h2>
+    <div class="kv">
+      <div><h5>Active scan</h5><p>Nessus connects to the target. Deepest data when credentialed. Generates traffic and load — the method with real blast radius.</p></div>
+      <div><h5>Agent</h5><p>Assessment runs on the host, reports out. No credentials in flight, works for roaming and off-network hosts, but cannot see network-visible issues like exposed services or expired TLS.</p></div>
+      <div><h5>Passive listening</h5><p>Traffic mirrored to a sensor; assets and weaknesses inferred from what they say. Zero risk to the target, shallower detail, only sees what talks.</p></div>
+      <div><h5>Protocol-native query</h5><p>OT active query: read-only requests in the device's own language (e.g. a PLC state read) rather than generic probes. Deep OT detail with far less risk than a Nessus scan.</p></div>
+      <div><h5>API / connector</h5><p>Cloud accounts, CMDB, EDR, third-party scanners. No packets near the asset at all. Perfect for environments you cannot touch.</p></div>
+    </div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 340" role="img" aria-label="Collection methods plotted by operational risk against data depth">
+  <line x1="70" y1="300" x2="800" y2="300" stroke="#161F1D" stroke-width="1.5"/>
+  <line x1="70" y1="300" x2="70" y2="20" stroke="#161F1D" stroke-width="1.5"/>
+  <text class="fm" x="330" y="326">DATA DEPTH  &#8594;</text>
+  <text class="fm" x="0" y="160" transform="rotate(-90 18,160)" >OPERATIONAL RISK  &#8594;</text>
+  <line x1="70" y1="160" x2="800" y2="160" stroke="#C4C0B2" stroke-dasharray="4 4"/>
+  <line x1="435" y1="20" x2="435" y2="300" stroke="#C4C0B2" stroke-dasharray="4 4"/>
+
+  <rect class="bg" x="96" y="238" width="150" height="46"/>
+  <text class="hd" x="106" y="258" fill="#2C6349">API / connector</text>
+  <text class="xs" x="106" y="274">no packets near the asset</text>
+
+  <rect class="bg" x="250" y="196" width="160" height="46"/>
+  <text class="hd" x="260" y="216" fill="#2C6349">Passive listening</text>
+  <text class="xs" x="260" y="232">sees only what talks</text>
+
+  <rect class="bb" x="470" y="180" width="160" height="46"/>
+  <text class="hd" x="480" y="200" fill="#17495B">Nessus Agent</text>
+  <text class="xs" x="480" y="216">blind to network exposure</text>
+
+  <rect class="ba" x="452" y="96" width="180" height="50"/>
+  <text class="hd" x="462" y="116" fill="#8A5D00">Protocol query (OT)</text>
+  <text class="xs" x="462" y="132">deep OT detail, low but</text>
+  <text class="xs" x="462" y="144">non-zero risk</text>
+
+  <rect class="bo" x="636" y="40" width="164" height="50"/>
+  <text class="hd" x="646" y="60" fill="#973520">Credentialed scan</text>
+  <text class="xs" x="646" y="76">deepest data, real blast</text>
+  <text class="xs" x="646" y="88">radius on fragile gear</text>
+
+  <rect class="bo" x="230" y="34" width="176" height="50"/>
+  <text class="hd" x="240" y="54" fill="#973520">Unauth. sweep on OT</text>
+  <text class="xs" x="240" y="70">worst trade in the chart —</text>
+  <text class="xs" x="240" y="82">shallow data, high risk</text>
+
+  <text class="fm" x="86" y="36">AVOID</text><text class="fm" x="700" y="290">IDEAL</text>
+</svg>
+<div class="figcap"><b>Fig 4.1</b> — Every placement decision is this trade. Move down and right wherever you can; never sit top-left.</div>
+</div>
+<h2><span class="hn">4.2</span> Work the board</h2>
+    <p>Ten zones from a realistic global colo estate. Pick the primary collection method for each. Verdicts and reasoning appear as you go.</p>
+    <div id="board"></div>
+    <div class="btnrow">
+      <button class="btn pri" id="boardScore">Score the board</button>
+      <button class="btn" id="boardReset">Clear answers</button>
+      <span id="boardOut" style="font-family:var(--m);font-size:12.5px;align-self:center"></span>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2><span class="hn">4.3</span> Placement rules worth memorising</h2>
+    <ul>
+      <li><b>Scanner goes where the traffic should stay.</b> One scanner per site or per segment group, assessing locally and shipping only results upstream. Never scan across a WAN link if you can avoid it — you burn bandwidth, inflate scan windows, and produce timeouts that look like vulnerabilities.</li>
+      <li><b>Prefer outbound-only.</b> Linked scanners initiate to the console over 443; nothing needs to be opened inbound to a colo cage. This single fact resolves most firewall objections.</li>
+      <li><b>Agents for anything that moves or is hard to credential;</b> network scans for anything you cannot install software on — appliances, printers, network gear, storage arrays, embedded devices.</li>
+      <li><b>Both, deliberately, for servers.</b> Agent for depth and reliability, periodic credentialed network scan for the outside-in view. Plan the deduplication before you turn both on.</li>
+      <li><b>Never point a general-purpose scanner at Level 0–2.</b> That is the OT appliance's job, and even then you start passive.</li>
+      <li><b>Size for the window, not the asset count.</b> The question is never "how many assets" — it is "how many assets can I finish inside the change window at an acceptable concurrency."</li>
+    </ul>
+    <div class="note n-risk"><span class="lbl">Blast-radius checklist before any new scan target</span>
+      Is it embedded or safety-related? · Does the vendor warranty prohibit scanning? · Is it single-homed on a fragile stack? · Has it ever fallen over during a scan before? · Is there a maintenance window and a rollback owner? · Have you disabled dangerous plugin families and capped concurrency? — If you cannot answer all six, you are not ready to launch.</div>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 05 ============ -->
+<section class="sheet" id="s5" data-title="Global &amp; colo network design" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>05</b></div>
+    <div class="sheettitle">
+      <h1>Global &amp; colo network design</h1>
+      <p>Data flow, connectivity, sizing and the segmentation questions that decide whether the build takes six weeks or six months.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Architecture</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">5.1</span> Data flow, end to end</h2>
+    <div class="codewrap"><button class="copy" data-copy>Copy</button><pre class="mono"><span class="c">SITE (per DC / colo cage)                    TRANSIT            PLATFORM</span>
+
+ Nessus Agents ——————
+                    ———> Nessus Scanner ———
+ Network targets ————     (local, linked) —
+                                          ——— 443 outbound ——> Tenable One VM
+ OT Sensors ——> OT ICP appliance ——————————                      —
+   (SPAN/TAP)      (passive + query)      —                      ——> Inventory
+                                          —                      ——> Exposure View
+ Domain Controllers ——> Identity collector—                      ——> Attack Path
+                                                                 ——> Exposure Signals
+ Cloud accounts ————————> connector (API) ————————————————————————>      —
+ CMDB / ITSM  <———————————— bi-directional integration ———————————————————
+ SIEM         <———————————— findings + audit events ——————————————————————
+
+<span class="k">Rule:</span> raw scan traffic never crosses a WAN link. Only findings do.</pre></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 470" role="img" aria-label="End to end architecture: site sensors connecting outbound to the cloud platform, plus API connectors and downstream integrations">
+  <rect x="0" y="20" width="330" height="430" fill="none" stroke="#161F1D" stroke-dasharray="6 4"/>
+  <text class="fm" x="10" y="14">SITE — DATA CENTER OR COLO CAGE  (— N globally)</text>
+  <rect x="580" y="20" width="240" height="250" fill="none" stroke="#17495B" stroke-dasharray="6 4"/>
+  <text class="fm" x="590" y="14" fill="#17495B">TENABLE ONE PLATFORM (SaaS)</text>
+
+  <rect class="bx" x="16" y="36" width="140" height="30"/><text class="xs" x="26" y="55">Servers + agents</text>
+  <rect class="bx" x="16" y="74" width="140" height="30"/><text class="xs" x="26" y="93">Network / OOB mgmt</text>
+  <rect class="bx" x="16" y="112" width="140" height="30"/><text class="xs" x="26" y="131">Storage, appliances</text>
+  <rect class="bb" x="186" y="66" width="128" height="52"/>
+  <text class="hd" x="196" y="86" fill="#17495B">Nessus</text><text class="hd" x="196" y="102" fill="#17495B">scanner</text>
+  <path class="ln" d="M158 51 L184 78"/><path class="ln" d="M158 89 L184 90"/><path class="ln" d="M158 127 L184 106"/>
+
+  <line x1="16" y1="158" x2="314" y2="158" stroke="#E3A81E" stroke-width="4"/>
+  <text class="fm" x="16" y="176" fill="#8A5D00">IT / OT BOUNDARY</text>
+
+  <rect class="bx" x="16" y="186" width="140" height="30"/><text class="xs" x="26" y="205">BMS / HMI (L2)</text>
+  <rect class="bx" x="16" y="224" width="140" height="30"/><text class="xs" x="26" y="243">PLC, UPS, ATS (L1)</text>
+  <rect class="ba" x="16" y="262" width="140" height="30"/><text class="xs" x="26" y="281" fill="#8A5D00">OT sensor @ switch</text>
+  <rect class="ba" x="186" y="206" width="128" height="52"/>
+  <text class="hd" x="196" y="226" fill="#8A5D00">OT ICP</text><text class="hd" x="196" y="242" fill="#8A5D00">appliance</text>
+  <path class="la dsh" d="M158 200 L184 224"/><path class="la dsh" d="M158 238 L184 234"/><path class="la" d="M158 276 L184 252"/>
+  <text class="fm" x="120" y="306">SPAN / TAP &#8594; PASSIVE</text>
+
+  <rect class="bx" x="16" y="330" width="140" height="30"/><text class="xs" x="26" y="349">Domain controllers</text>
+  <rect class="bb" x="186" y="330" width="128" height="30"/><text class="xs" x="196" y="349">AD collector</text>
+  <path class="ln" d="M158 345 L184 345"/>
+
+  <path class="lb" d="M316 92 C 420 92, 470 120, 578 120"/>
+  <path class="la" d="M316 232 C 430 232, 470 150, 578 140"/>
+  <path class="lb" d="M316 345 C 440 345, 480 170, 578 160"/>
+  <rect x="392" y="96" width="120" height="22" fill="#F2F0E9" stroke="#17495B"/>
+  <text class="fm" x="402" y="111" fill="#17495B">443 OUTBOUND ONLY</text>
+
+  <rect class="bb" x="596" y="36" width="208" height="30"/><text class="sm" x="608" y="56">Inventory</text>
+  <rect class="bb" x="596" y="74" width="208" height="30"/><text class="sm" x="608" y="94">Exposure View · CES</text>
+  <rect class="bb" x="596" y="112" width="208" height="30"/><text class="sm" x="608" y="132">Attack Path Analysis</text>
+  <rect class="bb" x="596" y="150" width="208" height="30"/><text class="sm" x="608" y="170">Exposure Signals</text>
+  <rect class="bx" x="596" y="196" width="208" height="30"/><text class="sm" x="608" y="216">Dashboards / reporting</text>
+  <rect class="bx" x="596" y="234" width="208" height="26"/><text class="xs" x="608" y="252">ASM — no deployment</text>
+
+  <rect class="bx" x="360" y="300" width="180" height="34"/><text class="sm" x="372" y="322">Cloud accounts</text>
+  <path class="lb" d="M542 316 C 600 316, 660 300, 690 268"/>
+  <text class="fm" x="556" y="342">API CONNECTOR</text>
+
+  <rect class="bg" x="360" y="360" width="180" height="34"/><text class="sm" x="372" y="382">CMDB — context in</text>
+  <rect class="bg" x="580" y="360" width="224" height="34"/><text class="sm" x="592" y="382">ITSM — tickets out</text>
+  <rect class="bg" x="580" y="406" width="224" height="34"/><text class="sm" x="592" y="428">SIEM — findings out</text>
+  <path class="lb" d="M542 372 L578 372"/>
+  <path class="lb" d="M690 356 L690 340"/>
+  <path class="lb" d="M760 402 C 760 380, 770 300, 750 268"/>
+</svg>
+<div class="figcap"><b>Fig 5.1</b> — The reference architecture. One rule governs the whole picture: <b>scan traffic stays inside the site, only findings cross the WAN</b> — and every link out of a site is outbound-initiated.</div>
+</div>
+<h2><span class="hn">5.2</span> Connectivity you must confirm in discovery</h2>
+    <ul>
+      <li><b>Outbound 443 from each scanner and appliance</b> to the Tenable cloud, including through any proxy. Get the required destination list from current documentation and give the network team FQDNs, not IPs — cloud endpoints move.</li>
+      <li><b>Proxy behaviour</b>: authenticated proxies, TLS inspection and certificate pinning break scanner linking in that order of frequency. Ask specifically whether TLS is intercepted.</li>
+      <li><b>Scanner — target reachability</b>: which VLANs the scanner may source traffic into, and whether a firewall sits between. A firewall in path silently changes results — dropped SYNs read as closed ports, rate limits read as unresponsive hosts.</li>
+      <li><b>Credential path</b>: scanner to vault (CyberArk, Delinea, Azure Key Vault), and scanner to target on 22/445/5985.</li>
+      <li><b>Time sync and DNS</b>. Bad NTP breaks certificate validation and makes scan timestamps unusable for SLA reporting; bad reverse DNS wrecks asset identity.</li>
+      <li><b>Bandwidth budget per site.</b> Agree a ceiling with the network team and configure to it. In a colo, transit may be metered.</li>
+    </ul>
+
+    <h2><span class="hn">5.3</span> Sizing and scan windows</h2>
+    <p>Use a simple, defensible model rather than a vendor rule of thumb, and show your working:</p>
+    <div class="codewrap"><button class="copy" data-copy>Copy</button><pre class="mono"><span class="c"># Rough capacity check per scanner</span>
+hosts_per_window = (window_hours * 3600) / avg_seconds_per_host * concurrency_factor
+
+<span class="c"># credentialed Windows/Linux server, full plugin set: 90–240s typical</span>
+<span class="c"># discovery-only sweep:                                 1–5s</span>
+<span class="c"># network appliance, SNMP/SSH:                          30–90s</span>
+
+<span class="k">Then:</span> split by tag into staggered jobs, never one monolithic /16 scan.
+<span class="k">Then:</span> leave 30% headroom for retries, credential failures and growth.</pre></div>
+
+<div class="fig">
+<svg viewBox="0 0 820 250" role="img" aria-label="Weekly scan schedule showing daily discovery sweeps and staggered deep credentialed scans">
+  <text class="fm" x="0" y="12">MON</text><text class="fm" x="114" y="12">TUE</text><text class="fm" x="228" y="12">WED</text>
+  <text class="fm" x="342" y="12">THU</text><text class="fm" x="456" y="12">FRI</text><text class="fm" x="570" y="12">SAT</text><text class="fm" x="684" y="12">SUN</text>
+  <g stroke="#C4C0B2"><line x1="0" y1="20" x2="798" y2="20"/><line x1="114" y1="20" x2="114" y2="230"/>
+  <line x1="228" y1="20" x2="228" y2="230"/><line x1="342" y1="20" x2="342" y2="230"/><line x1="456" y1="20" x2="456" y2="230"/>
+  <line x1="570" y1="20" x2="570" y2="230"/><line x1="684" y1="20" x2="684" y2="230"/></g>
+
+  <text class="xs" x="0" y="42">Discovery sweep — all ranges, unauthenticated, fast</text>
+  <g fill="#DCE6E9" stroke="#17495B">
+    <rect x="6" y="50" width="30" height="20"/><rect x="120" y="50" width="30" height="20"/><rect x="234" y="50" width="30" height="20"/>
+    <rect x="348" y="50" width="30" height="20"/><rect x="462" y="50" width="30" height="20"/><rect x="576" y="50" width="30" height="20"/>
+    <rect x="690" y="50" width="30" height="20"/></g>
+  <text class="fm" x="740" y="65">DAILY</text>
+
+  <text class="xs" x="0" y="98">Deep credentialed scans — staggered by tag, inside change windows</text>
+  <rect class="bb" x="20" y="106" width="82" height="22"/><text class="xs" x="28" y="121">site:dfw</text>
+  <rect class="bb" x="134" y="106" width="82" height="22"/><text class="xs" x="142" y="121">site:ams</text>
+  <rect class="bb" x="248" y="106" width="82" height="22"/><text class="xs" x="256" y="121">site:sin</text>
+  <rect class="bb" x="362" y="106" width="82" height="22"/><text class="xs" x="370" y="121">colo-tx</text>
+  <rect class="ba" x="590" y="106" width="180" height="22"/><text class="xs" x="598" y="121" fill="#8A5D00">OT window w/ facilities</text>
+
+  <text class="xs" x="0" y="154">Agent scans — continuous, no window needed</text>
+  <rect x="6" y="162" width="792" height="20" fill="#D8E5DC" stroke="#2C6349"/>
+  <text class="xs" x="16" y="177" fill="#2C6349">runs locally on the host, reports when connected</text>
+
+  <text class="xs" x="0" y="210">Config audit &amp; web app scans</text>
+  <rect class="bx" x="462" y="216" width="100" height="20"/><text class="xs" x="470" y="231">monthly</text>
+  <rect class="bo" x="20" y="216" width="140" height="20"/><text class="xs" x="28" y="231" fill="#973520">emergency CVE sweep</text>
+</svg>
+<div class="figcap"><b>Fig 5.2</b> — Split the schedule by <b>purpose</b>, not by subnet. Daily cheap discovery keeps inventory honest; expensive assessment is staggered so no single night is overloaded.</div>
+</div>
+<div class="note n-tip"><span class="lbl">Design move that saves the program</span>Run a <b>fast unauthenticated discovery sweep daily</b> and a <b>deep credentialed assessment weekly</b>, in separate policies. Discovery keeps inventory honest and catches rogue assets within a day; the deep scan carries the expensive plugins and fits inside a real change window. Mixing both into one nightly job is the most common cause of scans that never finish.</div>
+
+    <h2><span class="hn">5.4</span> Segmentation questions for the design workshop</h2>
+    <ul>
+      <li>Where are the IT/OT boundaries, and is there a formal DMZ between them or a flat path someone will discover during discovery?</li>
+      <li>Which segments are customer-owned in the colo halls, and what is the written demarcation? Scanning a colo tenant's equipment without authorisation is a contractual and potentially legal problem — get scope in writing.</li>
+      <li>Is out-of-band management (iDRAC/iLO/IPMI, serial concentrators, smart PDUs) in scope? It usually should be — it is the highest-value, least-scanned network in the building.</li>
+      <li>Do the sites share address space? Overlapping RFC1918 ranges across sites are common and they destroy IP-based asset identity. Plan for scanner-scoped identity and non-IP correlation keys.</li>
+      <li>Where can you get a SPAN or TAP, and who owns the switch? This determines OT coverage more than any other factor.</li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 06 ============ -->
+<section class="sheet" id="s6" data-title="OT, IoT &amp; facility systems" data-disc="ot">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>06</b></div>
+    <div class="sheettitle">
+      <h1>OT, IoT &amp; facility systems</h1>
+      <p>Power, cooling and building management. The part of this role that most candidates cannot speak to — and the part that decides whether you get hired.</p>
+    </div>
+    <div class="disc"><span class="tag t-ot">OT / IoT</span><span class="tag t-risk">Operational risk</span></div>
+  </div></div>
+
+  <div class="hazard"></div>
+
+  <div class="block">
+    <p class="lede">A data center's operational technology <em>is</em> the product. If the BMS misbehaves, the halls overheat; if the ATS controller faults, the customer's SLA credit is real money. Everything in this sheet follows from one premise: <b>you may not cause an outage in order to find a vulnerability.</b></p>
+
+    <h2><span class="hn">6.1</span> What is actually in a data center OT estate</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>System</th><th>Typical technology</th><th>Why it is fragile</th></tr>
+      <tr><td>Building management (BMS/BAS)</td><td>Niagara/Tridium, Johnson Metasys, Siemens Desigo; BACnet/IP, Modbus TCP</td><td>Embedded Java stacks, old TLS, flat credentials, integrator-owned</td></tr>
+      <tr><td>Cooling</td><td>CRAC/CRAH controllers, chillers, cooling towers, valve and pump controllers</td><td>Thin TCP stacks; a port sweep can hang the controller's web service</td></tr>
+      <tr><td>Power</td><td>UPS management cards, static transfer switches, ATS, generator controllers, switchgear</td><td>Safety-critical; some cards reboot on malformed SNMP</td></tr>
+      <tr><td>Metering &amp; environment</td><td>Branch circuit monitors, intelligent PDUs, temperature/humidity/leak sensors</td><td>Thousands of cheap IP endpoints, default creds, rarely inventoried</td></tr>
+      <tr><td>Physical security</td><td>Access control, cameras, intercom, mantraps</td><td>Often on a converged network, often the vendor's remote-access path</td></tr>
+      <tr><td>Fire &amp; life safety</td><td>VESDA, suppression panels, EPO circuits</td><td>Regulated; touching them can void certification. Usually observe-only.</td></tr>
+    </table></div>
+
+    <h2><span class="hn">6.2</span> The Purdue model, and what you deploy at each level</h2>
+    <p>Click a level. The model is imperfect in converged modern estates — treat it as a shared vocabulary for describing risk, not a claim about how the network is really wired.</p>
+    <div id="purdue"></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 400" role="img" aria-label="Purdue model levels with the Tenable collection method appropriate at each level">
+  <text class="fm" x="0" y="12">PURDUE LEVEL</text><text class="fm" x="300" y="12">TYPICAL ASSETS</text>
+  <text class="fm" x="576" y="12">WHAT YOU DEPLOY</text>
+
+  <g>
+    <rect class="bx" x="0" y="20" width="290" height="42"/><text class="hd" x="12" y="40">L5 · Enterprise</text><text class="xs" x="12" y="55">corporate IT, internet edge</text>
+    <rect class="bb" x="570" y="20" width="250" height="42"/><text class="sm" x="582" y="46" fill="#17495B">Full IT tooling — scan + agents</text>
+    <rect class="bx" x="300" y="20" width="256" height="42"/><text class="xs" x="312" y="46">ERP, email, user endpoints</text>
+
+    <rect class="bx" x="0" y="66" width="290" height="42"/><text class="hd" x="12" y="86">L4 · Site business</text><text class="xs" x="12" y="101">site IT, DCIM</text>
+    <rect class="bx" x="300" y="66" width="256" height="42"/><text class="xs" x="312" y="92">DCIM, maintenance systems</text>
+    <rect class="bb" x="570" y="66" width="250" height="42"/><text class="sm" x="582" y="92" fill="#17495B">Credentialed scan + agents</text>
+
+    <rect class="bg" x="0" y="112" width="290" height="46" stroke-width="2"/><text class="hd" x="12" y="132" fill="#2C6349">L3.5 · IT/OT DMZ</text>
+    <text class="xs" x="12" y="148">the added level — instrument it</text>
+    <rect class="bx" x="300" y="112" width="256" height="46"/><text class="xs" x="312" y="132">jump hosts, historian replica,</text><text class="xs" x="312" y="146">vendor remote access</text>
+    <rect class="bg" x="570" y="112" width="250" height="46"/><text class="sm" x="582" y="132" fill="#2C6349">Scan the servers + OT sensor</text><text class="xs" x="582" y="148">highest-value visibility you buy</text>
+
+    <rect class="bx" x="0" y="162" width="290" height="42"/><text class="hd" x="12" y="182">L3 · Site operations</text><text class="xs" x="12" y="197">OT servers &amp; workstations</text>
+    <rect class="bx" x="300" y="162" width="256" height="42"/><text class="xs" x="312" y="188">BMS supervisory servers, EWS</text>
+    <rect class="ba" x="570" y="162" width="250" height="42"/><text class="sm" x="582" y="182" fill="#8A5D00">Credentialed scan in window</text><text class="xs" x="582" y="197">+ passive always on</text>
+
+    <rect class="ba" x="0" y="208" width="290" height="42"/><text class="hd" x="12" y="228" fill="#8A5D00">L2 · Supervisory</text><text class="xs" x="12" y="243">HMIs, SCADA front ends</text>
+    <rect class="bx" x="300" y="208" width="256" height="42"/><text class="xs" x="312" y="234">Niagara stations, chiller plant</text>
+    <rect class="ba" x="570" y="208" width="250" height="42"/><text class="sm" x="582" y="228" fill="#8A5D00">Passive + selective query</text><text class="xs" x="582" y="243">agreed per query type</text>
+
+    <rect class="bo" x="0" y="254" width="290" height="42"/><text class="hd" x="12" y="274" fill="#973520">L1 · Basic control</text><text class="xs" x="12" y="289">devices that command plant</text>
+    <rect class="bx" x="300" y="254" width="256" height="42"/><text class="xs" x="312" y="280">PLC, RTU, VFD, UPS, ATS</text>
+    <rect class="bo" x="570" y="254" width="250" height="42"/><text class="sm" x="582" y="274" fill="#973520">Passive only, to begin with</text><text class="xs" x="582" y="289">queries after lab validation</text>
+
+    <rect class="bo" x="0" y="300" width="290" height="42"/><text class="hd" x="12" y="320" fill="#973520">L0 · Physical process</text><text class="xs" x="12" y="335">the plant itself</text>
+    <rect class="bx" x="300" y="300" width="256" height="42"/><text class="xs" x="312" y="326">sensors, valves, fans, coils</text>
+    <rect class="bo" x="570" y="300" width="250" height="42"/><text class="sm" x="582" y="326" fill="#973520">Observed via traffic only</text>
+  </g>
+
+  <line x1="0" y1="360" x2="820" y2="360" stroke="#C4C0B2"/>
+  <text class="fm" x="0" y="380">SAFE TO SCAN</text>
+  <rect x="120" y="368" width="580" height="14" fill="url(#gradSafe)"/>
+  <defs><linearGradient id="gradSafe" x1="0" x2="1"><stop offset="0" stop-color="#DCE6E9"/><stop offset="0.5" stop-color="#F0E4C4"/><stop offset="1" stop-color="#EFDCD4"/></linearGradient></defs>
+  <text class="fm" x="712" y="380" fill="#973520">PASSIVE ONLY</text>
+</svg>
+<div class="figcap"><b>Fig 6.1</b> — The single slide to bring to the facilities meeting. It shows them exactly where you are <b>not</b> going, which is what they need to hear before they will discuss where you are.</div>
+</div>
+<h2><span class="hn">6.3</span> Passive versus active — the answer they want to hear</h2>
+    <p>Tenable's own guidance is a layered one: passive monitoring across all levels for continuous visibility, with active methods reserved for the upper levels where the assets are conventional computers. Beneath that, use protocol-native read-only queries rather than general scanning, and only with operations agreement.</p>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Method</th><th>Risk to plant</th><th>Data depth</th><th>Where it belongs</th></tr>
+      <tr><td>Passive network detection</td><td>None — mirrored traffic only</td><td>Assets, protocols, conversations, some firmware and version detail</td><td>Everywhere, always. This is your baseline.</td></tr>
+      <tr><td>OT active query (protocol-native)</td><td>Low, but non-zero</td><td>Firmware, backplane modules, PLC run state, precise model data</td><td>Level 1–2, enabled selectively, per query type, agreed with operations</td></tr>
+      <tr><td>Nessus credentialed scan</td><td>Moderate</td><td>Full vulnerability and configuration assessment</td><td>Level 3–3.5 engineering workstations, historians, jump hosts</td></tr>
+      <tr><td>Nessus unauthenticated sweep</td><td>Highest for embedded gear</td><td>Service and banner level</td><td>Level 4–5 only, or lab-validated exceptions</td></tr>
+    </table></div>
+
+    <div class="note n-ot"><span class="lbl">How the OT module is put together</span>An <b>ICP appliance</b> per site analyses traffic from a SPAN, mirror or TAP, and runs both passive detection and the active query engine. <b>Sensors</b> — up to roughly one per managed switch — sit on segments the appliance cannot see, capture and compress traffic back to the appliance, and can themselves be enabled to issue active queries into their local segments. The appliance wants a monitoring interface fed by SPAN and a separate management/query interface, and port separation is supported when the operations team insists the monitoring path stays passive-only.</div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 330" role="img" aria-label="OT Security topology: ICP appliance fed by SPAN, remote sensors on other switches, separate management interface">
+  <rect class="ba" x="300" y="120" width="200" height="86" stroke-width="2"/>
+  <text class="hd" x="316" y="144" fill="#8A5D00">OT ICP appliance</text>
+  <text class="xs" x="316" y="164">passive network detection</text>
+  <text class="xs" x="316" y="180">+ active query engine</text>
+  <text class="xs" x="316" y="196">one per site</text>
+
+  <rect class="bx" x="30" y="40" width="170" height="34"/><text class="sm" x="42" y="62">Core OT switch</text>
+  <text class="fm" x="42" y="92">SPAN / MIRROR PORT</text>
+  <path class="la" d="M115 78 C 115 130, 220 150, 298 152"/>
+  <text class="fm" x="150" y="130" fill="#8A5D00">MONITORING IFACE — RX ONLY</text>
+
+  <rect class="bx" x="30" y="180" width="170" height="34"/><text class="sm" x="42" y="202">Remote switch A</text>
+  <rect class="ba" x="30" y="224" width="170" height="30"/><text class="xs" x="42" y="244" fill="#8A5D00">OT sensor</text>
+  <rect class="bx" x="30" y="266" width="170" height="34"/><text class="sm" x="42" y="288">Remote switch B</text>
+  <rect class="ba" x="200" y="266" width="86" height="34"/><text class="xs" x="210" y="288" fill="#8A5D00">sensor</text>
+  <path class="la" d="M202 239 C 250 239, 270 200, 298 190"/>
+  <path class="la" d="M288 283 C 310 283, 330 230, 340 210"/>
+  <text class="fm" x="150" y="316">SENSORS: CAPTURE + COMPRESS &#8594; APPLIANCE · UP TO ~1 PER MANAGED SWITCH</text>
+
+  <path class="lo dsh" d="M400 118 L400 84"/>
+  <rect class="bo" x="300" y="46" width="200" height="36"/>
+  <text class="xs" x="312" y="62" fill="#973520">Active query — read-only,</text>
+  <text class="xs" x="312" y="76" fill="#973520">native protocol, per query type</text>
+
+  <rect class="bx" x="560" y="120" width="240" height="36"/><text class="sm" x="572" y="143">Management interface</text>
+  <path class="ln" d="M502 150 L556 140"/>
+  <text class="fm" x="512" y="176">SEPARATE PORT OPTION</text>
+  <rect class="bb" x="560" y="180" width="240" height="36"/><text class="sm" x="572" y="203">Tenable One platform</text>
+  <path class="lb" d="M680 158 L680 176"/>
+  <rect class="bx" x="560" y="228" width="240" height="36"/><text class="sm" x="572" y="251">Operator console (site)</text>
+  <path class="ln plain" d="M680 214 L680 226"/>
+  <text class="xs" x="560" y="290">Port separation keeps the monitoring path</text>
+  <text class="xs" x="560" y="306">strictly passive when operations insists.</text>
+</svg>
+<div class="figcap"><b>Fig 6.2</b> — Where the OT dependency really sits: <b>SPAN port access</b>. It is a network-engineering request, it takes weeks, and it gates all OT visibility — so raise it in week one.</div>
+</div>
+<div class="note n-risk"><span class="lbl">Never say this</span>"Active scanning is safe, it's read-only." Tenable itself will not guarantee active scanning cannot disturb operation, some vendor warranties explicitly prohibit scanning and agent installation, and every OT engineer in the room has a story about a device that fell over. The credible sentence is: <b>"We start passive, we prove value with passive, and every active step is tested and agreed before it runs in production."</b></div>
+
+    <h3>Rules of engagement — write these down and get them signed</h3>
+    <ul>
+      <li>Named operations approver per site, plus a documented stop authority: anyone in the control room can halt collection, no questions asked.</li>
+      <li>Change-window alignment with facilities maintenance calendars — not the IT change calendar; they are different, and facilities' one usually wins.</li>
+      <li>Written device exclusion list: fire/life safety, anything under active vendor warranty dispute, anything in commissioning.</li>
+      <li>Lab or spare-unit validation before enabling any new query type against a device family.</li>
+      <li>Rollback and escalation path, including who calls the vendor if a controller misbehaves during a collection window.</li>
+      <li>Recorded baseline of normal behaviour first, so anomalies after your changes can be attributed honestly.</li>
+    </ul>
+
+    <h3>Remediation reality in OT</h3>
+    <p>Most OT findings will not be patched this quarter, and pretending otherwise destroys your credibility with facilities. Design the OT track around <b>compensating controls</b> — segmentation and firewall rule tightening, removing default credentials, disabling unused services and remote-access paths, restricting vendor access, and monitoring — with patching batched into scheduled maintenance shutdowns. Report OT posture on a separate track with its own targets, so a five-year-old unpatchable controller does not sit permanently red on the enterprise dashboard.</p>
+    <div class="note n-say"><span class="lbl">Say this in the interview</span>"In OT my first deliverable isn't a vulnerability report, it's an accurate asset inventory and a conversation with facilities about what we can safely touch. Passive gets me the inventory in weeks with zero operational risk, and it buys the trust I need before I ask to query anything."</div>
+  </div>
+
+  <div class="hazard"></div>
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 07 ============ -->
+<section class="sheet" id="s7" data-title="Asset identity &amp; tagging" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>07</b></div>
+    <div class="sheettitle">
+      <h1>Asset identity &amp; tagging</h1>
+      <p>The unglamorous design decision that determines whether every dashboard, SLA and report you build later is trustworthy.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Data model</span><span class="tag t-ops">Reporting</span></div>
+  </div></div>
+
+  <div class="block">
+    <p class="lede">Ask a deployment engineer what went wrong on their last project and the answer is almost always duplicate or unattributed assets. Exposure scores are asset-weighted; if the asset record is wrong, every number above it is wrong, and stakeholders will find the error before you do.</p>
+
+    <h2><span class="hn">7.1</span> Why duplicates happen</h2>
+    <ul>
+      <li>The same host seen by an agent, a credentialed scan and a cloud connector, with three different identifiers.</li>
+      <li>DHCP churn and IP reuse across sites with overlapping RFC1918 space.</li>
+      <li>Ephemeral cloud instances and containers that live for hours.</li>
+      <li>Cloned VMs sharing a machine identifier, or a golden image baked with an agent already linked.</li>
+      <li>Devices with multiple NICs, or NAT between scanner and target.</li>
+    </ul>
+    <div class="note n-tip"><span class="lbl">Countermeasures</span>Bake agents into images <em>unlinked</em> and link at first boot. Set aging rules so ephemeral assets expire rather than accumulate. Prefer strong identifiers — agent UUID, cloud instance ID, CMDB correlation ID — over IP and hostname. Reconcile against the CMDB continuously and review the "no CMDB match" queue weekly; that queue is also your rogue-asset detector.</div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="Multiple sensors reporting the same host, reconciled into one asset record or fragmenting into duplicates">
+  <text class="hd" x="0" y="14">Six sightings of one server</text>
+  <rect class="bx" x="0" y="28" width="200" height="28"/><text class="xs" x="10" y="46">Agent — UUID a9f3—</text>
+  <rect class="bx" x="0" y="62" width="200" height="28"/><text class="xs" x="10" y="80">Scan — 10.4.2.9</text>
+  <rect class="bx" x="0" y="96" width="200" height="28"/><text class="xs" x="10" y="114">Scan (new DHCP) — 10.4.7.31</text>
+  <rect class="bx" x="0" y="130" width="200" height="28"/><text class="xs" x="10" y="148">Cloud API — i-0ab42—</text>
+  <rect class="bx" x="0" y="164" width="200" height="28"/><text class="xs" x="10" y="182">CMDB — SRV-DFW-0412</text>
+  <rect class="bx" x="0" y="198" width="200" height="28"/><text class="xs" x="10" y="216">EDR — host DFW0412.corp</text>
+
+  <rect class="bb" x="252" y="86" width="150" height="82"/>
+  <text class="hd" x="264" y="106" fill="#17495B">Matching</text>
+  <text class="xs" x="264" y="124">agent UUID</text><text class="xs" x="264" y="138">instance ID</text><text class="xs" x="264" y="152">CMDB correlation ID</text>
+  <path class="ln" d="M202 42 L250 104"/><path class="ln" d="M202 76 L250 114"/><path class="ln" d="M202 110 L250 122"/>
+  <path class="ln" d="M202 144 L250 132"/><path class="ln" d="M202 178 L250 142"/><path class="ln" d="M202 212 L250 152"/>
+
+  <path class="lb" d="M404 108 L470 74"/>
+  <rect class="bg" x="474" y="40" width="330" height="70"/>
+  <text class="hd" x="486" y="62" fill="#2C6349">1 asset record</text>
+  <text class="xs" x="486" y="80">accurate AES · one owner · one ticket · one SLA clock</text>
+  <text class="xs" x="486" y="98">coverage maths that stands up to an auditor</text>
+
+  <path class="lo" d="M404 148 L470 190"/>
+  <rect class="bo" x="474" y="150" width="330" height="86"/>
+  <text class="hd" x="486" y="172" fill="#973520">—or 4 duplicates</text>
+  <text class="xs" x="486" y="190">licence burn · inflated asset count · CES nonsense</text>
+  <text class="xs" x="486" y="206">tickets to three different teams for one host</text>
+  <text class="xs" x="486" y="222">&#8220;we already fixed that&#8221; — and they had</text>
+
+  <text class="fm" x="252" y="196">WEAK KEYS: IP, HOSTNAME</text>
+  <text class="fm" x="252" y="212">STRONG KEYS: UUID, INSTANCE ID</text>
+  <text class="fm" x="0" y="264">UNMATCHED QUEUE = YOUR ROGUE-ASSET DETECTOR — REVIEW IT WEEKLY</text>
+  <line x1="0" y1="272" x2="500" y2="272" stroke="#E3A81E" stroke-width="3"/>
+</svg>
+<div class="figcap"><b>Fig 7.1</b> — Asset identity is the hinge of the whole program. Get the matching keys wrong and every number above it is quietly false.</div>
+</div>
+<h2><span class="hn">7.2</span> Tag taxonomy — design it once, on purpose</h2>
+    <p>Tags are how you slice exposure, route remediation, scope scans and drive reporting. Prefer <b>dynamic, rule-based tags</b> sourced from authoritative data over static lists that rot. A workable taxonomy has a small number of orthogonal dimensions — build one below and see what it unlocks.</p>
+    <div id="tagbuild"></div>
+
+    <h2><span class="hn">7.3</span> Rules of good tagging</h2>
+    <ul>
+      <li><b>Every dimension answers a question someone will ask.</b> If no report or workflow needs it, do not create it.</li>
+      <li><b>Source from truth, not typing.</b> Derive tags from CMDB fields, cloud tags, AD OUs, subnet ranges or naming conventions — and fix the source when it is wrong rather than patching the tag.</li>
+      <li><b>Owner is mandatory.</b> An asset with no remediation owner is not a finding, it is an unassigned task that will age forever. Make "untagged owner" a tracked metric with a target of zero.</li>
+      <li><b>Keep the vocabulary controlled.</b> <code>prod</code>, <code>Prod</code> and <code>PRD</code> as three tags is how a taxonomy dies. Document allowed values.</li>
+      <li><b>Design ACR assignment as a tag consequence</b>, so criticality is applied consistently and re-applied automatically to new assets.</li>
+      <li><b>Version it.</b> Tag schema changes silently redraw every dashboard; treat schema edits as change-managed and note them on trend charts.</li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 08 ============ -->
+<section class="sheet" id="s8" data-title="Scanning mechanics &amp; data quality" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>08</b></div>
+    <div class="sheettitle">
+      <h1>Scanning mechanics &amp; data quality</h1>
+      <p>Policies, credentials, agents at scale, and the triage runbook for the three failures you will spend most of your build time on.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Deployment</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">8.1</span> Scan policy set</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Policy</th><th>Frequency</th><th>Scope</th><th>Notes</th></tr>
+      <tr><td>Host discovery</td><td>Daily</td><td>All routable ranges</td><td>Fast, unauthenticated, ping + limited port set. Feeds inventory and rogue detection.</td></tr>
+      <tr><td>Credentialed assessment — servers</td><td>Weekly, staggered by tag</td><td>Windows/Linux estate</td><td>Full plugin set; the workhorse. Stagger to spread load across the week.</td></tr>
+      <tr><td>Credentialed assessment — network &amp; infra</td><td>Weekly / bi-weekly</td><td>Switches, firewalls, storage, OOB mgmt</td><td>SSH/SNMPv3; disable dangerous plugin families; low concurrency.</td></tr>
+      <tr><td>Agent scan</td><td>Daily</td><td>Servers, endpoints, roaming</td><td>Runs locally; no credential handling; use agent groups matched to tags.</td></tr>
+      <tr><td>Configuration audit</td><td>Monthly</td><td>CIS/DISA benchmark targets</td><td>Separate from vulnerability scans — different audience, different SLA.</td></tr>
+      <tr><td>Web application</td><td>Per release + monthly</td><td>Internal and external apps</td><td>Authenticated where possible; scope fenced hard to avoid destructive crawling.</td></tr>
+      <tr><td>Verification re-scan</td><td>On demand</td><td>Assets with closed tickets</td><td>Closes the loop and produces the "did the fix work" evidence.</td></tr>
+    </table></div>
+
+    <h2><span class="hn">8.2</span> Credentialed scanning — the highest-leverage work</h2>
+    <p>Uncredentialed scanning tells you a host exists and which ports answer. Credentialed scanning tells you what is actually installed and patched, and it is the difference between a program people believe and a program people argue with. Expect to spend more time on credentials than on anything else in the build.</p>
+    <div class="kv">
+      <div><h5>Windows</h5><p>Domain account, admin rights on target, SMB and remote registry reachable, admin shares present. Group Policy that disables remote registry is the classic silent killer.</p></div>
+      <div><h5>Linux/Unix</h5><p>SSH with key auth, a defined privilege escalation method, and a sudoers entry that actually permits the commands the plugins run.</p></div>
+      <div><h5>Network devices</h5><p>SSH or SNMPv3 with authPriv. Community strings still lurking on facility gear are themselves a finding.</p></div>
+      <div><h5>Vault-backed</h5><p>Integrate with CyberArk/Delinea rather than storing credentials in scan policies. Rotation then never breaks scanning, and audit is happy.</p></div>
+    </div>
+    <div class="note n-risk"><span class="lbl">Least privilege reality</span>A scanning account is a privileged account across your whole estate — it is exactly what an attacker wants. Constrain it: dedicated account, no interactive logon, source-restricted to scanner IPs, vault-managed rotation, alerting on use from anywhere else. Being able to discuss this unprompted marks you as senior.</div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 250" role="img" aria-label="Credentialed scan flow from vault to scanner to target, with the common failure points marked">
+  <rect class="bg" x="0" y="60" width="170" height="56"/>
+  <text class="hd" x="12" y="82" fill="#2C6349">Credential vault</text><text class="xs" x="12" y="100">CyberArk / Delinea</text>
+  <path class="ln" d="M172 88 L246 88"/><text class="fm" x="178" y="78">FETCH</text>
+
+  <rect class="bb" x="250" y="60" width="170" height="56"/>
+  <text class="hd" x="262" y="82" fill="#17495B">Nessus scanner</text><text class="xs" x="262" y="100">local to the segment</text>
+  <path class="ln" d="M422 88 L546 88"/><text class="fm" x="440" y="78">SSH 22 · SMB 445 · WINRM 5985</text>
+
+  <rect class="bx" x="550" y="60" width="170" height="56"/>
+  <text class="hd" x="562" y="82">Target host</text><text class="xs" x="562" y="100">Windows / Linux / network</text>
+
+  <text class="fm" x="0" y="146" fill="#973520">WHERE IT BREAKS — AND THE SCAN STILL REPORTS &#8220;COMPLETE&#8221;</text>
+  <line x1="0" y1="154" x2="820" y2="154" stroke="#973520"/>
+  <rect class="bo" x="0" y="164" width="196" height="72"/>
+  <text class="xs" x="10" y="184" fill="#973520">rotation not integrated</text>
+  <text class="xs" x="10" y="200" fill="#973520">key not in vault scope</text>
+  <text class="xs" x="10" y="216" fill="#973520">service account expired</text>
+  <rect class="bo" x="212" y="164" width="196" height="72"/>
+  <text class="xs" x="222" y="184" fill="#973520">wrong escalation method</text>
+  <text class="xs" x="222" y="200" fill="#973520">policy has stale password</text>
+  <text class="xs" x="222" y="216" fill="#973520">scanner cannot route</text>
+  <rect class="bo" x="424" y="164" width="196" height="72"/>
+  <text class="xs" x="434" y="184" fill="#973520">remote registry disabled</text>
+  <text class="xs" x="434" y="200" fill="#973520">UAC remote restriction</text>
+  <text class="xs" x="434" y="216" fill="#973520">host firewall / no sudoers</text>
+  <rect class="bg" x="636" y="164" width="184" height="72"/>
+  <text class="xs" x="646" y="184" fill="#2C6349">DETECT: track auth-success</text>
+  <text class="xs" x="646" y="200" fill="#2C6349">per host as a metric,</text>
+  <text class="xs" x="646" y="216" fill="#2C6349">alert below 98%</text>
+  <path class="lo" d="M98 132 L98 160"/><path class="lo" d="M310 132 L310 160"/><path class="lo" d="M522 132 L522 160"/>
+  <rect class="bx" x="0" y="0" width="820" height="30"/>
+  <text class="sm" x="12" y="20">A credentialed scan that fails authentication looks exactly like a clean, healthy host.</text>
+</svg>
+<div class="figcap"><b>Fig 8.1</b> — The credential path, and every place it silently fails. This is where most of your build time actually goes.</div>
+</div>
+<h2><span class="hn">8.3</span> Deploying agents at scale</h2>
+    <ul>
+      <li>Ship via the tooling that already exists — SCCM/Intune, Ansible, Chef, Jamf, a golden image — never by hand.</li>
+      <li>Protect the linking key like a credential; it lets anything join your tenant.</li>
+      <li>Plan agent groups to mirror your tag dimensions so scan targeting and reporting align.</li>
+      <li>Watch for clone collisions from images baked with a linked agent; unlink before sealing.</li>
+      <li>Monitor agent health as a first-class metric: linked, last-seen, plugin-set age. A silent agent is a coverage gap that looks like a clean asset.</li>
+      <li>Agree an update strategy — staggered rings, not all-at-once across a global estate.</li>
+    </ul>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 280" role="img" aria-label="Overlapping inventories from Tenable, CMDB and EDR revealing coverage gaps and rogue assets">
+  <circle cx="290" cy="140" r="112" fill="#DCE6E9" fill-opacity=".75" stroke="#17495B"/>
+  <circle cx="410" cy="140" r="112" fill="#D8E5DC" fill-opacity=".6" stroke="#2C6349"/>
+  <circle cx="350" cy="200" r="112" fill="#F0E4C4" fill-opacity=".55" stroke="#8A5D00"/>
+  <text class="hd" x="182" y="52" fill="#17495B">Tenable assessed</text>
+  <text class="hd" x="452" y="52" fill="#2C6349">CMDB</text>
+  <text class="hd" x="300" y="292" fill="#8A5D00">EDR / DHCP / ARP</text>
+
+  <text class="sm" x="326" y="150" font-weight="600">agreed</text>
+  <text class="xs" x="196" y="140">assessed but</text><text class="xs" x="196" y="154">not in CMDB</text>
+  <text class="xs" x="462" y="140">in CMDB,</text><text class="xs" x="462" y="154">never scanned</text>
+  <text class="xs" x="300" y="240">seen on the wire only</text>
+
+  <path class="lo" d="M600 90 L510 130"/>
+  <rect class="bo" x="600" y="60" width="220" height="60"/>
+  <text class="hd" x="612" y="80" fill="#973520">Coverage gap</text>
+  <text class="xs" x="612" y="98">no scanner route, stale exclusion,</text>
+  <text class="xs" x="612" y="112">site never onboarded</text>
+
+  <path class="la" d="M600 210 L470 214"/>
+  <rect class="ba" x="600" y="180" width="220" height="60"/>
+  <text class="hd" x="612" y="200" fill="#8A5D00">Rogue / unmanaged</text>
+  <text class="xs" x="612" y="218">contractor kit, vendor laptop,</text>
+  <text class="xs" x="612" y="232">shadow BMS gateway</text>
+
+  <rect class="bx" x="0" y="0" width="820" height="26"/>
+  <text class="sm" x="12" y="18">Never prove coverage from the platform&#8217;s own asset count — triangulate against independent sources.</text>
+</svg>
+<div class="figcap"><b>Fig 8.2</b> — Report the deltas explicitly. &#8220;110 assets unexplained&#8221; is the honest number, and driving it to zero is a legitimate month-two deliverable.</div>
+</div>
+<h2><span class="hn">8.4</span> Triage runbook: the three failures</h2>
+    <details class="acc"><summary>Failure 1 — "The scan says the host is fine" (silent credential failure)</summary><div class="accbody">
+      <p>A credentialed scan that fails authentication still completes, still reports, and produces a short, clean-looking result. This is the single most dangerous data-quality failure in vulnerability management because it manufactures false confidence.</p>
+      <ol>
+        <li>Check the authentication-success plugin output per host, not the scan status.</li>
+        <li>Treat credential failure as a monitored metric with a target (e.g. —98% of in-scope hosts authenticating) and alert on regression.</li>
+        <li>Common causes: expired or rotated password, account lockout from parallel scans, remote registry disabled, UAC remote restrictions, missing sudo entry, SSH key not distributed, host-based firewall, or a jump in host count after new builds land without the account provisioned.</li>
+        <li>Fix at source — bake the scanning account into build automation so new hosts are scannable on day one.</li>
+      </ol>
+    </div></details>
+    <details class="acc"><summary>Failure 2 — Coverage gaps you cannot see</summary><div class="accbody">
+      <p>You can only report on assets you know exist. Prove coverage by triangulating independent sources rather than trusting the platform's own asset count.</p>
+      <ul>
+        <li>Reconcile against DHCP leases, ARP/CAM tables from the network team, EDR console, CMDB, cloud inventory APIs and the identity directory.</li>
+        <li>Report the delta explicitly: "CMDB has 12,400 assets, we assess 11,910, 380 are excluded by policy, 110 are unexplained." That last number is the one that matters, and driving it to zero is a legitimate month-two deliverable.</li>
+        <li>Watch for whole subnets missing because a scanner cannot route to them, an exclusion list is stale, or a site was never added after a colo expansion.</li>
+      </ul>
+    </div></details>
+    <details class="acc"><summary>Failure 3 — False positives and the credibility spiral</summary><div class="accbody">
+      <p>One badly-handled false positive can cost you an entire team's cooperation. Backported security patches on enterprise Linux are the classic case: version-based detection flags a package that the distributor already fixed.</p>
+      <ul>
+        <li>Prefer credentialed and local-package checks over banner-grabbing detection wherever possible.</li>
+        <li>Give owners a formal dispute path with a service commitment — you will investigate within N days and respond with evidence either way.</li>
+        <li>Distinguish a true false positive from an accepted risk. Suppress the former, document the latter as an exception with an expiry date.</li>
+        <li>Track suppression volume. A rising suppression rate is either a detection-quality problem or a governance problem, and both need surfacing.</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 09 ============ -->
+<section class="sheet" id="s9" data-title="Integrations" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>09</b></div>
+    <div class="sheettitle">
+      <h1>Integrations</h1>
+      <p>ServiceNow, SIEM, identity and cloud. Where the platform stops being a scanner and starts being a program.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Operationalization</span><span class="tag t-it">Build</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">9.1</span> ServiceNow — CMDB and ITSM are two different projects</h2>
+    <p>Say this precisely, because conflating them is a common junior mistake:</p>
+    <div class="kv">
+      <div><h5>CMDB direction (in)</h5><p>ServiceNow gives you business context: owner, service, criticality, environment, location. This is what makes tagging and ACR meaningful.</p></div>
+      <div><h5>ITSM direction (out)</h5><p>Tenable creates and updates incidents, changes or vulnerability response records. This is what makes remediation trackable.</p></div>
+      <div><h5>Correlation is the hard part</h5><p>Agree the matching key up front — serial, cloud instance ID, FQDN, MAC. Expect a real reconciliation exercise before either direction is trustworthy.</p></div>
+      <div><h5>Do not flood</h5><p>One ticket per finding per host at enterprise scale is tens of thousands of tickets and instant revolt.</p></div>
+    </div>
+    <div class="note n-tip"><span class="lbl">Ticketing design that survives</span>Group by <b>owner + remediation action</b>, not by finding. "Patch group X to April cumulative update, 240 hosts, closes 1,900 findings" is one actionable ticket. Aim for tickets a team can complete in a sprint, with the finding detail attached rather than exploded. Then set the auto-close rule on <em>verified re-scan</em>, not on the assignee's say-so.</div>
+
+    <h2><span class="hn">9.2</span> The other integrations</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>System</th><th>Direction</th><th>What it buys you</th><th>Watch out for</th></tr>
+      <tr><td>SIEM</td><td>Out</td><td>Correlating exposure with detection; alerting when a vulnerable asset shows suspicious activity</td><td>Volume and licence cost — export prioritised findings and platform audit events, not every plugin result</td></tr>
+      <tr><td>Identity provider</td><td>In / SSO</td><td>SSO plus SCIM for console access, and identity context for exposure</td><td>Role mapping: analysts, OT viewers, executives and auditors all need different scoped roles</td></tr>
+      <tr><td>Cloud providers</td><td>In</td><td>Agentless inventory and assessment of cloud resources, workload identity, misconfiguration</td><td>Account sprawl and permissions review; read-only roles per account, and a process for new accounts</td></tr>
+      <tr><td>EDR</td><td>In</td><td>Independent asset truth for coverage validation</td><td>Do not merge blindly; use it as a reconciliation source first</td></tr>
+      <tr><td>Patch / config management</td><td>Both</td><td>Closing the loop from finding to deployed fix</td><td>Ownership of the truth: the patch tool says "installed," the scan says "still vulnerable." Scan wins; agree that in advance.</td></tr>
+      <tr><td>Third-party VM/OT tools</td><td>In</td><td>Unified inventory where another product already owns a domain</td><td>Duplicate assets and score double-counting</td></tr>
+    </table></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="Integration map showing which systems feed context in and which receive findings out">
+  <text class="fm" x="0" y="14" fill="#17495B">CONTEXT IN &#8594;</text>
+  <text class="fm" x="700" y="14" fill="#2C6349">&#8594; ACTION OUT</text>
+  <rect class="bb" x="310" y="106" width="200" height="88" stroke-width="2"/>
+  <text class="hd" x="326" y="132" fill="#17495B">Tenable One</text>
+  <text class="xs" x="326" y="152">assets · exposures ·</text><text class="xs" x="326" y="168">paths · scores</text>
+
+  <rect class="bx" x="0" y="30" width="220" height="34"/><text class="sm" x="12" y="52">CMDB — owner, service, tier</text>
+  <rect class="bx" x="0" y="78" width="220" height="34"/><text class="sm" x="12" y="100">Cloud accounts — inventory</text>
+  <rect class="bx" x="0" y="126" width="220" height="34"/><text class="sm" x="12" y="148">Identity provider — SSO, roles</text>
+  <rect class="bx" x="0" y="174" width="220" height="34"/><text class="sm" x="12" y="196">EDR — independent asset truth</text>
+  <rect class="bx" x="0" y="222" width="220" height="34"/><text class="sm" x="12" y="244">3rd-party VM / OT tools</text>
+  <path class="lb" d="M222 47 C 270 47, 280 120, 308 128"/>
+  <path class="lb" d="M222 95 C 270 95, 285 128, 308 138"/>
+  <path class="lb" d="M222 143 L306 148"/>
+  <path class="lb" d="M222 191 C 270 191, 285 170, 308 160"/>
+  <path class="lb" d="M222 239 C 275 239, 285 185, 308 170"/>
+
+  <rect class="bg" x="600" y="30" width="220" height="34"/><text class="sm" x="612" y="52">ITSM — grouped tickets</text>
+  <rect class="bg" x="600" y="78" width="220" height="34"/><text class="sm" x="612" y="100">SIEM — prioritised findings</text>
+  <rect class="bg" x="600" y="126" width="220" height="34"/><text class="sm" x="612" y="148">Patch / config tooling</text>
+  <rect class="bg" x="600" y="174" width="220" height="34"/><text class="sm" x="612" y="196">Dashboards &amp; exec reporting</text>
+  <rect class="bg" x="600" y="222" width="220" height="34"/><text class="sm" x="612" y="244">Automation via API</text>
+  <path class="lb" d="M512 128 C 552 120, 560 47, 598 47"/>
+  <path class="lb" d="M512 138 C 552 132, 566 95, 598 95"/>
+  <path class="lb" d="M514 148 L598 143"/>
+  <path class="lb" d="M512 160 C 552 168, 566 191, 598 191"/>
+  <path class="lb" d="M512 170 C 552 180, 560 239, 598 239"/>
+
+  <path class="la dsh" d="M700 64 C 730 90, 730 250, 420 282 C 200 282, 180 70, 218 56"/>
+  <text class="fm" x="360" y="298" fill="#8A5D00">CLOSED LOOP — TICKET CLOSURE VERIFIED BY RE-SCAN, NOT BY ASSERTION</text>
+</svg>
+<div class="figcap"><b>Fig 9.1</b> — Build left to right. Context before automation, or you will route thousands of tickets to the wrong owners at speed.</div>
+</div>
+<h2><span class="hn">9.3</span> Order of operations</h2>
+    <p>Sequence matters. Build integrations in the order that makes the next one easier:</p>
+    <ol>
+      <li><b>Identity/SSO first</b> — you need scoped roles before other teams touch the console.</li>
+      <li><b>CMDB in</b> — context before automation, or you will automate tickets to the wrong owners at scale.</li>
+      <li><b>Cloud connectors</b> — cheap coverage wins that need no field work.</li>
+      <li><b>ITSM out, in pilot</b> — one business unit, manual approval on ticket creation, tune the grouping rules against real feedback.</li>
+      <li><b>SIEM</b> — once findings are prioritised well enough to be worth alerting on.</li>
+      <li><b>Everything else</b> — after the operating model exists, so integrations serve a workflow rather than inventing one.</li>
+    </ol>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 10 ============ -->
+<section class="sheet" id="s10" data-title="The operating model" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>10</b></div>
+    <div class="sheettitle">
+      <h1>The operating model</h1>
+      <p>SLAs, exceptions, escalation and ownership. The part that outlives you.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Operationalization</span></div>
+  </div></div>
+
+  <div class="block">
+    <p class="lede">A vulnerability management standard is a short document that answers four questions: who fixes what, how fast, what happens when they cannot, and who is told when they do not. Everything else is commentary. Write it in weeks 4–8, socialise it, and get it signed by someone senior enough to enforce it.</p>
+
+    <h2><span class="hn">10.1</span> Build the SLA matrix</h2>
+    <p>Two axes — how dangerous the weakness is, how much the asset matters. Adjust the sliders and the matrix recalculates. Aim for numbers the customer can actually hit; an aspirational SLA that is missed 70% of the time is worse than a modest one that is met.</p>
+    <div id="slamatrix"></div>
+
+    <h2><span class="hn">10.2</span> Exceptions and risk acceptance</h2>
+    <p>The exception process is the pressure-release valve. Without one, teams simply ignore findings and your metrics become fiction. With a rigorous one, your dashboard stays honest.</p>
+    <ul>
+      <li><b>Every exception has an expiry.</b> 90 days by default, one year maximum, no permanent exceptions ever.</li>
+      <li><b>Every exception names a compensating control</b> and the residual risk in a sentence a non-specialist understands.</li>
+      <li><b>Approval scales with risk.</b> Low findings: asset owner. High: security lead. Critical or Tier-0: CISO or a named risk committee.</li>
+      <li><b>Exceptions are visible.</b> Publish the count and the aging alongside remediation metrics — a growing exception register is a signal, not an embarrassment.</li>
+      <li><b>OT gets its own template</b> with mitigation language, since "patch in 30 days" is frequently not physically possible.</li>
+    </ul>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 360" role="img" aria-label="Remediation workflow from detection through triage, ticketing, fix, verification and closure, with exception and escalation branches">
+  <text class="fm" x="0" y="14">SECURITY</text>
+  <line x1="0" y1="20" x2="820" y2="20" stroke="#C4C0B2"/>
+  <rect class="bb" x="0" y="32" width="140" height="44"/><text class="sm" x="12" y="52">Finding</text><text class="xs" x="12" y="68">detected</text>
+  <path class="lb" d="M142 54 L170 54"/>
+  <rect class="bb" x="174" y="32" width="140" height="44"/><text class="sm" x="186" y="52">Triage</text><text class="xs" x="186" y="68">VPR — ACR — exposure</text>
+  <path class="lb" d="M316 54 L344 54"/>
+  <rect class="bb" x="348" y="32" width="160" height="44"/><text class="sm" x="360" y="52">Group by owner</text><text class="xs" x="360" y="68">+ remediation action</text>
+  <path class="lb" d="M510 54 L538 54"/>
+  <rect class="bb" x="542" y="32" width="140" height="44"/><text class="sm" x="554" y="52">Ticket raised</text><text class="xs" x="554" y="68">SLA clock starts</text>
+
+  <text class="fm" x="0" y="122">REMEDIATION OWNER</text>
+  <line x1="0" y1="128" x2="820" y2="128" stroke="#C4C0B2"/>
+  <path class="lb" d="M612 78 L612 140"/>
+  <rect class="bx" x="542" y="144" width="140" height="44"/><text class="sm" x="554" y="164">Fix applied</text><text class="xs" x="554" y="180">in change window</text>
+  <rect class="ba" x="348" y="144" width="160" height="44"/><text class="sm" x="360" y="164" fill="#8A5D00">Cannot fix</text><text class="xs" x="360" y="180">OT, warranty, vendor</text>
+  <path class="la" d="M540 166 L512 166"/>
+  <rect class="bo" x="140" y="144" width="180" height="44"/><text class="sm" x="152" y="164" fill="#973520">SLA breached</text><text class="xs" x="152" y="180">no action, no exception</text>
+  <path class="lo" d="M346 178 C 340 200, 330 178, 322 168"/>
+
+  <text class="fm" x="0" y="230">GOVERNANCE</text>
+  <line x1="0" y1="236" x2="820" y2="236" stroke="#C4C0B2"/>
+  <path class="la" d="M428 190 L428 248"/>
+  <rect class="ba" x="348" y="252" width="160" height="60"/>
+  <text class="sm" x="360" y="272" fill="#8A5D00">Exception</text>
+  <text class="xs" x="360" y="288">compensating control</text><text class="xs" x="360" y="302">+ expiry date</text>
+  <path class="lo" d="M230 190 L230 248"/>
+  <rect class="bo" x="140" y="252" width="180" height="60"/>
+  <text class="sm" x="152" y="272" fill="#973520">Escalation</text>
+  <text class="xs" x="152" y="288">to the owner&#8217;s manager,</text><text class="xs" x="152" y="302">never a shared mailbox</text>
+
+  <path class="lb" d="M682 166 L710 166"/>
+  <rect class="bg" x="600" y="200" width="220" height="44"/><text class="sm" x="612" y="220" fill="#2C6349">Verification re-scan</text><text class="xs" x="612" y="236">the only valid close signal</text>
+  <path class="lb" d="M714 188 L714 196"/>
+  <rect class="bg" x="600" y="262" width="220" height="44"/><text class="sm" x="612" y="282" fill="#2C6349">Closed</text><text class="xs" x="612" y="298">feeds MTTR + SLA attainment</text>
+  <path class="lb" d="M710 246 L710 258"/>
+  <path class="lo dsh" d="M600 222 C 540 222, 560 200, 612 190"/>
+  <text class="fm" x="520" y="212" fill="#973520">STILL PRESENT &#8594; REOPEN</text>
+</svg>
+<div class="figcap"><b>Fig 10.1</b> — Three exits, and only one of them is silent failure. Every finding must end in a verified fix, a documented exception, or an escalation with a name on it.</div>
+</div>
+<h2><span class="hn">10.3</span> Ownership — RACI that survives contact</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Activity</th><th>Responsible</th><th>Accountable</th><th>Consulted</th></tr>
+      <tr><td>Platform health, scan coverage, data quality</td><td>VM engineer</td><td>Security operations lead</td><td>Network, infrastructure</td></tr>
+      <tr><td>Triage &amp; prioritisation</td><td>VM analyst</td><td>Security operations lead</td><td>Threat intel, app owners</td></tr>
+      <tr><td>Remediation — IT</td><td>Platform / server / app teams</td><td>IT service owner</td><td>Security</td></tr>
+      <tr><td>Remediation — OT</td><td>Facilities engineering + vendor</td><td>Site operations manager</td><td>Security, vendor</td></tr>
+      <tr><td>Exception approval</td><td>Requesting owner</td><td>CISO / risk committee</td><td>Security, audit</td></tr>
+      <tr><td>Executive reporting</td><td>VM engineer</td><td>CISO</td><td>Business units</td></tr>
+    </table></div>
+    <div class="note n-risk"><span class="lbl">The accountability gap</span>Security finds; someone else fixes. Every failed program dies in that gap. Close it with three things: remediation targets in the <em>owning team's</em> objectives, a monthly forum where owners present their own numbers rather than security presenting for them, and automatic escalation on SLA breach that goes to the owner's manager, not to a shared mailbox.</div>
+
+    <h2><span class="hn">10.4</span> The weekly and monthly rhythm</h2>
+    <div class="kv">
+      <div><h5>Daily</h5><p>Platform health check, scan failures, new critical/exploited findings, emergency triage for anything actively exploited.</p></div>
+      <div><h5>Weekly</h5><p>Triage queue review, credential failure and coverage delta, ticket grooming, OT queue with facilities.</p></div>
+      <div><h5>Monthly</h5><p>Owner forum: SLA compliance by team, aging, exception review, coverage report. Trends, not snapshots.</p></div>
+      <div><h5>Quarterly</h5><p>Executive readout, scope review, ACR revalidation, policy tuning, tabletop against a real exploited vulnerability.</p></div>
+    </div>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 11 ============ -->
+<section class="sheet" id="s11" data-title="Metrics &amp; executive reporting" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>11</b></div>
+    <div class="sheettitle">
+      <h1>Metrics &amp; executive reporting</h1>
+      <p>What to measure, what to show a board, and which popular metrics quietly lie.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Reporting</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">11.1</span> The metric set</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Metric</th><th>Definition</th><th>Why it earns its place</th></tr>
+      <tr><td>Assessment coverage</td><td>% of known assets successfully assessed in the expected interval</td><td>The foundation. Every other number is conditional on this one.</td></tr>
+      <tr><td>Authenticated scan rate</td><td>% of in-scope hosts where credentials succeeded</td><td>Distinguishes real assessment from a clean-looking failure.</td></tr>
+      <tr><td>Mean time to remediate</td><td>Detection — verified closure, split by priority band</td><td>Measures the machine, not the backlog. Split by team to find the bottleneck.</td></tr>
+      <tr><td>SLA attainment</td><td>% of findings closed within their band's target</td><td>The accountability number. Report it per owning team.</td></tr>
+      <tr><td>Remediation velocity</td><td>Findings closed vs. opened per period</td><td>Answers "are we gaining or losing?" better than any backlog count.</td></tr>
+      <tr><td>Aging of open criticals</td><td>Distribution, not average</td><td>Averages hide the 400-day outlier that will be in the breach report.</td></tr>
+      <tr><td>Exposure score trend</td><td>CES by business unit and site, over time</td><td>The executive line, always shown against coverage.</td></tr>
+      <tr><td>Exception register</td><td>Count, aging, expiring-soon</td><td>Where unresolvable risk accumulates — especially OT.</td></tr>
+      <tr><td>Recurrence rate</td><td>Findings that return after closure</td><td>Detects image drift and cosmetic fixes.</td></tr>
+    </table></div>
+
+    <div class="note n-risk"><span class="lbl">Metrics that lie</span>
+      <b>Total vulnerability count</b> — moves with asset count and plugin releases, so it rewards not scanning. <b>Average time to remediate</b> — hides the tail. <b>Percentage of criticals closed</b> — encourages cherry-picking the easy ones. <b>Scans completed</b> — measures activity, not outcome. If a stakeholder asks for these, give them the honest version alongside and explain the difference once, calmly.</div>
+
+    <h2><span class="hn">11.2</span> Three audiences, three dashboards</h2>
+    <div class="kv">
+      <div><h5>Operator view</h5><p>Work queue. What is assigned to me, due when, with the fix action. No scores, no trends — just the next task and the evidence to do it.</p></div>
+      <div><h5>Manager view</h5><p>My team's SLA attainment, aging, coverage, exceptions expiring. Answers "am I on track and where am I stuck."</p></div>
+      <div><h5>Executive view</h5><p>One page. Exposure trend with coverage overlay, top choke points, SLA attainment by business unit, notable events. No CVE ever appears on it.</p></div>
+    </div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="Three reporting layers for operators, managers and executives">
+  <polygon points="410,10 560,90 260,90" class="bg"/>
+  <text class="hd" x="352" y="52" fill="#2C6349">EXEC</text>
+  <rect class="bg" x="580" y="24" width="240" height="66"/>
+  <text class="sm" x="592" y="44" fill="#2C6349">1 page · exposure trend + coverage</text>
+  <text class="xs" x="592" y="62">top choke points, SLA by business unit</text>
+  <text class="xs" x="592" y="80">a decision to make. No CVE ever appears.</text>
+
+  <polygon points="260,96 560,96 640,186 180,186" class="bb"/>
+  <text class="hd" x="368" y="148" fill="#17495B">MANAGER</text>
+  <rect class="bb" x="660" y="112" width="160" height="66"/>
+  <text class="sm" x="672" y="132" fill="#17495B">My team&#8217;s numbers</text>
+  <text class="xs" x="672" y="150">SLA attainment, aging,</text>
+  <text class="xs" x="672" y="166">exceptions expiring</text>
+
+  <polygon points="180,192 640,192 720,286 100,286" class="bx"/>
+  <text class="hd" x="368" y="244">OPERATOR</text>
+  <rect class="bx" x="740" y="208" width="80" height="66"/>
+  <text class="xs" x="748" y="228">work queue,</text>
+  <text class="xs" x="748" y="244">fix action,</text>
+  <text class="xs" x="748" y="260">evidence</text>
+
+  <path class="ln" d="M60 280 L60 30"/>
+  <text class="fm" x="0" y="176" transform="rotate(-90 20,176)">AGGREGATION &#8594;</text>
+  <text class="fm" x="86" y="300">DETAIL &#8594; MEANING: EACH LAYER STRIPS DETAIL AND ADDS INTERPRETATION</text>
+</svg>
+<div class="figcap"><b>Fig 11.1</b> — One dataset, three products. Serving an executive an operator&#8217;s view is the fastest way to lose a program&#8217;s budget.</div>
+</div>
+<h2><span class="hn">11.3</span> Writing the executive page</h2>
+    <ol>
+      <li>Lead with the direction of travel and one sentence of interpretation — "exposure down 18% this quarter, driven by the identity remediation push; coverage up 6% so the improvement is real."</li>
+      <li>Convert risk into consequence. "Three internet-facing systems have weaknesses under active exploitation" beats "417 critical vulnerabilities."</li>
+      <li>Show the ask. Every executive readout should end with a decision you need from them: funding, a mandate, an accepted risk, or an escalation.</li>
+      <li>Report OT separately with its own targets and its mitigation narrative.</li>
+      <li>Annotate the chart when scope changes. Unexplained jumps destroy trust in the whole program.</li>
+    </ol>
+    <div class="note n-say"><span class="lbl">Say this in the interview</span>"I never present an exposure score without the coverage line next to it. Otherwise the first time we onboard a new site, the score jumps and I'm explaining statistics instead of risk."</div>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 12 ============ -->
+<section class="sheet" id="s12" data-title="Automation &amp; API" data-disc="it">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>12</b></div>
+    <div class="sheettitle">
+      <h1>Automation &amp; API</h1>
+      <p>What to automate, in what order, and the patterns that keep automation from becoming the next person's problem.</p>
+    </div>
+    <div class="disc"><span class="tag t-it">Build</span><span class="tag t-ops">Handoff</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">12.1</span> What is worth automating</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Workflow</th><th>Trigger</th><th>Payoff</th></tr>
+      <tr><td>Ticket creation &amp; grouping</td><td>New findings above threshold, grouped by owner + fix action</td><td>Highest — this is the mobilisation engine</td></tr>
+      <tr><td>Asset reconciliation</td><td>Nightly diff: platform vs CMDB vs EDR vs cloud</td><td>High — surfaces coverage gaps and rogue assets automatically</td></tr>
+      <tr><td>Tag and ACR application</td><td>New asset appears, or CMDB field changes</td><td>High — keeps context accurate without human effort</td></tr>
+      <tr><td>Credential failure alerting</td><td>Auth-success rate drops below threshold</td><td>High — catches silent blindness within a day</td></tr>
+      <tr><td>Recurring report generation</td><td>Schedule</td><td>Medium — saves hours, but do it after the content is stable</td></tr>
+      <tr><td>Emergency response sweep</td><td>New actively-exploited CVE announced</td><td>Medium/high — "who is affected, right now" in minutes rather than days</td></tr>
+      <tr><td>Exception expiry notices</td><td>30 days before expiry</td><td>Medium — keeps the register honest</td></tr>
+    </table></div>
+
+    <h2><span class="hn">12.2</span> API patterns that matter</h2>
+    <p>Tenable exposes REST APIs across the products, with <code>pyTenable</code> as the maintained Python client. Four practical rules cover most of what you will build:</p>
+    <ul>
+      <li><b>Use export endpoints, not paginated list endpoints, for bulk data.</b> Exports are asynchronous — request, poll for chunk readiness, download chunks. This is the only pattern that scales to a full estate.</li>
+      <li><b>Respect rate limits and implement backoff.</b> Retry with exponential delay on 429 and 5xx, and make jobs idempotent so a retry cannot double-create tickets.</li>
+      <li><b>Filter server-side.</b> Pull findings since a timestamp, above a severity, within a tag — never pull everything and filter locally.</li>
+      <li><b>Keys are credentials.</b> Store in a vault, scope to a dedicated service account with least privilege, rotate on a schedule, and never in a repo or a runbook screenshot.</li>
+    </ul>
+    <div class="codewrap"><button class="copy" data-copy>Copy</button><pre class="mono"><span class="c"># Export-and-poll: the pattern behind almost every automation you will write</span>
+<span class="k">1.</span> POST /vulns/export        <span class="c"># filters: since, severity, tag, state</span>
+<span class="k">2.</span> GET  /vulns/export/{uuid}/status   <span class="c"># poll until chunks available</span>
+<span class="k">3.</span> GET  /vulns/export/{uuid}/chunks/{n}
+<span class="k">4.</span> transform -> group by (owner_tag, fix_action)
+<span class="k">5.</span> upsert into ITSM by deterministic external_id  <span class="c"># idempotent</span>
+<span class="k">6.</span> write run summary to log + alert on zero-record runs
+
+<span class="c"># Confirm current endpoint paths against developer docs — they do change.</span></pre></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 300" role="img" aria-label="Sequence diagram of the asynchronous export and poll pattern feeding grouped tickets">
+  <rect class="bx" x="20" y="0" width="150" height="30"/><text class="xs" x="34" y="20">Your job runner</text>
+  <rect class="bb" x="330" y="0" width="150" height="30"/><text class="xs" x="344" y="20">Tenable API</text>
+  <rect class="bg" x="650" y="0" width="150" height="30"/><text class="xs" x="664" y="20">ITSM</text>
+  <g stroke="#C4C0B2" stroke-dasharray="4 4"><line x1="95" y1="32" x2="95" y2="286"/><line x1="405" y1="32" x2="405" y2="286"/><line x1="725" y1="32" x2="725" y2="286"/></g>
+
+  <path class="lb" d="M97 58 L400 58"/><text class="fm" x="140" y="52">1 · POST /vulns/export  (since, severity, tag)</text>
+  <path class="lb" d="M403 88 L100 88"/><text class="fm" x="180" y="82">RETURNS EXPORT UUID</text>
+  <path class="lb" d="M97 118 L400 118"/><text class="fm" x="140" y="112">2 · GET —/status   &#8592; poll with backoff</text>
+  <path class="ln dsh plain" d="M420 106 C 470 118, 470 132, 420 130"/>
+  <text class="fm" x="440" y="128">RETRY ON 429</text>
+  <path class="lb" d="M403 156 L100 156"/><text class="fm" x="180" y="150">CHUNKS READY</text>
+  <path class="lb" d="M97 186 L400 186"/><text class="fm" x="140" y="180">3 · GET —/chunks/{n}   &#8592; loop</text>
+
+  <rect class="bx" x="20" y="206" width="230" height="52"/>
+  <text class="xs" x="32" y="226">4 · group by (owner_tag, fix_action)</text>
+  <text class="xs" x="32" y="246">deterministic external_id</text>
+  <path class="lb" d="M255 232 L720 232"/><text class="fm" x="330" y="226">5 · UPSERT — IDEMPOTENT, SO RETRIES CANNOT DOUBLE-CREATE</text>
+
+  <rect class="bo" x="470" y="256" width="330" height="34"/>
+  <text class="xs" x="482" y="278" fill="#973520">6 · alert on a zero-record run — silent success is the dangerous failure</text>
+</svg>
+<div class="figcap"><b>Fig 12.1</b> — The pattern behind nearly every automation you will write. Bulk data is always asynchronous: request, poll, download.</div>
+</div>
+<h2><span class="hn">12.3</span> Automation you will hand over</h2>
+    <ul>
+      <li>Source control from the first script. No exceptions, no "temporary" scripts on a laptop.</li>
+      <li>Configuration in files, not hard-coded — the customer will change tags, thresholds and endpoints after you leave.</li>
+      <li>Structured logging and a health signal. Silent-failure automation is worse than no automation, because people trust it.</li>
+      <li>A README that states what it does, what it needs, how to run it manually, and how it fails. Assume the reader has never met you.</li>
+      <li>Run it somewhere the customer owns — their scheduler, their runner, their service account. Not yours.</li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 13 ============ -->
+<section class="sheet" id="s13" data-title="Handoff &amp; enablement" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>13</b></div>
+    <div class="sheettitle">
+      <h1>Handoff &amp; enablement</h1>
+      <p>The actual deliverable. Design for it from week one, not from month eight.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Handoff</span></div>
+  </div></div>
+
+  <div class="block">
+    <p class="lede">A nine-month engagement has one failure mode above all others: a working platform that nobody can operate. Every design decision should be checked against the question <em class="q">"can their team run this without me?"</em> — and where the answer is no, the simpler design usually wins.</p>
+
+    <h2><span class="hn">13.1</span> The documentation set</h2>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Document</th><th>Audience</th><th>Written when</th></tr>
+      <tr><td>Target-state architecture &amp; design decisions</td><td>Architects, future engineers</td><td>Month 1–2, updated as built</td></tr>
+      <tr><td>Deployment as-built (sensors, links, integrations, credentials map)</td><td>Operators</td><td>Continuously — never retrospectively</td></tr>
+      <tr><td>Vulnerability &amp; exposure management standard</td><td>Whole organisation</td><td>Month 2–3, signed by month 4</td></tr>
+      <tr><td>Runbooks (scan failure, credential failure, agent health, onboarding a site, emergency CVE response)</td><td>Analysts</td><td>As each situation first occurs</td></tr>
+      <tr><td>SOPs (triage, exception handling, reporting cycle, onboarding an asset owner)</td><td>Analysts, owners</td><td>Month 4–6</td></tr>
+      <tr><td>Automation repo + READMEs</td><td>Engineers</td><td>With the code</td></tr>
+      <tr><td>Known issues, deferred items, risk register</td><td>Successor</td><td>Month 8–9 — your honesty ledger</td></tr>
+    </table></div>
+    <div class="note n-tip"><span class="lbl">Write runbooks from real incidents</span>The best runbook is the one written the day something broke, by the person who fixed it, in the order they actually did it — including the wrong turns. Keep a running incident log from day one and convert it as you go; retrospective documentation is always thinner and always wrong in the same places.</div>
+
+    <h2><span class="hn">13.2</span> Enablement that works</h2>
+    <ul>
+      <li><b>Role-based, not tool-tour.</b> Separate sessions for analysts (triage and investigation), engineers (platform operation), asset owners (how to read your ticket and dispute a finding), and executives (how to read the dashboard).</li>
+      <li><b>Shadow then reverse-shadow.</b> They watch you run the monthly cycle twice, then you watch them run it twice while you sit on your hands.</li>
+      <li><b>Record the sessions.</b> Staff turn over; the recording outlives the class.</li>
+      <li><b>Hand over live work, early.</b> Give the customer's analysts the triage queue in month five, not month nine. The problems surface while you are still there to fix them.</li>
+      <li><b>Run a handover dry-run</b> a month before you leave: you take a week off from the program and see what breaks.</li>
+    </ul>
+
+    <h2><span class="hn">13.3</span> Exit criteria — agree these in month one</h2>
+    <ul class="chk" data-chk>
+      <li><input type="checkbox" id="x1"><label for="x1">Coverage — agreed target across IT scope, evidenced against an independent source</label></li>
+      <li><input type="checkbox" id="x2"><label for="x2">OT/IoT asset inventory complete for in-scope sites, with passive monitoring running and validated</label></li>
+      <li><input type="checkbox" id="x3"><label for="x3">Authenticated scan rate — 95% of in-scope hosts</label></li>
+      <li><input type="checkbox" id="x4"><label for="x4">Vulnerability &amp; exposure management standard signed and in force</label></li>
+      <li><input type="checkbox" id="x5"><label for="x5">SLA attainment reported per owning team for three consecutive months</label></li>
+      <li><input type="checkbox" id="x6"><label for="x6">ITSM integration in production with grouped tickets and verified auto-close</label></li>
+      <li><input type="checkbox" id="x7"><label for="x7">Executive dashboard reviewed at least twice by its intended audience</label></li>
+      <li><input type="checkbox" id="x8"><label for="x8">Runbooks and SOPs published; two customer staff have run the full monthly cycle unaided</label></li>
+      <li><input type="checkbox" id="x9"><label for="x9">Automation in the customer's source control, running on the customer's infrastructure</label></li>
+      <li><input type="checkbox" id="x10"><label for="x10">Deferred-items and risk register handed over and formally accepted</label></li>
+    </ul>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 14 ============ -->
+<section class="sheet" id="s14" data-title="The nine-month plan" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>14</b></div>
+    <div class="sheettitle">
+      <h1>The nine-month plan</h1>
+      <p>A phased roadmap you can sketch on a whiteboard in an interview, with the value milestone for each phase.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Roadmap</span></div>
+  </div></div>
+
+  <div class="block">
+    <div class="scroller"><table class="tbl">
+      <tr><th>Phase</th><th>Weeks</th><th>Work</th><th>Milestone that proves value</th></tr>
+      <tr><td>0 · Discover</td><td>1–3</td><td>Stakeholder map, current-state assessment, network and site inventory, scope and demarcation in writing, licence and module confirmation, success criteria agreed</td><td>Signed scope and a one-page current-state honest assessment</td></tr>
+      <tr><td>1 · Design</td><td>3–6</td><td>Target-state architecture, sensor placement plan, tag taxonomy, ACR bands, operating model draft, OT rules of engagement</td><td>Architecture approved by security, network and facilities — all three</td></tr>
+      <tr><td>2 · Foundation</td><td>6–12</td><td>Console setup, SSO/roles, first-site scanners, agent pilot, ASM enabled, CMDB connector, discovery scanning live</td><td>First real inventory: "here is what you own, including 900 assets you did not know about"</td></tr>
+      <tr><td>3 · IT scale-out</td><td>12–22</td><td>Site-by-site rollout, credentialed scanning, agents at scale, Identity Exposure, cloud connectors, coverage validation</td><td>Coverage and authenticated-scan targets met; first credible exposure baseline</td></tr>
+      <tr><td>4 · OT enablement</td><td>16–28</td><td>ICP appliance and sensors at pilot site, SPAN engineering, passive baseline, selective active query, facilities workflow</td><td>Complete OT asset inventory at pilot site with zero operational incidents</td></tr>
+      <tr><td>5 · Operationalise</td><td>22–32</td><td>Standard signed, SLAs live, ITSM integration, dashboards, automation, owner forum running</td><td>First month where SLA attainment is reported per team and acted on</td></tr>
+      <tr><td>6 · Transfer</td><td>30–38</td><td>Training, shadowing, runbooks, reverse-shadow, dry-run handover, deferred-item register</td><td>Customer team runs a full monthly cycle with you silent</td></tr>
+    </table></div>
+
+
+<div class="fig">
+<svg viewBox="0 0 820 320" role="img" aria-label="Nine month phased roadmap as overlapping bars across forty weeks">
+  <g class="fm" fill="#79807A">
+    <text x="150" y="12">W1</text><text x="300" y="12">W10</text><text x="450" y="12">W20</text><text x="600" y="12">W30</text><text x="740" y="12">W40</text>
+  </g>
+  <g stroke="#C4C0B2"><line x1="150" y1="18" x2="800" y2="18"/>
+  <line x1="150" y1="18" x2="150" y2="270"/><line x1="313" y1="18" x2="313" y2="270"/>
+  <line x1="475" y1="18" x2="475" y2="270"/><line x1="638" y1="18" x2="638" y2="270"/><line x1="800" y1="18" x2="800" y2="270"/></g>
+
+  <text class="sm" x="0" y="42">0 · Discover</text>
+  <rect class="bx" x="150" y="28" width="49" height="22"/>
+  <text class="sm" x="0" y="78">1 · Design</text>
+  <rect class="bx" x="183" y="64" width="49" height="22"/>
+  <text class="sm" x="0" y="114">2 · Foundation</text>
+  <rect class="bb" x="232" y="100" width="98" height="22"/>
+  <text class="sm" x="0" y="150">3 · IT scale-out</text>
+  <rect class="bb" x="330" y="136" width="163" height="22"/>
+  <text class="sm" x="0" y="186" fill="#8A5D00">4 · OT enablement</text>
+  <rect class="ba" x="395" y="172" width="196" height="22"/>
+  <text class="sm" x="0" y="222">5 · Operationalise</text>
+  <rect class="bg" x="493" y="208" width="163" height="22"/>
+  <text class="sm" x="0" y="258">6 · Transfer</text>
+  <rect class="bg" x="623" y="244" width="130" height="22"/>
+
+  <g class="xs" fill="#4C554F">
+    <text x="205" y="44">scope signed</text>
+    <text x="238" y="80">architecture approved</text>
+    <text x="336" y="116">first real inventory</text>
+    <text x="499" y="152">coverage target met</text>
+    <text x="597" y="188">OT inventory, zero incidents</text>
+    <text x="662" y="224">SLA reported per team</text>
+    <text x="759" y="260">they run it</text>
+  </g>
+  <g fill="#161F1D">
+    <circle cx="199" cy="39" r="3.5"/><circle cx="232" cy="75" r="3.5"/><circle cx="330" cy="111" r="3.5"/>
+    <circle cx="493" cy="147" r="3.5"/><circle cx="591" cy="183" r="3.5"/><circle cx="656" cy="219" r="3.5"/><circle cx="753" cy="255" r="3.5"/>
+  </g>
+
+  <line x1="395" y1="18" x2="395" y2="290" stroke="#8A5D00" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="fm" x="300" y="306" fill="#8A5D00">OT STARTS WHILE IT SCALE-OUT IS STILL RUNNING</text>
+  <text class="fm" x="0" y="306">MILESTONE &#9679;</text>
+</svg>
+<div class="figcap"><b>Fig 14.1</b> — Phases overlap on purpose. OT progress is gated by other people&#8217;s calendars, so its elapsed time is queue time, not build time — start it early and run it in parallel.</div>
+</div>
+<div class="note n-tip"><span class="lbl">Sequencing principle</span>Phases overlap deliberately: OT discovery starts while IT scale-out is still running, because OT progress is gated on other people's calendars and vendor availability, not on your effort. Start every dependency-heavy workstream — SPAN ports, credentials, facilities approvals, firewall rules — <b>as early as you can and in parallel</b>, because the elapsed time is other teams' queue time, not your build time.</div>
+
+    <h3>Quick wins to bank early</h3>
+    <ul>
+      <li><b>ASM in week two.</b> Pure SaaS, no deployment, and it almost always finds forgotten internet-facing assets. It buys credibility before you have deployed a single scanner.</li>
+      <li><b>Identity Exposure early.</b> AD misconfigurations are usually severe, cheap to find, and fixable without a change window.</li>
+      <li><b>Passive OT at one site.</b> An inventory nobody had, with zero operational risk, converts facilities from obstacle to ally.</li>
+      <li><b>One emergency-CVE drill.</b> The first time a headline vulnerability lands, answering "we have 43 affected hosts, here they are" within an hour does more for your standing than any dashboard.</li>
+    </ul>
+
+    <h3>Risks to name out loud in week one</h3>
+    <div class="scroller"><table class="tbl">
+      <tr><th>Risk</th><th>Early mitigation</th></tr>
+      <tr><td>Facilities will not permit any collection in OT</td><td>Start passive-only, at one pilot site, with a named stop authority and a written no-active-scanning commitment</td></tr>
+      <tr><td>Credential provisioning stalls across sites</td><td>Vault integration in phase 2; make scanning-account provisioning part of the standard build</td></tr>
+      <tr><td>Colo demarcation disputes stop scanning</td><td>Written scope with legal/contracts before phase 2, per site</td></tr>
+      <tr><td>Remediation teams have no capacity</td><td>Grouped tickets and realistic SLAs; surface the capacity gap as a leadership decision, with numbers, in month three</td></tr>
+      <tr><td>CMDB quality is too poor for context</td><td>Reconciliation report as an early deliverable — it improves their CMDB and gives you your context</td></tr>
+      <tr><td>Key person dependency on you</td><td>Reverse-shadowing from month five, and a documentation-first culture from week one</td></tr>
+    </table></div>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><button class="btn pri" data-next>Next sheet →</button></div>
+</section>
+
+<!-- ============ SHEET 15 ============ -->
+<section class="sheet" id="s15" data-title="Drill room" data-disc="ops">
+  <div class="sheethead"><div class="top">
+    <div class="sheetno"><em>SHEET</em><b>15</b></div>
+    <div class="sheettitle">
+      <h1>Drill room</h1>
+      <p>Interview questions with strong answers, terminology flashcards, and a sixteen-question exam.</p>
+    </div>
+    <div class="disc"><span class="tag t-ops">Practice</span></div>
+  </div></div>
+
+  <div class="block">
+    <h2><span class="hn">15.1</span> Questions you will be asked</h2>
+    <p>Each card shows what the interviewer is really testing. Reveal the answer only after you have said yours out loud.</p>
+    <div id="drill"></div>
+  </div>
+
+  <div class="block">
+    <h2><span class="hn">15.2</span> Questions you should ask them</h2>
+    <p>A senior candidate's questions are part of the assessment. These also protect you from walking into an unwinnable engagement:</p>
+    <ul>
+      <li>"Who owns remediation today, and do they have targets in their objectives?" — tests whether mobilisation is possible at all.</li>
+      <li>"Has anything ever gone wrong during a scan in the facility environment?" — the answer shapes your whole OT approach and tells you how much trust you are inheriting.</li>
+      <li>"Which sites are wholly owned versus colocation, and where is the scanning demarcation written down?"</li>
+      <li>"Is there an existing CMDB you consider trustworthy, and who maintains it?"</li>
+      <li>"What does success look like to the person funding this — a compliance artefact, a risk number, or an operational capability?"</li>
+      <li>"Who is the customer's technical owner after I leave, and are they hired yet?" — if the answer is nobody, that is the risk to raise on day one.</li>
+      <li>"Are licences already purchased, and which modules are in scope?" — scope creep into unlicensed modules is a common nine-month derailment.</li>
+    </ul>
+    <div class="note n-risk"><span class="lbl">Red flags to listen for</span>No named executive sponsor · no successor identified · facilities has not been told this project exists · "we just need the dashboards to look good for the audit in six weeks" · a previous deployment that was abandoned and nobody will say why.</div>
+  </div>
+
+  <div class="block">
+    <h2><span class="hn">15.3</span> Terminology drill</h2>
+    <p>Click a card to flip. These are the terms that come up unprompted and mark the difference between reading about the platform and running it.</p>
+    <div id="cards"></div>
+    <div class="btnrow"><button class="btn" id="cardsFlipAll">Flip all</button><button class="btn" id="cardsReset">Reset</button></div>
+  </div>
+
+  <div class="block">
+    <h2><span class="hn">15.4</span> Exam</h2>
+    <p>Sixteen questions across the whole set. Explanations appear as you answer.</p>
+    <div id="quiz"></div>
+    <div class="btnrow">
+      <button class="btn pri" id="quizScore">Score exam</button>
+      <button class="btn" id="quizReset">Clear answers</button>
+      <span id="quizOut" style="font-family:var(--m);font-size:12.5px;align-self:center"></span>
+    </div>
+  </div>
+
+  <div class="pagenav"><button class="btn" data-prev>← Previous</button><span></span></div>
+</section>
+
+</main>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $ = function(s,c){return (c||document).querySelector(s);};
+var $$ = function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));};
+var el = function(t,cls,html){var e=document.createElement(t); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;};
+
+/* ---------------- navigation ---------------- */
+var sheets = $$('.sheet');
+var idx = $('#idx');
+var reviewed = {};
+
+sheets.forEach(function(s,i){
+  var b = el('button','nav');
+  b.type='button';
+  b.dataset.go = i;
+  b.innerHTML = '<span class="n">'+String(i).padStart(2,'0')+'</span><span>'+s.dataset.title+'</span><span class="tick">—</span>';
+  idx.appendChild(b);
+
+  var pn = $('.pagenav', s);
+  if(pn){
+    var mk = el('button','btn','Mark sheet reviewed');
+    mk.type='button'; mk.dataset.mark = i;
+    pn.insertBefore(mk, pn.children[1] || null);
+  }
+});
+
+function show(i){
+  i = Math.max(0, Math.min(sheets.length-1, i));
+  sheets.forEach(function(s,n){ s.classList.toggle('on', n===i); });
+  $$('.nav').forEach(function(b,n){ b.classList.toggle('on', n===i); });
+  window.scrollTo({top:0, behavior:'instant' in window ? 'auto':'auto'});
+  current = i;
+}
+var current = 0;
+
+function updateProgress(){
+  var n = Object.keys(reviewed).length;
+  $('#pbar').style.width = (n/sheets.length*100)+'%';
+  $('#ptxt').textContent = n+' / '+sheets.length;
+}
+
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-go],[data-next],[data-prev],[data-mark],[data-copy]');
+  if(!t) return;
+  if(t.hasAttribute('data-go')) show(+t.dataset.go);
+  else if(t.hasAttribute('data-next')) show(current+1);
+  else if(t.hasAttribute('data-prev')) show(current-1);
+  else if(t.hasAttribute('data-mark')){
+    var i = +t.dataset.mark;
+    reviewed[i] = true;
+    $$('.nav')[i].classList.add('done');
+    t.textContent = 'Reviewed —';
+    t.disabled = true;
+    t.style.opacity = .55;
+    updateProgress();
+  }
+  else if(t.hasAttribute('data-copy')){
+    var pre = t.parentNode.querySelector('pre');
+    var txt = pre ? pre.innerText : '';
+    if(navigator.clipboard){ navigator.clipboard.writeText(txt); }
+    var old = t.textContent; t.textContent='Copied'; setTimeout(function(){t.textContent=old;},1400);
+  }
+});
+updateProgress();
+
+/* ---------------- sheet 04: placement board ---------------- */
+var METHODS = [
+  {id:'scan',  label:'Credentialed active scan'},
+  {id:'agent', label:'Nessus Agent'},
+  {id:'passive',label:'Passive OT monitoring'},
+  {id:'query', label:'Passive + protocol query'},
+  {id:'api',   label:'API / connector'}
+];
+var ZONES = [
+  {z:'Internet-facing estate', d:'Public IPs, forgotten marketing sites, expired certificates, shadow SaaS.', a:'api',
+   why:'Attack Surface Management discovers this from outside with no deployment at all. Nothing to install, and it is your fastest week-one win.'},
+  {z:'Public cloud accounts', d:'AWS/Azure workloads supporting the DC management plane.', a:'api',
+   why:'Cloud connectors assess via provider APIs — agentless, no network path required, and they keep up with ephemeral resources that scanning never will.'},
+  {z:'Corporate laptops & roaming staff', d:'Engineers who are rarely on a scannable network.', a:'agent',
+   why:'Agents assess locally and report whenever the host has connectivity. Network scanning cannot reliably reach hosts that are off-network most of the day.'},
+  {z:'Data center server VLANs', d:'Windows and Linux production servers inside your own halls.', a:'scan',
+   why:'Credentialed scanning from a local scanner gives full patch and configuration depth. In practice you pair it with agents — scan for the outside-in view, agents for reliability and coverage.'},
+  {z:'Colo cage, no inbound permitted', d:'Your equipment in a third-party facility; firewall allows outbound only.', a:'scan',
+   why:'Deploy a local Nessus scanner inside the cage and link it outbound over 443. It scans locally and ships only findings — no inbound rule, no WAN scan traffic.'},
+  {z:'Out-of-band management network', d:'iDRAC/iLO, serial concentrators, intelligent PDUs, switch management.', a:'scan',
+   why:'Credentialed scanning with SSH/SNMPv3, at low concurrency and with dangerous plugin families disabled. High value — this network is powerful and almost never assessed — but management cards are fragile, so tune before you scale.'},
+  {z:'Active Directory / Entra', d:'Domain controllers and the identity tier.', a:'api',
+   why:'Identity Exposure continuously analyses directory configuration and privilege relationships. A vulnerability scan of a DC tells you about patches; it tells you nothing about the delegation path that owns your forest.'},
+  {z:'BMS supervisory layer (Level 2)', d:'Niagara/Metasys front ends, HMIs, historians for power and cooling.', a:'query',
+   why:'Start passive to build the inventory, then enable selective protocol-native queries with facilities agreement. Conventional scanning here risks the supervisory service that operators rely on.'},
+  {z:'Controllers: PLCs, VFDs, chiller & ATS logic (Level 1)', d:'Devices that directly command physical plant.', a:'passive',
+   why:'Passive only. These devices have thin network stacks, vendor warranties often prohibit scanning, and a fault here is a facility event. Any active step comes later, lab-tested, one query type at a time.'},
+  {z:'Internal web applications', d:'DCIM portals, customer portals, ticketing front ends.', a:'api',
+   why:'Web App Scanning is the right tool — a network scan finds the web server, not the application logic. Use an internal scanner for private apps and fence the scope tightly.'}
+];
+(function(){
+  var host = $('#board'); if(!host) return;
+  ZONES.forEach(function(z,i){
+    var card = el('div');
+    card.style.cssText='border:1px solid var(--rule);border-left:4px solid var(--rule-hard);background:var(--sheet-2);padding:12px 14px;margin-bottom:10px';
+    var opts = METHODS.map(function(m){
+      return '<button type="button" class="mbtn" data-zone="'+i+'" data-m="'+m.id+'" style="font-family:var(--m);font-size:11px;letter-spacing:.04em;background:var(--sheet);border:1px solid var(--rule-hard);padding:4px 9px;cursor:pointer">'+m.label+'</button>';
+    }).join('');
+    card.innerHTML =
+      '<div style="font-family:var(--d);text-transform:uppercase;letter-spacing:.06em;font-weight:600;font-size:13.5px">'+
+      '<span style="font-family:var(--m);color:var(--blue);font-size:11px;margin-right:8px">Z'+String(i+1).padStart(2,'0')+'</span>'+z.z+'</div>'+
+      '<div style="font-size:13.4px;color:var(--ink-2);margin:3px 0 9px">'+z.d+'</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+opts+'</div>'+
+      '<div class="verdict" style="display:none;margin-top:10px;font-size:13.6px;padding:9px 11px;border-left:3px solid var(--blue);background:var(--blue-wash)"></div>';
+    host.appendChild(card);
+  });
+  host.addEventListener('click', function(e){
+    var b = e.target.closest('.mbtn'); if(!b) return;
+    var i = +b.dataset.zone, z = ZONES[i], card = b.closest('div').parentNode;
+    $$('.mbtn[data-zone="'+i+'"]', host).forEach(function(x){
+      x.style.background='var(--sheet)'; x.style.color='var(--ink)'; x.style.borderColor='var(--rule-hard)'; x.style.fontWeight='400';
+    });
+    var ok = b.dataset.m === z.a;
+    b.style.background = ok ? 'var(--green-wash)' : 'var(--oxide-wash)';
+    b.style.borderColor = ok ? 'var(--green)' : 'var(--oxide)';
+    b.style.color = ok ? 'var(--green)' : 'var(--oxide)';
+    b.style.fontWeight='600';
+    card.dataset.correct = ok ? '1' : '0';
+    card.style.borderLeftColor = ok ? 'var(--green)' : 'var(--oxide)';
+    var v = $('.verdict', card);
+    v.style.display='block';
+    v.style.borderLeftColor = ok ? 'var(--green)' : 'var(--oxide)';
+    v.style.background = ok ? 'var(--green-wash)' : 'var(--oxide-wash)';
+    var lead = ok ? '<b>Correct — </b>' : '<b>Not the primary method. </b>';
+    var answerName = METHODS.filter(function(m){return m.id===z.a;})[0].label;
+    v.innerHTML = lead + (ok ? '' : 'Use <b>'+answerName+'</b>. ') + z.why;
+  });
+  $('#boardScore').addEventListener('click', function(){
+    var cards = $$('#board > div');
+    var done = cards.filter(function(c){return c.dataset.correct;}).length;
+    var right = cards.filter(function(c){return c.dataset.correct==='1';}).length;
+    $('#boardOut').textContent = right+' / '+ZONES.length+' correct  ·  '+done+' answered';
+    $('#boardOut').style.color = right===ZONES.length ? 'var(--green)' : 'var(--ink-2)';
+  });
+  $('#boardReset').addEventListener('click', function(){
+    $$('#board > div').forEach(function(c){
+      c.removeAttribute('data-correct'); c.style.borderLeftColor='var(--rule-hard)';
+      $('.verdict',c).style.display='none';
+      $$('.mbtn',c).forEach(function(x){x.style.background='var(--sheet)';x.style.color='var(--ink)';x.style.borderColor='var(--rule-hard)';x.style.fontWeight='400';});
+    });
+    $('#boardOut').textContent='';
+  });
+})();
+
+/* ---------------- sheet 06: purdue ---------------- */
+var PURDUE = [
+  {l:'5', n:'Enterprise network', ex:'Corporate IT, ERP, email, internet edge', dep:'Full IT tooling: credentialed scanning, agents, ASM, Identity Exposure.', risk:'low'},
+  {l:'4', n:'Site business planning', ex:'Site IT servers, DCIM, maintenance systems, engineering file shares', dep:'Credentialed scanning and agents. Standard IT change control applies.', risk:'low'},
+  {l:'3.5', n:'IT/OT DMZ', ex:'Jump hosts, data diodes, historian replicas, vendor remote access', dep:'Credentialed scanning of the servers themselves, plus OT sensor visibility on the boundary. This is the most valuable segment to instrument — almost every OT intrusion crosses it.', risk:'medium'},
+  {l:'3', n:'Site operations', ex:'BMS supervisory servers, historians, engineering workstations, domain services for OT', dep:'Credentialed scanning where the asset is a conventional Windows/Linux machine, agreed with operations and inside a facilities change window. Passive monitoring always on.', risk:'medium'},
+  {l:'2', n:'Supervisory control', ex:'HMIs, SCADA front ends, Niagara stations, chiller plant controllers', dep:'Passive monitoring as baseline. Selective protocol-native active query once operations agrees. No general-purpose scanning.', risk:'high'},
+  {l:'1', n:'Basic control', ex:'PLCs, RTUs, VFDs, UPS and ATS controllers, breaker relays', dep:'Passive only to begin with. Read-only OT queries after lab validation, per device family, one query type at a time.', risk:'critical'},
+  {l:'0', n:'Physical process', ex:'Sensors, actuators, valves, fans, pumps, CRAC coils, meters', dep:'Observe through the traffic they generate. Nothing is deployed here and nothing is queried directly.', risk:'critical'}
+];
+(function(){
+  var host = $('#purdue'); if(!host) return;
+  var colors = {low:'var(--blue)', medium:'var(--amber-fill)', high:'var(--amber)', critical:'var(--oxide)'};
+  var labels = {low:'IT methods OK', medium:'Coordinate', high:'Passive first', critical:'Passive only'};
+  PURDUE.forEach(function(p,i){
+    var row = el('div');
+    row.style.cssText='border:1px solid var(--rule);border-left:6px solid '+colors[p.risk]+';background:var(--sheet-2);margin-bottom:6px;cursor:pointer';
+    row.innerHTML =
+      '<div style="display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 14px">'+
+        '<div style="font-family:var(--d);font-size:22px;font-weight:700;color:'+colors[p.risk]+'">L'+p.l+'</div>'+
+        '<div><div style="font-family:var(--d);text-transform:uppercase;letter-spacing:.06em;font-weight:600;font-size:13px">'+p.n+'</div>'+
+        '<div style="font-size:13px;color:var(--ink-2)">'+p.ex+'</div></div>'+
+        '<div style="font-family:var(--m);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:'+colors[p.risk]+';white-space:nowrap">'+labels[p.risk]+'</div>'+
+      '</div>'+
+      '<div class="pd" style="display:none;padding:0 14px 12px 84px;font-size:13.6px;color:var(--ink)"><b>Deploy:</b> '+p.dep+'</div>';
+    row.addEventListener('click', function(){
+      var d = $('.pd', row);
+      d.style.display = d.style.display==='none' ? 'block' : 'none';
+    });
+    host.appendChild(row);
+  });
+  host.appendChild(el('div','', '<div style="font-family:var(--m);font-size:11px;color:var(--ink-3);margin-top:8px">Level 3.5 is not in the original Purdue model — it is the DMZ everyone adds in practice, and it is where your highest-value OT visibility sits.</div>'));
+})();
+
+/* ---------------- sheet 07: tag builder ---------------- */
+var DIMS = [
+  {id:'env', n:'Environment', vals:'prod · staging · dev · lab', src:'CMDB field or naming convention', un:'Scan scheduling by risk of disruption; separate SLAs for prod'},
+  {id:'own', n:'Remediation owner', vals:'team-platform · team-network · team-facilities · vendor-x', src:'CMDB support group', un:'Ticket routing, per-team SLA attainment, the accountability forum'},
+  {id:'site', n:'Site / region', vals:'dfw01 · ams02 · sin01 · colo-tx-3', src:'Subnet ranges and scanner association', un:'Scanner scoping, regional reporting, change-window alignment'},
+  {id:'crit', n:'Business criticality', vals:'tier0 · tier1 · tier2 · tier3', src:'DR tier or business-service mapping', un:'ACR assignment, prioritisation, executive views'},
+  {id:'dom', n:'Domain', vals:'it · ot · iot · cloud · identity', src:'Sensor of origin plus subnet', un:'Keeping OT out of IT SLAs and reports — the single most important split here'},
+  {id:'fn', n:'Function', vals:'bms · power · cooling · access-control · db · web · dc-network', src:'Passive fingerprint plus CMDB class', un:'Facility-system reporting and targeted OT workflows'},
+  {id:'exp', n:'Exposure', vals:'internet-facing · internal · isolated', src:'ASM plus network context', un:'Prioritisation rules and emergency-response scoping'},
+  {id:'comp', n:'Compliance scope', vals:'pci · soc2 · iso27001 · none', src:'CMDB flag or asset group', un:'Audit evidence extraction without a manual exercise'}
+];
+(function(){
+  var host = $('#tagbuild'); if(!host) return;
+  var picked = {};
+  var wrap = el('div');
+  wrap.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:12px 0';
+  DIMS.forEach(function(d){
+    var b = el('button');
+    b.type='button'; b.dataset.d = d.id;
+    b.style.cssText='text-align:left;border:1px solid var(--rule-hard);background:var(--sheet-2);padding:9px 11px;cursor:pointer;font-family:var(--b)';
+    b.innerHTML='<div style="font-family:var(--d);text-transform:uppercase;letter-spacing:.06em;font-weight:600;font-size:12.5px">'+d.n+'</div>'+
+      '<div style="font-family:var(--m);font-size:11px;color:var(--blue);margin-top:2px">'+d.vals+'</div>';
+    b.addEventListener('click', function(){
+      picked[d.id] = !picked[d.id];
+      b.style.background = picked[d.id] ? 'var(--blue-wash)' : 'var(--sheet-2)';
+      b.style.borderColor = picked[d.id] ? 'var(--blue)' : 'var(--rule-hard)';
+      render();
+    });
+    wrap.appendChild(b);
+  });
+  var out = el('div');
+  out.style.cssText='margin-top:6px';
+  host.appendChild(wrap); host.appendChild(out);
+
+  function render(){
+    var sel = DIMS.filter(function(d){return picked[d.id];});
+    if(!sel.length){ out.innerHTML='<div style="font-family:var(--m);font-size:12px;color:var(--ink-3)">Select the dimensions you would build. Four to six is usually right.</div>'; return; }
+    var rows = sel.map(function(d){
+      return '<tr><td>'+d.n+'</td><td style="font-family:var(--m);font-size:12px">'+d.vals+'</td><td>'+d.src+'</td><td>'+d.un+'</td></tr>';
+    }).join('');
+    var warn='';
+    if(sel.length>6) warn='<div class="note n-risk" style="margin-top:12px"><span class="lbl">Too many dimensions</span>Past six orthogonal dimensions, tag maintenance outruns its value and analysts stop trusting the scheme. Fold rarely-queried dimensions into asset attributes instead of tags.</div>';
+    if(!picked.own) warn+='<div class="note n-risk" style="margin-top:12px"><span class="lbl">Missing: remediation owner</span>Without an owner dimension every finding is unassigned. This is the one dimension that is not optional.</div>';
+    if(!picked.dom) warn+='<div class="note n-ot" style="margin-top:12px"><span class="lbl">Missing: domain</span>Without an IT/OT split, facility assets land in IT SLAs they can never meet and the executive dashboard stays permanently red.</div>';
+    out.innerHTML = '<div class="scroller"><table class="tbl"><tr><th>Dimension</th><th>Values</th><th>Source of truth</th><th>What it unlocks</th></tr>'+rows+'</table></div>'+
+      '<div style="font-family:var(--m);font-size:12.4px;background:var(--ink);color:#D9DED9;padding:11px 13px;border-left:4px solid var(--amber-fill)">Example asset: '+
+      sel.map(function(d){return d.id+':'+d.vals.split(' · ')[0];}).join(' | ')+'</div>'+warn;
+  }
+  render();
+})();
+
+/* ---------------- sheet 10: SLA matrix ---------------- */
+(function(){
+  var host = $('#slamatrix'); if(!host) return;
+  var base = 15, mult = 2.0, otRelief = 3;
+  var ctrl = el('div');
+  ctrl.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:14px 0;font-family:var(--m);font-size:11.5px';
+  ctrl.innerHTML =
+    '<label>Baseline for P1 on Tier-0 (days): <b id="v1">15</b><input type="range" min="1" max="30" value="15" id="r1" style="width:100%;accent-color:var(--blue)"></label>'+
+    '<label>Step factor per band: <b id="v2">2.0</b>—<input type="range" min="10" max="40" value="20" id="r2" style="width:100%;accent-color:var(--blue)"></label>'+
+    '<label>OT multiplier: <b id="v3">3</b>—<input type="range" min="1" max="8" value="3" id="r3" style="width:100%;accent-color:var(--amber-fill)"></label>';
+  var out = el('div');
+  host.appendChild(ctrl); host.appendChild(out);
+
+  function draw(){
+    var prio = ['P1 · exploited / internet-facing','P2 · VPR — 9','P3 · VPR — 7','P4 · everything else'];
+    var crit = [{n:'Tier 0 — power, cooling, identity',f:1},{n:'Tier 1 — production',f:1.6},{n:'Tier 2 — internal',f:2.6},{n:'Tier 3 — lab / dev',f:4.2}];
+    var h = '<div class="scroller"><table class="tbl"><tr><th>Priority</th>'+crit.map(function(c){return '<th>'+c.n+'</th>';}).join('')+'</tr>';
+    prio.forEach(function(p,i){
+      h += '<tr><td>'+p+'</td>';
+      crit.forEach(function(c){
+        var d = Math.round(base * Math.pow(mult,i) * c.f);
+        var col = d<=7?'var(--oxide)':d<=30?'var(--amber)':'var(--ink-2)';
+        h += '<td><b style="color:'+col+';font-family:var(--m)">'+d+'d</b><div style="font-size:11.5px;color:var(--ink-3)">OT: '+Math.round(d*otRelief)+'d or mitigate</div></td>';
+      });
+      h += '</tr>';
+    });
+    h += '</table></div>';
+    var warn = '';
+    if(base<=5) warn = '<div class="note n-risk"><span class="lbl">Check this against reality</span>A sub-week target for a patched fleet requires emergency change authority and out-of-hours capacity. If the customer cannot staff it, the SLA will be missed constantly and the whole standard loses force. Reserve very short targets for a narrow, well-defined P1 band.</div>';
+    else if(base>=25) warn = '<div class="note n-tip"><span class="lbl">Comfortable, possibly too comfortable</span>Generous targets are easy to meet and easy to ignore. If P1 covers actively-exploited internet-facing systems, most organisations commit to days, not weeks — and handle true emergencies outside the SLA entirely.</div>';
+    out.innerHTML = h + warn +
+      '<div class="note n-ot"><span class="lbl">Reading the OT row</span>The OT figure is not a laxer standard — it reflects that fixing a facility controller may need a vendor engineer and a maintenance shutdown. The commitment inside the shorter window is to <b>mitigate</b>: segment, remove default credentials, disable the exposed service, restrict remote access. Patch at the next scheduled outage, tracked as an exception with an expiry.</div>';
+  }
+  $('#r1',ctrl).addEventListener('input',function(e){base=+e.target.value;$('#v1',ctrl).textContent=base;draw();});
+  $('#r2',ctrl).addEventListener('input',function(e){mult=+e.target.value/10;$('#v2',ctrl).textContent=mult.toFixed(1);draw();});
+  $('#r3',ctrl).addEventListener('input',function(e){otRelief=+e.target.value;$('#v3',ctrl).textContent=otRelief;draw();});
+  draw();
+})();
+
+/* ---------------- sheet 15: interview drill ---------------- */
+var DRILL = [
+  {q:'Walk me through how you would architect Tenable One across twelve data centers on four continents.',
+   t:'Whether you think in constraints or in product features.',
+   a:'Start with constraints, not products: where can data go, where can I get outbound 443, where do change windows fall, and who owns each network. Then: cloud VM console as the default; one local Nessus scanner per site or segment group, linked outbound so no inbound rules are needed and no scan traffic crosses a WAN; agents on servers and anything roaming; OT appliance and sensors per site with SPAN feeds for facility systems; ASM and Identity Exposure enabled immediately because they need no field deployment. Security Center only where a written requirement forbids SaaS. Then the piece most people skip — the asset identity and tag model, because overlapping RFC1918 space across sites will break IP-based identity if I do not plan for it.'},
+  {q:'The facilities director says you are not scanning anything in his plant. What do you do?',
+   t:'Whether you treat OT people as obstacles or as the customer.',
+   a:'Agree with him, and mean it. I am not going to scan his plant. I ask for one thing instead: a SPAN port. Passive monitoring puts zero packets on his network and gives us an inventory he probably does not have — firmware versions, what is talking to what, and any remote-access path a vendor left open. I offer him the inventory as his deliverable, not mine. Once he sees value and trusts the process, I ask about read-only protocol queries on one device family, lab-tested first, with him holding stop authority. Trust is the prerequisite, and it takes months, so I start in week two.'},
+  {q:'Your exposure score went up after you onboarded three sites. The CIO wants to know why security got worse.',
+   t:'Metric literacy and stakeholder communication.',
+   a:'It did not get worse — we can now see risk that was always there. I would show the coverage line next to the score: asset count up 40%, exposure score up 12%, so exposure per asset actually improved. Then I would say the part people avoid: this will happen again with the next onboarding wave, here is the schedule, and here is the annotated trend line so nobody is surprised. Ideally I set this expectation before the first onboarding, not after.'},
+  {q:'How do you decide between Nessus Agents and network scans?',
+   t:'Depth of hands-on experience.',
+   a:'They answer different questions. Agents run locally, need no inbound access or credentials in flight, and are ideal for roaming hosts and anything hard to credential. Network scans see what an attacker on the network sees — exposed services, weak TLS, default web interfaces, and everything you cannot install software on: appliances, printers, switches, storage, embedded gear. For servers I use both deliberately, with deduplication planned before I turn the second one on. The failure mode people hit is assuming agents give complete coverage; they cannot see network-visible exposure.'},
+  {q:'Six months in, coverage is excellent, findings are prioritised, and nothing is getting fixed. What now?',
+   t:'Whether you understand that this is an organisational problem.',
+   a:'Stop tuning the platform — the platform is not the problem. I would go find out which of three things is failing: ownership is unclear, capacity does not exist, or there is no consequence for missing an SLA. Each has a different fix. Unclear ownership is a tagging and CMDB problem I can solve. Missing capacity is a leadership decision, and my job is to quantify it — this team needs to close 300 findings a month and closes 40, here is the gap. No consequence is a governance problem, fixed by putting remediation targets in owning teams objectives and having them present their own numbers monthly rather than security presenting for them. I would also check my own side: are the tickets actionable, grouped by fix action, or am I sending 4,000 individual findings and calling it their fault?'},
+  {q:'A team says your scanner caused an outage. How do you handle it?',
+   t:'Incident behaviour under blame, and whether you are honest.',
+   a:'First, pause scanning against that scope — immediately, before establishing anything. Credibility costs more than a missed scan window. Then get the facts together, jointly: scan timing versus the outage timeline, which policy and plugins ran, what the device logs show. Sometimes it is us; if it is, I say so plainly, document it, and change the policy — exclude the plugin family, reduce concurrency, move to passive for that device class. Sometimes it is not, and having the data means the conversation is factual rather than political. Either way I write it into the rules of engagement so it cannot recur, and I tell the affected team what changed.'},
+  {q:'How would you prioritise when everything is critical?',
+   t:'Whether you can reason past raw severity.',
+   a:'Severity alone is useless — over half the CVE corpus is high or critical. I stack three filters: is it being exploited in the wild, does the asset matter, and is it reachable. That is VPR plus a curated ACR plus exposure context, which is exactly what the asset exposure score expresses. Then I use attack paths to find choke points, because "fix these six things and you break 400 paths" is a list a team will actually complete, where "close 4,000 criticals" is a list they will ignore. And I would be honest that the ACR curation, which is unglamorous, drives more of that outcome than any scoring algorithm.'},
+  {q:'What are your first thirty days?',
+   t:'Whether you rush to deploy or start with discovery.',
+   a:'Almost no deployment. Week one: stakeholder map, and specifically finding the facilities and network people early, because they gate everything. Weeks one to two: current state — what tooling exists, what the CMDB looks like, where the sites are, what the licence actually covers, what previously went wrong. Week two: turn on ASM, because it needs no deployment and usually finds forgotten internet-facing assets, which buys credibility. Weeks two to four: scope and demarcation in writing, especially for colo space, plus the target-state architecture and the tag model. The one thing I would deploy is a pilot scanner at one site to validate connectivity assumptions before I commit them to a design.'},
+  {q:'How do you handle a device the vendor says cannot be patched?',
+   t:'Practical risk management rather than idealism.',
+   a:'Accept that patching is not the control and move to compensating controls: segment it so it is only reachable from what genuinely needs it, remove default and shared credentials, disable unused services and any vendor remote-access path, and monitor it — passive monitoring gives me alerting on anomalous conversations. Then document it as a time-boxed exception with named residual risk and an expiry, and put a firmware upgrade into the next major maintenance window with the vendor. What I do not do is leave it as a permanent red item on a dashboard, because that trains everyone to ignore the dashboard.'}
+];
+(function(){
+  var host = $('#drill'); if(!host) return;
+  DRILL.forEach(function(d,i){
+    var c = el('div');
+    c.style.cssText='border:1px solid var(--rule);border-left:4px solid var(--blue);background:var(--sheet-2);padding:13px 15px;margin-bottom:10px';
+    c.innerHTML =
+      '<div style="font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)">Q'+String(i+1).padStart(2,'0')+'</div>'+
+      '<div style="font-weight:600;font-size:15px;margin:3px 0 6px">'+d.q+'</div>'+
+      '<div style="font-size:13.3px;color:var(--ink-2);font-style:italic">Testing: '+d.t+'</div>'+
+      '<button type="button" class="btn" style="margin-top:10px">Reveal a strong answer</button>'+
+      '<div class="ans" style="display:none;margin-top:11px;padding:11px 13px;background:var(--green-wash);border-left:3px solid var(--green);font-size:14.2px">'+d.a+'</div>';
+    c.querySelector('button').addEventListener('click', function(){
+      var a = $('.ans', c);
+      var open = a.style.display!=='none';
+      a.style.display = open ? 'none' : 'block';
+      this.textContent = open ? 'Reveal a strong answer' : 'Hide answer';
+    });
+    host.appendChild(c);
+  });
+})();
+
+/* ---------------- sheet 15: flashcards ---------------- */
+var CARDS = [
+  ['VPR','Tenables threat-informed vulnerability score (010): exploit availability and maturity, threat chatter, age, plus CVSS. Recalculated as threat intelligence changes.'],
+  ['ACR','Asset Criticality Rating (110): how much the asset matters to the business. The context you must curate yourself  defaults are guesses.'],
+  ['AES','Asset Exposure Score (01000): the assets vulnerability picture weighted by its criticality. Ranks assets, not findings.'],
+  ['CES','Cyber Exposure Score (01000): aggregated AES across a scope. The executive trend line  always publish it with a coverage line.'],
+  ['Choke point','A node appearing across many attack paths. Fixing it collapses multiple paths at once, which makes it the most persuasive remediation ask you have.'],
+  ['Exposure signal','A query that surfaces toxic combinations across domains  vulnerability plus privilege plus reachability  rather than a single-domain finding.'],
+  ['ICP appliance','The OT Security appliance: analyses mirrored traffic and runs both passive network detection and the active query engine.'],
+  ['OT sensor','Small device on a segment the appliance cannot see, up to about one per managed switch. Captures and compresses traffic back to the appliance; can also issue active queries.'],
+  ['Active query','Read-only requests in a devices native industrial protocol  far safer than generic scanning, but never risk-free, and enabled per query type.'],
+  ['SPAN / TAP','Switch port mirroring, or a physical tap. The feed passive monitoring depends on. No SPAN, no OT visibility  this is a network-engineering dependency, so start it early.'],
+  ['Purdue Level 3.5','The IT/OT DMZ. Not in the original model, present in every real design, and the highest-value place to instrument.'],
+  ['Linked scanner','A Nessus scanner that initiates an outbound connection to the console. Removes the need for inbound firewall rules  the answer to most colo objections.'],
+  ['Credentialed scan','Authenticated assessment giving real patch and configuration state. A silent authentication failure produces a clean-looking result, which is why you monitor auth success as a metric.'],
+  ['Export API','Asynchronous bulk retrieval: request, poll for chunks, download. The only pattern that scales to a full estate.'],
+  ['Backported patch','A distributor fixes a flaw without bumping the version string, so version-based detection reports a false positive. The classic credibility-destroying finding on enterprise Linux.'],
+  ['Exception','Time-boxed documented acceptance of an unremediated finding, with a compensating control and an expiry. Never permanent, always visible in reporting.']
+];
+(function(){
+  var host = $('#cards'); if(!host) return;
+  var grid = el('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px;margin-top:12px';
+  CARDS.forEach(function(c){
+    var card = el('div');
+    card.style.cssText='border:1px solid var(--rule-hard);background:var(--sheet-2);padding:12px 13px;cursor:pointer;min-height:92px;display:flex;align-items:center';
+    card.dataset.flipped='0';
+    function paint(){
+      if(card.dataset.flipped==='1'){
+        card.innerHTML='<div style="font-size:13.2px;line-height:1.5">'+c[1]+'</div>';
+        card.style.background='var(--blue-wash)'; card.style.borderColor='var(--blue)';
+      } else {
+        card.innerHTML='<div style="font-family:var(--d);text-transform:uppercase;letter-spacing:.07em;font-weight:700;font-size:16px">'+c[0]+'</div>';
+        card.style.background='var(--sheet-2)'; card.style.borderColor='var(--rule-hard)';
+      }
+    }
+    card.addEventListener('click', function(){ card.dataset.flipped = card.dataset.flipped==='1'?'0':'1'; paint(); });
+    card._paint = paint; card._set = function(v){card.dataset.flipped=v;paint();};
+    paint(); grid.appendChild(card);
+  });
+  host.appendChild(grid);
+  $('#cardsFlipAll').addEventListener('click', function(){ $$('div',grid).forEach(function(c){ if(c._set) c._set('1'); }); });
+  $('#cardsReset').addEventListener('click', function(){ $$('div',grid).forEach(function(c){ if(c._set) c._set('0'); }); });
+})();
+
+/* ---------------- sheet 15: quiz ---------------- */
+var QUIZ = [
+  {q:'The single most important thing to establish before scanning a colocation facility is:',
+   o:['Scanner sizing','Written scope and demarcation of what you may assess','The plugin set','Executive sponsorship'],c:1,
+   e:'In a colo you share the building with other tenants. Assessing equipment you are not authorised to touch is a contractual and potentially legal problem. Get the demarcation in writing, per site.'},
+  {q:'A credentialed scan completes quickly and reports few findings on 200 servers. The most likely explanation is:',
+   o:['The servers are well patched','Authentication failed silently','The scanner is undersized','Plugins are out of date'],c:1,
+   e:'Failed authentication still produces a completed scan and a short, clean-looking result. Always check the authentication-success output per host, and monitor auth rate as a metric.'},
+  {q:'For PLCs and UPS controllers at Purdue Level 1, your default collection method is:',
+   o:['Credentialed Nessus scan in a change window','Nessus Agent','Passive monitoring only, initially','Unauthenticated discovery sweep'],c:2,
+   e:'Passive first. Thin network stacks, warranty restrictions and safety consequences mean anything active comes later, lab-validated, one query type at a time, with operations agreement.'},
+  {q:'Which pairing correctly describes the ServiceNow integration?',
+   o:['CMDB out, ITSM in','CMDB in for context, ITSM out for tickets','Both directions carry vulnerability data','Neither direction is bidirectional'],c:1,
+   e:'The CMDB supplies business context — owner, service, criticality. The ITSM direction receives grouped remediation records. They are two separate projects with different correlation problems.'},
+  {q:'CES rises sharply after a new site is onboarded. The correct response is:',
+   o:['Escalate as a security regression','Suppress the new assets until the score settles','Show the coverage line alongside the score and explain per-asset exposure','Rebaseline the score to hide the jump'],c:2,
+   e:'Score movement driven by coverage change is not risk change. Publishing coverage alongside exposure — and annotating onboarding events — keeps the trend line trustworthy.'},
+  {q:'A scanner sits in a colo cage where the firewall permits no inbound connections. The design is:',
+   o:['Request an inbound rule for the console','Scan the cage across the WAN from headquarters','Link the local scanner outbound over 443','Use agents only and skip network scanning'],c:2,
+   e:'Linked scanners initiate outbound to the console. Scanning locally and shipping only findings avoids both the firewall change and WAN scan traffic.'},
+  {q:'Which metric is most likely to mislead a leadership audience?',
+   o:['SLA attainment by owning team','Total open vulnerability count','Authenticated scan rate','Aging distribution of open criticals'],c:1,
+   e:'Total count moves with asset count and plugin releases, so it can be improved by scanning less. It rewards exactly the wrong behaviour.'},
+  {q:'The tag dimension you must never omit is:',
+   o:['Compliance scope','Remediation owner','Function','Region'],c:1,
+   e:'Without an owner, findings cannot be routed and nothing gets assigned. "Assets with no owner tag" should be a tracked metric with a target of zero.'},
+  {q:'Attack path analysis is most persuasive to executives because it:',
+   o:['Produces more findings','Identifies choke points that collapse many paths at once','Replaces vulnerability scanning','Maps every CVE to a CVSS score'],c:1,
+   e:'It converts an unbounded remediation ask into a short, finite list with a clear payoff — the difference between a list teams complete and a list they ignore.'},
+  {q:'A vendor warranty prohibits both scanning and agent installation on a facility controller. You should:',
+   o:['Scan anyway during a maintenance window','Exclude it from the program entirely','Cover it passively and manage it through compensating controls and a time-boxed exception','Wait until the warranty expires'],c:2,
+   e:'Passive monitoring still gives inventory and anomaly visibility with no operational risk. Segmentation, credential hygiene and disabled remote access are the real controls; the exception documents the residual risk with an expiry.'},
+  {q:'The main reason to run separate discovery and deep assessment scan policies is:',
+   o:['Licensing','Keeping inventory current daily while deep scans fit a change window','Discovery finds more vulnerabilities','Agents require it'],c:1,
+   e:'A fast daily sweep keeps inventory and rogue detection honest; the expensive credentialed scan runs weekly inside a real window. Merging them is the usual cause of scans that never finish.'},
+  {q:'For bulk retrieval of findings via API, the correct pattern is:',
+   o:['Paginated list endpoints in a loop','Request an export, poll for chunks, download','Scrape the dashboard','One request per asset'],c:1,
+   e:'The asynchronous export pattern is the only approach that scales to a full estate, and it is what the platform is designed around.'},
+  {q:'ACR defaults are left uncurated across 30,000 assets. The most direct consequence is:',
+   o:['Scans run slower','Asset and cyber exposure scores misrank what matters','Agents fail to link','Tickets duplicate'],c:1,
+   e:'AES and CES are both weighted by ACR. Uncurated criticality means the prioritisation the whole program rests on is quietly wrong.'},
+  {q:'The OT appliance needs a monitoring interface connected to:',
+   o:['A routed uplink','A SPAN, mirror or TAP destination port','The management VLAN gateway','Any access port'],c:1,
+   e:'Passive detection depends on mirrored traffic. Securing SPAN or TAP access is a network-engineering dependency that should start in the first weeks, because it gates all OT visibility.'},
+  {q:'ITSM ticket volume is overwhelming remediation teams. The best fix is:',
+   o:['Raise the severity threshold until volume is tolerable','Group tickets by owner and remediation action rather than by finding','Turn off the integration','Close tickets automatically after 30 days'],c:1,
+   e:'One ticket per finding per host does not scale. "Apply this update to 240 hosts, closes 1,900 findings" is one completable unit of work — and auto-close should be driven by verified re-scan, not by elapsed time.'},
+  {q:'The clearest evidence that a nine-month engagement succeeded is:',
+   o:['A green executive dashboard on the final day','Every critical finding closed','The customer team running a full monthly cycle unaided','All modules deployed'],c:2,
+   e:'The deliverable is a running program, not a configured platform. If it only works while you are there, it has not been handed over.'}
+];
+(function(){
+  var host = $('#quiz'); if(!host) return;
+  var answers = {};
+  QUIZ.forEach(function(q,i){
+    var c = el('div');
+    c.style.cssText='border:1px solid var(--rule);background:var(--sheet-2);padding:13px 15px;margin-bottom:10px';
+    var opts = q.o.map(function(o,j){
+      return '<button type="button" class="qb" data-q="'+i+'" data-o="'+j+'" style="display:block;width:100%;text-align:left;background:var(--sheet);border:1px solid var(--rule-hard);padding:7px 11px;margin-bottom:5px;cursor:pointer;font-family:var(--b);font-size:13.8px">'+o+'</button>';
+    }).join('');
+    c.innerHTML =
+      '<div style="font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)">Question '+String(i+1).padStart(2,'0')+'</div>'+
+      '<div style="font-weight:600;margin:3px 0 9px">'+q.q+'</div>'+opts+
+      '<div class="exp" style="display:none;margin-top:8px;padding:10px 12px;font-size:13.6px;border-left:3px solid var(--blue);background:var(--blue-wash)"></div>';
+    host.appendChild(c);
+  });
+  host.addEventListener('click', function(e){
+    var b = e.target.closest('.qb'); if(!b) return;
+    var i = +b.dataset.q, j = +b.dataset.o, q = QUIZ[i], card = b.parentNode;
+    answers[i] = j;
+    $$('.qb[data-q="'+i+'"]', host).forEach(function(x){
+      x.style.background='var(--sheet)'; x.style.borderColor='var(--rule-hard)'; x.style.color='var(--ink)'; x.style.fontWeight='400';
+    });
+    var ok = j===q.c;
+    b.style.background = ok?'var(--green-wash)':'var(--oxide-wash)';
+    b.style.borderColor = ok?'var(--green)':'var(--oxide)';
+    b.style.color = ok?'var(--green)':'var(--oxide)';
+    b.style.fontWeight='600';
+    if(!ok){
+      var right = $$('.qb[data-q="'+i+'"]', host)[q.c];
+      right.style.borderColor='var(--green)'; right.style.color='var(--green)'; right.style.fontWeight='600';
+    }
+    var ex = $('.exp', card);
+    ex.style.display='block';
+    ex.style.borderLeftColor = ok?'var(--green)':'var(--oxide)';
+    ex.style.background = ok?'var(--green-wash)':'var(--oxide-wash)';
+    ex.innerHTML = (ok?'<b>Correct. </b>':'<b>Not quite. </b>') + q.e;
+  });
+  $('#quizScore').addEventListener('click', function(){
+    var right = 0, done = 0;
+    QUIZ.forEach(function(q,i){ if(answers[i]!=null){ done++; if(answers[i]===q.c) right++; } });
+    var pct = Math.round(right/QUIZ.length*100);
+    var verdict = pct>=88?'Ready for the panel.':pct>=63?'Solid — revisit the sheets behind your misses.':'Work the sheets again before interviewing.';
+    var o = $('#quizOut');
+    o.textContent = right+' / '+QUIZ.length+' ('+pct+'%) · '+done+' answered · '+verdict;
+    o.style.color = pct>=88?'var(--green)':pct>=63?'var(--ink-2)':'var(--oxide)';
+  });
+  $('#quizReset').addEventListener('click', function(){
+    answers = {};
+    $$('.qb', host).forEach(function(x){x.style.background='var(--sheet)';x.style.borderColor='var(--rule-hard)';x.style.color='var(--ink)';x.style.fontWeight='400';});
+    $$('.exp', host).forEach(function(x){x.style.display='none';});
+    $('#quizOut').textContent='';
+  });
+})();
+
+/* ---------------- keyboard ---------------- */
+document.addEventListener('keydown', function(e){
+  if(e.target.matches('input,textarea,select')) return;
+  if(e.key==='ArrowRight' && !e.metaKey && !e.ctrlKey) show(current+1);
+  if(e.key==='ArrowLeft' && !e.metaKey && !e.ctrlKey) show(current-1);
+});
+
+})();
+</script>
+</body>
+</html>
