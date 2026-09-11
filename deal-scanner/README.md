@@ -61,3 +61,30 @@ own call, so a second condition doubles the cost.
   deals as sent.
 - Keepa gzips responses regardless of `Accept-Encoding`.
 - Discord sits behind Cloudflare, which 403s urllib's default User-Agent.
+
+## Deployment
+
+Runs as a Cloud Run job on a Cloud Scheduler trigger, in the same GCP project
+as the 7 Beacons site (`project-0abb08b6-4e60-4be0-8db`, `us-central1`).
+
+| Resource | Name |
+|---|---|
+| Cloud Run job | `deal-scanner` |
+| Scheduler | `deal-scanner-trigger` (`*/7 * * * *` UTC) |
+| State bucket | `gs://project-0abb08b6-4e60-4be0-8db-deal-scanner/state.json` |
+| Secrets | `keepa-api-key`, `discord-webhook-url` (Secret Manager) |
+
+State lives in GCS because Cloud Run is stateless -- losing it means every
+tracked deal gets re-sent as a duplicate.
+
+Redeploy after changing `scanner.py`:
+
+```bash
+gcloud run jobs deploy deal-scanner --source deal-scanner --region us-central1
+```
+
+Run once manually:
+
+```bash
+gcloud run jobs execute deal-scanner --region us-central1
+```

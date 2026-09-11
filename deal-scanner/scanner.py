@@ -34,7 +34,21 @@ QUIET_WHEN_EMPTY = os.environ.get("QUIET_WHEN_EMPTY", "0") == "1"
 
 DOMAIN = 1                      # amazon.com
 CATEGORIES = [565108]           # Laptops (565098 = Desktops)
-PRICE_TYPE = 32                 # Buy Box Used (with shipping)
+# Keepa priceTypes. Only one per query -- each extra type is another call
+# (another 5 tokens). This same value indexes the current/avg/deltaPercent
+# arrays on the deal object, so it must stay in sync with the query.
+PRICE_TYPE_LABELS = {
+    0: "Amazon",
+    1: "Marketplace New",
+    2: "Used",
+    9: "Warehouse",
+    19: "Used - Like New",
+    20: "Used - Very Good",
+    21: "Used - Good",
+    22: "Used - Acceptable",
+    32: "Buy Box Used",
+}
+PRICE_TYPE = int(os.environ.get("PRICE_TYPE", "19"))
 # Deltas drift as the trailing average updates, so a deal can hover across
 # the cutoff. A floor a few points below your target absorbs that.
 DELTA_PERCENT_RANGE = [int(os.environ.get("MIN_DISCOUNT", "35")), 100]
@@ -131,9 +145,20 @@ def price_of(deal):
 
 
 def best_discount(deal):
-    """Highest delta across the four intervals -- what the UI headlines."""
+    """Delta for the interval(s) we actually queried.
+
+    Deal objects carry deltas for all four intervals regardless of which
+    bucket was requested, and they differ -- a laptop can read 59% against
+    its weekly average but 54% against its 90-day one. Reporting the max
+    across all four would show a number that doesn't match what Keepa's UI
+    displays for the same drop-interval setting.
+    """
     dp = deal.get("deltaPercent") or []
-    vals = [row[PRICE_TYPE] for row in dp if len(row) > PRICE_TYPE]
+    vals = [
+        dp[i][PRICE_TYPE]
+        for i in DATE_RANGES
+        if i < len(dp) and len(dp[i]) > PRICE_TYPE
+    ]
     return max(vals) if vals else 0
 
 
@@ -147,7 +172,20 @@ def image_url(deal):
 
 # --- state ------------------------------------------------------------------
 
+def _gcs_blob():
+    """Resolve STATE_PATH of the form gs://bucket/path to a GCS blob."""
+    from google.cloud import storage
+
+    bucket_name, _, blob_name = STATE_PATH[len("gs://"):].partition("/")
+    return storage.Client().bucket(bucket_name).blob(blob_name)
+
+
 def load_state():
+    if STATE_PATH.startswith("gs://"):
+        blob = _gcs_blob()
+        if not blob.exists():
+            return {"seen": {}}
+        return json.loads(blob.download_as_text())
     try:
         with open(STATE_PATH, encoding="utf-8") as f:
             return json.load(f)
@@ -156,8 +194,12 @@ def load_state():
 
 
 def save_state(state):
+    body = json.dumps(state, indent=2)
+    if STATE_PATH.startswith("gs://"):
+        _gcs_blob().upload_from_string(body, content_type="application/json")
+        return
     with open(STATE_PATH, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2)
+        f.write(body)
 
 
 # --- discord ----------------------------------------------------------------
@@ -258,7 +300,9 @@ def main():
         for i in range(0, len(new_items), 10):     # discord caps 10 embeds/msg
             chunk = new_items[i:i + 10]
             header = (
-                f"**{len(new_items)} deal(s)** — Laptops, Buy Box Used, {DELTA_PERCENT_RANGE[0]}%+ off"
+                f"**{len(new_items)} deal(s)** — Laptops, "
+                f"{PRICE_TYPE_LABELS.get(PRICE_TYPE, PRICE_TYPE)}, "
+                f"{DELTA_PERCENT_RANGE[0]}%+ off"
                 if i == 0 else None
             )
             if not post_discord(content=header, embeds=[build_embed(d) for d in chunk]):
