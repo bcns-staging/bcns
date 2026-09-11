@@ -27,6 +27,8 @@ python3 scanner.py
 | `DISCORD_WEBHOOK_URL` | *(required)* | Discord channel webhook |
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
+| `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
+| `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
 | `DATE_RANGES` | `3` | Keepa buckets: 0=day, 1=week, 2=month, 3=90d. Comma-separated |
 | `QUIET_WHEN_EMPTY` | `0` | `1` = stay silent when nothing is new |
 | `VERIFY_TLS` | `1` | `0` disables cert checks (needed behind TLS-inspecting AV) |
@@ -88,3 +90,14 @@ Run once manually:
 ```bash
 gcloud run jobs execute deal-scanner --region us-central1
 ```
+
+## Rotating deal types
+
+Keepa allows only one `priceTypes` value per query, so multiple deal types are
+rotated across runs rather than fetched together -- each extra type in a single
+run costs another 5 tokens. With two types on a 7-minute schedule, each is
+checked every 14 minutes at no extra cost.
+
+The rotation cursor lives in state, and each type keeps its **own** seen-map:
+the same ASIN can appear under both types at different prices, and a shared map
+would let one feed suppress the other's alerts or look like a price drop.

@@ -32,6 +32,10 @@ VERIFY_TLS = os.environ.get("VERIFY_TLS", "1") != "0"
 # Send a "nothing new" message instead of staying silent.
 QUIET_WHEN_EMPTY = os.environ.get("QUIET_WHEN_EMPTY", "0") == "1"
 
+# Log what would be sent instead of posting -- for testing filters and
+# rotation without spamming the channel.
+DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
+
 DOMAIN = 1                      # amazon.com
 CATEGORIES = [565108]           # Laptops (565098 = Desktops)
 # Keepa priceTypes. Only one per query -- each extra type is another call
@@ -48,7 +52,16 @@ PRICE_TYPE_LABELS = {
     22: "Used - Acceptable",
     32: "Buy Box Used",
 }
-PRICE_TYPE = int(os.environ.get("PRICE_TYPE", "19"))
+# Only one price type can be queried per call, so multiple types are
+# rotated across runs rather than fetched together -- each extra type in a
+# single run would cost another 5 tokens. With two types on a 7-minute
+# schedule, each is checked every 14 minutes at no extra cost.
+PRICE_TYPES = [
+    int(x) for x in os.environ.get("PRICE_TYPES", "19,32").split(",") if x.strip()
+]
+# Set per-run by main() from the rotation cursor. Also indexes the
+# current/avg/deltaPercent arrays, so it must match the query.
+PRICE_TYPE = PRICE_TYPES[0]
 # Deltas drift as the trailing average updates, so a deal can hover across
 # the cutoff. A floor a few points below your target absorbs that.
 DELTA_PERCENT_RANGE = [int(os.environ.get("MIN_DISCOUNT", "35")), 100]
@@ -144,6 +157,18 @@ def price_of(deal):
     return v if v and v > 0 else None
 
 
+def avg_price(deal):
+    """Reference average the discount is measured against, for the same
+    interval(s) we queried -- so "43% off" and "$1,373.41 average" agree."""
+    avg = deal.get("avg") or []
+    vals = [
+        avg[i][PRICE_TYPE]
+        for i in DATE_RANGES
+        if i < len(avg) and len(avg[i]) > PRICE_TYPE and avg[i][PRICE_TYPE] > 0
+    ]
+    return max(vals) if vals else None
+
+
 def best_discount(deal):
     """Delta for the interval(s) we actually queried.
 
@@ -205,9 +230,16 @@ def save_state(state):
 # --- discord ----------------------------------------------------------------
 
 def post_discord(content=None, embeds=None):
+    if DRY_RUN:
+        n = len(embeds or [])
+        print(f"[dry-run] would post: {content or ''} ({n} embed(s))")
+        return True
     if not DISCORD_WEBHOOK:
-        print("[warn] no DISCORD_WEBHOOK_URL set; skipping post")
-        return
+        # A missing webhook is a config error, not a transient failure --
+        # report it as undelivered so state isn't advanced past deals that
+        # nobody received.
+        print("[error] no DISCORD_WEBHOOK_URL set; cannot deliver")
+        return False
     payload = {}
     if content:
         payload["content"] = content
@@ -241,14 +273,15 @@ def build_embed(deal):
     title = title.encode("utf-8", "replace").decode("utf-8", "replace")[:250]
     price = price_of(deal)
     pct = best_discount(deal)
-    day_pct = (deal.get("deltaPercent") or [[]])[0]
-    day_pct = day_pct[PRICE_TYPE] if len(day_pct) > PRICE_TYPE else 0
+
+    avg = avg_price(deal)
+    saving = (avg - price) if (avg and price) else None
 
     fields = [
         {"name": "Price", "value": f"${price/100:,.2f}" if price else "-", "inline": True},
+        {"name": "Average", "value": f"${avg/100:,.2f}" if avg else "-", "inline": True},
         {"name": "Discount", "value": f"{pct}% off", "inline": True},
-        {"name": "Today", "value": f"{day_pct}%", "inline": True},
-        {"name": "Rank drops (30d)", "value": str(deal.get("salesRankDrops30", "?")), "inline": True},
+        {"name": "You save", "value": f"${saving/100:,.2f}" if saving else "-", "inline": True},
         {"name": "Found", "value": f"{deal_age_hours(deal):.0f}h ago", "inline": True},
     ]
     cond = CONDITION_LABELS.get(deal.get("warehouseCondition"))
@@ -271,18 +304,33 @@ def build_embed(deal):
 # --- main -------------------------------------------------------------------
 
 def main():
+    global PRICE_TYPE
+
     if not KEEPA_KEY:
         sys.exit("KEEPA_API_KEY not set")
+
+    state = load_state()
+
+    # Pick this run's deal type from the rotation cursor, then advance it.
+    cursor = int(state.get("rotation", 0)) % len(PRICE_TYPES)
+    PRICE_TYPE = PRICE_TYPES[cursor]
+    label = PRICE_TYPE_LABELS.get(PRICE_TYPE, PRICE_TYPE)
+
+    # Each price type keeps its own seen-map: the same ASIN can appear under
+    # both types at different prices, and a shared map would let one feed
+    # suppress the other's alerts or fake a price drop.
+    seen_all = state.get("seen", {})
+    if seen_all and not isinstance(next(iter(seen_all.values())), dict):
+        # Migrate the pre-rotation flat {asin: price} map, which belonged to
+        # whichever single type was deployed at the time.
+        seen_all = {str(PRICE_TYPES[0]): seen_all}
+    seen = seen_all.get(str(PRICE_TYPE), {})
 
     union, tokens_left = fetch_union()
     recent = {
         asin: d for asin, d in union.items()
         if deal_age_hours(d) <= MAX_AGE_HOURS
     }
-
-    state = load_state()
-    seen = state.get("seen", {})
-    first_run = not seen
 
     # Key on asin -> price, so a deeper discount on a known ASIN re-alerts.
     new_items = []
@@ -292,7 +340,10 @@ def main():
         if prev is None or (price is not None and price < prev):
             new_items.append(deal)
 
-    print(f"union={len(union)}  last24h={len(recent)}  new={len(new_items)}  tokensLeft={tokens_left}")
+    print(
+        f"type={PRICE_TYPE} ({label})  union={len(union)}  "
+        f"last24h={len(recent)}  new={len(new_items)}  tokensLeft={tokens_left}"
+    )
 
     delivered = True
     if new_items:
@@ -300,8 +351,7 @@ def main():
         for i in range(0, len(new_items), 10):     # discord caps 10 embeds/msg
             chunk = new_items[i:i + 10]
             header = (
-                f"**{len(new_items)} deal(s)** — Laptops, "
-                f"{PRICE_TYPE_LABELS.get(PRICE_TYPE, PRICE_TYPE)}, "
+                f"**{len(new_items)} deal(s)** — Laptops, {label}, "
                 f"{DELTA_PERCENT_RANGE[0]}%+ off"
                 if i == 0 else None
             )
@@ -310,18 +360,23 @@ def main():
         print(f"{'posted' if delivered else 'FAILED to post'} {len(new_items)} deal(s)")
     else:
         if not QUIET_WHEN_EMPTY:
-            post_discord(content=f"No updates yet — {len(recent)} deal(s) tracked, nothing new.")
+            post_discord(
+                content=f"No updates yet — {label}: {len(recent)} deal(s) tracked, nothing new."
+            )
         print("nothing new")
 
     if not delivered:
         # Leave state untouched so the next run retries these deals rather
-        # than marking undelivered items as already seen.
+        # than marking undelivered items as already seen. The rotation
+        # cursor stays put too, so the retry re-runs this same type.
         print("[warn] delivery failed -- state not updated, will retry next run")
         return
 
-    state["seen"] = {
+    seen_all[str(PRICE_TYPE)] = {
         asin: price_of(d) for asin, d in recent.items() if price_of(d)
     }
+    state["seen"] = seen_all
+    state["rotation"] = cursor + 1
     state["last_run"] = int(time.time())
     state["tokens_left"] = tokens_left
     save_state(state)
