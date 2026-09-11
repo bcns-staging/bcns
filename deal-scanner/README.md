@@ -28,6 +28,7 @@ python3 scanner.py
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
 | `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
+| `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
 | `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
 | `DATE_RANGES` | `3` | Keepa buckets: 0=day, 1=week, 2=month, 3=90d. Comma-separated |
 | `QUIET_WHEN_EMPTY` | `0` | `1` = stay silent when nothing is new |
@@ -101,3 +102,9 @@ checked every 14 minutes at no extra cost.
 The rotation cursor lives in state, and each type keeps its **own** seen-map:
 the same ASIN can appear under both types at different prices, and a shared map
 would let one feed suppress the other's alerts or look like a price drop.
+
+An ASIN alerts when it is genuinely unseen, or when it becomes at least
+`MIN_REALERT_DROP` percent cheaper than the best price ever reported for it
+across *every* type. Without that floor most of one feed's alerts are just
+restatements of the other's: measured on live data, 6 of 8 Buy Box Used deals
+were laptops already sent as Like New, quoted within $15 -- one to the cent.

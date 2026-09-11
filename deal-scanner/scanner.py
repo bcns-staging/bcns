@@ -36,6 +36,12 @@ QUIET_WHEN_EMPTY = os.environ.get("QUIET_WHEN_EMPTY", "0") == "1"
 # rotation without spamming the channel.
 DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 
+# How much cheaper an already-alerted ASIN must get before it alerts again,
+# in percent. Rotating deal types surface the same laptop at near-identical
+# prices (Buy Box Used often undercuts Like New by a few dollars), so without
+# a floor most of one feed's alerts are restatements of the other's.
+MIN_REALERT_DROP = float(os.environ.get("MIN_REALERT_DROP", "5"))
+
 DOMAIN = 1                      # amazon.com
 CATEGORIES = [565108]           # Laptops (565098 = Desktops)
 # Keepa priceTypes. Only one per query -- each extra type is another call
@@ -332,17 +338,34 @@ def main():
         if deal_age_hours(d) <= MAX_AGE_HOURS
     }
 
-    # Key on asin -> price, so a deeper discount on a known ASIN re-alerts.
+    # An ASIN alerts when it's genuinely unseen, or when it has become
+    # meaningfully cheaper than the best price we've ever reported for it --
+    # across *every* deal type, not just this one. Comparing only within the
+    # current type would re-announce the same laptop each time the rotation
+    # switches, since the two feeds quote it within a few dollars.
+    def best_reported(asin):
+        prices = [
+            m[asin] for m in seen_all.values()
+            if isinstance(m, dict) and m.get(asin)
+        ]
+        return min(prices) if prices else None
+
     new_items = []
+    suppressed = 0
     for asin, deal in recent.items():
         price = price_of(deal)
-        prev = seen.get(asin)
-        if prev is None or (price is not None and price < prev):
+        baseline = best_reported(asin)
+        if baseline is None:
             new_items.append(deal)
+        elif price is not None and price <= baseline * (1 - MIN_REALERT_DROP / 100.0):
+            new_items.append(deal)
+        elif asin not in seen:
+            suppressed += 1
 
     print(
         f"type={PRICE_TYPE} ({label})  union={len(union)}  "
-        f"last24h={len(recent)}  new={len(new_items)}  tokensLeft={tokens_left}"
+        f"last24h={len(recent)}  new={len(new_items)}  "
+        f"cross-feed-suppressed={suppressed}  tokensLeft={tokens_left}"
     )
 
     delivered = True
