@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+# Runtime state -- tracks which deals have already been sent.
+state.json
+
+# Secrets: Keepa API key, Discord webhook URL.
+.env
+*.key
+keepa_key.txt
