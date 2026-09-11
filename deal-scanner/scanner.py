@@ -147,7 +147,20 @@ def image_url(deal):
 
 # --- state ------------------------------------------------------------------
 
+def _gcs_blob():
+    """Resolve STATE_PATH of the form gs://bucket/path to a GCS blob."""
+    from google.cloud import storage
+
+    bucket_name, _, blob_name = STATE_PATH[len("gs://"):].partition("/")
+    return storage.Client().bucket(bucket_name).blob(blob_name)
+
+
 def load_state():
+    if STATE_PATH.startswith("gs://"):
+        blob = _gcs_blob()
+        if not blob.exists():
+            return {"seen": {}}
+        return json.loads(blob.download_as_text())
     try:
         with open(STATE_PATH, encoding="utf-8") as f:
             return json.load(f)
@@ -156,8 +169,12 @@ def load_state():
 
 
 def save_state(state):
+    body = json.dumps(state, indent=2)
+    if STATE_PATH.startswith("gs://"):
+        _gcs_blob().upload_from_string(body, content_type="application/json")
+        return
     with open(STATE_PATH, "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2)
+        f.write(body)
 
 
 # --- discord ----------------------------------------------------------------
