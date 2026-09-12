@@ -43,7 +43,17 @@ DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 MIN_REALERT_DROP = float(os.environ.get("MIN_REALERT_DROP", "5"))
 
 DOMAIN = 1                      # amazon.com
-CATEGORIES = [565108]           # Laptops (565098 = Desktops)
+# Amazon browse nodes. Free to add -- they go in one array on the same call,
+# unlike price types. The only ceiling is the 150-results-per-page cap, past
+# which paging costs another 5 tokens.
+#   565108       Laptops          13896597011  Desktops > Towers
+#   565098       Desktops         13896591011  Desktops > Minis
+#   13896603011  Desktops > All-in-Ones
+# Keepa resolves child nodes automatically, so a parent covers its children.
+CATEGORIES = [
+    int(x) for x in
+    os.environ.get("CATEGORIES", "565108,13896597011").split(",") if x.strip()
+]
 # Keepa priceTypes. Only one per query -- each extra type is another call
 # (another 5 tokens). This same value indexes the current/avg/deltaPercent
 # arrays on the deal object, so it must stay in sync with the query.
@@ -71,7 +81,13 @@ PRICE_TYPE = PRICE_TYPES[0]
 # Deltas drift as the trailing average updates, so a deal can hover across
 # the cutoff. A floor a few points below your target absorbs that.
 DELTA_PERCENT_RANGE = [int(os.environ.get("MIN_DISCOUNT", "35")), 100]
-CURRENT_RANGE = [0, 5000000]    # cents
+# Keepa prices are in cents; these are set in dollars for sanity. The floor
+# exists because sub-$200 hits are dominated by Chromebooks and accessories
+# where shipping eats any margin -- a 50% discount on a $65 Chromebook is
+# not a deal worth being paged about.
+MIN_PRICE = float(os.environ.get("MIN_PRICE", "200"))
+MAX_PRICE = float(os.environ.get("MAX_PRICE", "50000"))
+CURRENT_RANGE = [int(MIN_PRICE * 100), int(MAX_PRICE * 100)]
 MAX_AGE_HOURS = 24
 # Keepa buckets: 0=day, 1=week, 2=month, 3=90d. Using 90d only (5 tokens
 # /sweep): a price measured against its 90-day average is the honest "is
@@ -374,7 +390,7 @@ def main():
         for i in range(0, len(new_items), 10):     # discord caps 10 embeds/msg
             chunk = new_items[i:i + 10]
             header = (
-                f"**{len(new_items)} deal(s)** — Laptops, {label}, "
+                f"**{len(new_items)} deal(s)** — {label}, "
                 f"{DELTA_PERCENT_RANGE[0]}%+ off"
                 if i == 0 else None
             )

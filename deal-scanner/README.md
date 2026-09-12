@@ -27,6 +27,8 @@ python3 scanner.py
 | `DISCORD_WEBHOOK_URL` | *(required)* | Discord channel webhook |
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
+| `CATEGORIES` | `565108,13896597011` | Amazon browse nodes: Laptops, Desktop Towers |
+| `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
 | `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
 | `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
 | `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
@@ -108,3 +110,26 @@ An ASIN alerts when it is genuinely unseen, or when it becomes at least
 across *every* type. Without that floor most of one feed's alerts are just
 restatements of the other's: measured on live data, 6 of 8 Buy Box Used deals
 were laptops already sent as Like New, quoted within $15 -- one to the cent.
+
+## Categories
+
+Categories are free to add -- they go in one array on the same call, unlike
+price types. The only ceiling is the 150-results-per-page cap, past which
+paging costs another 5 tokens. Keepa resolves child nodes automatically, so
+a parent node covers its children.
+
+| Node | Category |
+|---|---|
+| `565108` | Laptops |
+| `565098` | Desktops (parent of the three below) |
+| `13896597011` | Desktops > Towers |
+| `13896591011` | Desktops > Minis |
+| `13896603011` | Desktops > All-in-Ones |
+
+Amazon's own category tagging is unreliable -- a 27" ASUS monitor turned up
+under Towers, and a Psycho box set under PlayStation 5 > Consoles. Expect the
+occasional wrong-product-type alert.
+
+PlayStation was evaluated and dropped: consoles showed **zero** deals at even
+10% off across 90 days and three price types, so the filter would never fire.
+Sony holds console pricing too tightly for discounts to appear.
