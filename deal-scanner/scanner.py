@@ -354,28 +354,47 @@ def main():
         if deal_age_hours(d) <= MAX_AGE_HOURS
     }
 
-    # An ASIN alerts when it's genuinely unseen, or when it has become
-    # meaningfully cheaper than the best price we've ever reported for it --
-    # across *every* deal type, not just this one. Comparing only within the
-    # current type would re-announce the same laptop each time the rotation
-    # switches, since the two feeds quote it within a few dollars.
-    def best_reported(asin):
-        prices = [
-            m[asin] for m in seen_all.values()
-            if isinstance(m, dict) and m.get(asin)
-        ]
-        return min(prices) if prices else None
+    # Dedup on Keepa's deal event, not just price.
+    #
+    # Keying purely on "cheapest price ever recorded" deadlocks the feed:
+    # every observed deal is written to state whether or not it was actually
+    # sent, so an item that was muted once needs a 5% drop to ever alert --
+    # even though you never heard about it. Observed live, five consecutive
+    # deals sat muted for a day, three at exactly the recorded price.
+    #
+    # creationDate is when Keepa flagged this as a deal. A newer one is a
+    # genuinely new event and worth reporting regardless of price history,
+    # while the same event re-seen every 7 minutes (or under the other deal
+    # type) stays quiet.
+    def prior(asin):
+        for m in seen_all.values():
+            if isinstance(m, dict) and isinstance(m.get(asin), dict):
+                yield m[asin]
 
     new_items = []
     suppressed = 0
     for asin, deal in recent.items():
         price = price_of(deal)
-        baseline = best_reported(asin)
-        if baseline is None:
+        created = deal.get("creationDate") or 0
+        records = list(prior(asin))
+
+        if not records:
             new_items.append(deal)
-        elif price is not None and price <= baseline * (1 - MIN_REALERT_DROP / 100.0):
+            continue
+
+        newest_seen = max(r.get("created", 0) for r in records)
+        cheapest = min(
+            (r["price"] for r in records if r.get("price")), default=None
+        )
+        is_new_event = created > newest_seen
+        is_real_drop = (
+            price is not None
+            and cheapest is not None
+            and price <= cheapest * (1 - MIN_REALERT_DROP / 100.0)
+        )
+        if is_new_event or is_real_drop:
             new_items.append(deal)
-        elif asin not in seen:
+        else:
             suppressed += 1
 
     print(
@@ -412,7 +431,12 @@ def main():
         return
 
     seen_all[str(PRICE_TYPE)] = {
-        asin: price_of(d) for asin, d in recent.items() if price_of(d)
+        asin: {
+            "created": d.get("creationDate") or 0,
+            "price": price_of(d),
+        }
+        for asin, d in recent.items()
+        if price_of(d)
     }
     state["seen"] = seen_all
     state["rotation"] = cursor + 1
