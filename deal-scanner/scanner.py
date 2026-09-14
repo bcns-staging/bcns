@@ -69,9 +69,11 @@ CATEGORIES = [
 # or "Arc" would let integrated graphics through -- "Ryzen 5 7520U with
 # Radeon 610M" is an iGPU, not a card -- so AMD requires the RX prefix and
 # Intel requires an Arc model number.
+# \W{0,4} rather than \s* between the brand and model number: vendors slip
+# trademark symbols in, e.g. "GeForce RTX (tm) 5080", which \s* misses.
 _DISCRETE_GPU = re.compile(
-    r"(GeForce|RTX\s*A?\d{3,4}|GTX\s*\d{3,4}|Radeon\s+RX\s*\d{3,4}"
-    r"|Arc\s+A\d{3}|Quadro)",
+    r"(GeForce|RTX\W{0,4}A?\d{3,4}|GTX\W{0,4}\d{3,4}"
+    r"|Radeon\W{0,4}RX\W{0,4}\d{3,4}|Arc\W{0,4}A\d{3}|Quadro)",
     re.I,
 )
 
@@ -80,7 +82,7 @@ _DISCRETE_GPU = re.compile(
 # 13896615011 / 13896609011 and never 565108 itself, so a filter keyed on the
 # parent silently matches nothing and lets everything through.
 CATEGORY_TITLE_FILTERS = {
-    284822: re.compile(r"RTX\s*[45]0(50|60|70|80|90)", re.I),  # Graphics Cards
+    284822: re.compile(r"RTX\W{0,4}[45]0(50|60|70|80|90)", re.I),  # Graphics Cards
     13896615011: _DISCRETE_GPU,  # Traditional Laptops
     13896609011: _DISCRETE_GPU,  # 2 in 1 Laptops
     13896597011: _DISCRETE_GPU,  # Desktop Towers
