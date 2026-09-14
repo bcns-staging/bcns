@@ -27,7 +27,7 @@ python3 scanner.py
 | `DISCORD_WEBHOOK_URL` | *(required)* | Discord channel webhook |
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
-| `CATEGORIES` | `565108,13896597011` | Amazon browse nodes: Laptops, Desktop Towers |
+| `CATEGORIES` | `565108,13896597011,284822` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards |
 | `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
 | `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
 | `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
@@ -125,6 +125,7 @@ a parent node covers its children.
 | `13896597011` | Desktops > Towers |
 | `13896591011` | Desktops > Minis |
 | `13896603011` | Desktops > All-in-Ones |
+| `284822` | Graphics Cards |
 
 Amazon's own category tagging is unreliable -- a 27" ASUS monitor turned up
 under Towers, and a Psycho box set under PlayStation 5 > Consoles. Expect the
@@ -133,3 +134,20 @@ occasional wrong-product-type alert.
 PlayStation was evaluated and dropped: consoles showed **zero** deals at even
 10% off across 90 days and three price types, so the filter would never fire.
 Sony holds console pricing too tightly for discounts to appear.
+
+## Per-category title filters
+
+`CATEGORY_TITLE_FILTERS` maps a category node to a regex its titles must match.
+Filters apply **only** to deals actually listed in that category, which matters:
+gaming laptop titles name their GPU ("Alienware 16 ... RTX 5070"), so a global
+title filter would silently gut the laptop feed.
+
+Graphics Cards (`284822`) is restricted to RTX 40/50-series. The pattern
+requires a real model tier -- `RTX\s*[45]0(50|60|70|80|90)` -- because the
+looser `RTX\s*(40|50)\d\d` also matches the **Quadro RTX 4000**, a 2018
+workstation card rather than a 40-series GeForce.
+
+Expect this feed to be quiet. Current-generation GPUs hold their price: across
+90 days the only RTX 40/50 card discounted at all was a 5060 Ti at 26%, under
+the default 35% floor. A 35%-off 40/50-series card is a genuinely rare event,
+which is arguably the point of watching for it.
