@@ -13,6 +13,7 @@ average -- filtering on any single range silently drops those.
 import gzip
 import json
 import os
+import re
 import ssl
 import sys
 import time
@@ -50,10 +51,42 @@ DOMAIN = 1                      # amazon.com
 #   565098       Desktops         13896591011  Desktops > Minis
 #   13896603011  Desktops > All-in-Ones
 # Keepa resolves child nodes automatically, so a parent covers its children.
+#   284822       Graphics Cards
 CATEGORIES = [
     int(x) for x in
-    os.environ.get("CATEGORIES", "565108,13896597011").split(",") if x.strip()
+    os.environ.get("CATEGORIES", "565108,13896597011,284822").split(",") if x.strip()
 ]
+
+# Title patterns applied only to deals in a given category. Scoping matters:
+# gaming laptop titles also name their GPU ("Alienware 16 ... RTX 5070"), so a
+# global title filter would silently gut the laptop feed.
+#
+# The GPU pattern requires a real 40/50-series model tier (4050-4090, 5050-5090)
+# rather than RTX\s*(40|50)\d\d, which also matches the Quadro RTX 4000 -- a
+# 2018 workstation card, not a 40-series GeForce.
+#
+# Laptops and towers must name a *discrete* GPU. Matching a bare "Radeon"
+# or "Arc" would let integrated graphics through -- "Ryzen 5 7520U with
+# Radeon 610M" is an iGPU, not a card -- so AMD requires the RX prefix and
+# Intel requires an Arc model number.
+# \W{0,4} rather than \s* between the brand and model number: vendors slip
+# trademark symbols in, e.g. "GeForce RTX (tm) 5080", which \s* misses.
+_DISCRETE_GPU = re.compile(
+    r"(GeForce|RTX\W{0,4}A?\d{3,4}|GTX\W{0,4}\d{3,4}"
+    r"|Radeon\W{0,4}RX\W{0,4}\d{3,4}|Arc\W{0,4}A\d{3}|Quadro)",
+    re.I,
+)
+
+# Keyed on the *leaf* nodes products are actually tagged with, not the
+# parents we query. includeCategories=565108 (Laptops) returns items tagged
+# 13896615011 / 13896609011 and never 565108 itself, so a filter keyed on the
+# parent silently matches nothing and lets everything through.
+CATEGORY_TITLE_FILTERS = {
+    284822: re.compile(r"RTX\W{0,4}[45]0(50|60|70|80|90)", re.I),  # Graphics Cards
+    13896615011: _DISCRETE_GPU,  # Traditional Laptops
+    13896609011: _DISCRETE_GPU,  # 2 in 1 Laptops
+    13896597011: _DISCRETE_GPU,  # Desktop Towers
+}
 # Keepa priceTypes. Only one per query -- each extra type is another call
 # (another 5 tokens). This same value indexes the current/avg/deltaPercent
 # arrays on the deal object, so it must stay in sync with the query.
@@ -166,6 +199,20 @@ def fetch_union():
         for d in (resp.get("deals") or {}).get("dr") or []:
             union.setdefault(d["asin"], d)
     return union, tokens_left
+
+
+def passes_title_filter(deal):
+    """Apply a category's title pattern, if it has one.
+
+    Only deals actually listed in that category are tested, so a gaming
+    laptop naming an RTX card in its title isn't judged by the GPU rule.
+    """
+    cats = deal.get("categories") or []
+    title = deal.get("title") or ""
+    for cat_id, pattern in CATEGORY_TITLE_FILTERS.items():
+        if cat_id in cats and not pattern.search(title):
+            return False
+    return True
 
 
 def deal_age_hours(deal):
@@ -351,31 +398,50 @@ def main():
     union, tokens_left = fetch_union()
     recent = {
         asin: d for asin, d in union.items()
-        if deal_age_hours(d) <= MAX_AGE_HOURS
+        if deal_age_hours(d) <= MAX_AGE_HOURS and passes_title_filter(d)
     }
 
-    # An ASIN alerts when it's genuinely unseen, or when it has become
-    # meaningfully cheaper than the best price we've ever reported for it --
-    # across *every* deal type, not just this one. Comparing only within the
-    # current type would re-announce the same laptop each time the rotation
-    # switches, since the two feeds quote it within a few dollars.
-    def best_reported(asin):
-        prices = [
-            m[asin] for m in seen_all.values()
-            if isinstance(m, dict) and m.get(asin)
-        ]
-        return min(prices) if prices else None
+    # Dedup on Keepa's deal event, not just price.
+    #
+    # Keying purely on "cheapest price ever recorded" deadlocks the feed:
+    # every observed deal is written to state whether or not it was actually
+    # sent, so an item that was muted once needs a 5% drop to ever alert --
+    # even though you never heard about it. Observed live, five consecutive
+    # deals sat muted for a day, three at exactly the recorded price.
+    #
+    # creationDate is when Keepa flagged this as a deal. A newer one is a
+    # genuinely new event and worth reporting regardless of price history,
+    # while the same event re-seen every 7 minutes (or under the other deal
+    # type) stays quiet.
+    def prior(asin):
+        for m in seen_all.values():
+            if isinstance(m, dict) and isinstance(m.get(asin), dict):
+                yield m[asin]
 
     new_items = []
     suppressed = 0
     for asin, deal in recent.items():
         price = price_of(deal)
-        baseline = best_reported(asin)
-        if baseline is None:
+        created = deal.get("creationDate") or 0
+        records = list(prior(asin))
+
+        if not records:
             new_items.append(deal)
-        elif price is not None and price <= baseline * (1 - MIN_REALERT_DROP / 100.0):
+            continue
+
+        newest_seen = max(r.get("created", 0) for r in records)
+        cheapest = min(
+            (r["price"] for r in records if r.get("price")), default=None
+        )
+        is_new_event = created > newest_seen
+        is_real_drop = (
+            price is not None
+            and cheapest is not None
+            and price <= cheapest * (1 - MIN_REALERT_DROP / 100.0)
+        )
+        if is_new_event or is_real_drop:
             new_items.append(deal)
-        elif asin not in seen:
+        else:
             suppressed += 1
 
     print(
@@ -412,7 +478,12 @@ def main():
         return
 
     seen_all[str(PRICE_TYPE)] = {
-        asin: price_of(d) for asin, d in recent.items() if price_of(d)
+        asin: {
+            "created": d.get("creationDate") or 0,
+            "price": price_of(d),
+        }
+        for asin, d in recent.items()
+        if price_of(d)
     }
     state["seen"] = seen_all
     state["rotation"] = cursor + 1
