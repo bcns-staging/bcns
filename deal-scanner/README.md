@@ -147,7 +147,20 @@ requires a real model tier -- `RTX\s*[45]0(50|60|70|80|90)` -- because the
 looser `RTX\s*(40|50)\d\d` also matches the **Quadro RTX 4000**, a 2018
 workstation card rather than a 40-series GeForce.
 
-Expect this feed to be quiet. Current-generation GPUs hold their price: across
+Laptops and towers must name a discrete GPU, which drops integrated-graphics
+machines (Surface Laptop, OmniBook, Vivobook Go) and keeps gaming and
+workstation hardware (Razer Blade, Alienware, ROG Zephyrus, iBUYPOWER). On a
+144-deal sample that keeps 19 and drops 125. AMD requires the `RX` prefix and
+Intel an Arc model number, since a bare "Radeon" or "Arc" matches iGPUs like
+the "Radeon 610M".
+
+**Filters key on leaf category nodes, not the parents you query.**
+`includeCategories=565108` (Laptops) returns items tagged `13896615011` or
+`13896609011` and never `565108` itself, so a filter keyed on the parent
+silently matches nothing and lets everything through. Towers (`13896597011`)
+and Graphics Cards (`284822`) are leaves and are tagged directly.
+
+Expect the GPU feed to be quiet. Current-generation GPUs hold their price: across
 90 days the only RTX 40/50 card discounted at all was a 5060 Ti at 26%, under
 the default 35% floor. A 35%-off 40/50-series card is a genuinely rare event,
 which is arguably the point of watching for it.
