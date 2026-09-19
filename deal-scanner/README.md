@@ -29,6 +29,7 @@ python3 scanner.py
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
 | `CATEGORIES` | `565108,13896597011,284822` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards |
 | `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
+| `BUYBOX_MACHINE_MAX` | `1500` | Price ceiling for laptops/towers on the Buy Box feed only |
 | `PRICE_TYPES` | `19,32,18` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used, 18=Buy Box) |
 | `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
 | `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
@@ -101,10 +102,17 @@ rotated across runs rather than fetched together -- each extra type in a single
 run costs another 5 tokens. With three types on a 7-minute schedule, each is
 checked every 21 minutes at no extra cost.
 
-Buy Box (`18`, new condition) is a far wider feed than the used types --
-it hits the 150-result page cap and surfaced 34 deals in a 24-hour window
-where both used types had none, since far more new products get discounted
-than used ones.
+Buy Box (`18`, new condition) looks far wider than the used types -- it hits
+the 150-result page cap and surfaced 34 deals in a 24-hour window where both
+used types had none. That volume is mostly illusory: 32 of those 34 were
+near-identical "Adamant Custom" workstation builds from a single seller,
+priced $3,600-$10,750.
+
+`BUYBOX_MACHINE_MAX` caps laptops and towers on that feed at $1,500, which
+removes the vendor spam and leaves genuine signal. GPUs are exempt (a 5090 is
+legitimately dear) and so are the used feeds, which already price well below
+new. Keepa's own `currentRange` can't express this -- it applies to the whole
+query, so it would cap GPUs and the used feeds too.
 
 The rotation cursor lives in state, and each type keeps its **own** seen-map:
 the same ASIN can appear under both types at different prices, and a shared map

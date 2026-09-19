@@ -81,6 +81,17 @@ _DISCRETE_GPU = re.compile(
 # parents we query. includeCategories=565108 (Laptops) returns items tagged
 # 13896615011 / 13896609011 and never 565108 itself, so a filter keyed on the
 # parent silently matches nothing and lets everything through.
+# Leaf nodes for "a whole machine" as opposed to a component.
+MACHINE_CATEGORIES = {13896615011, 13896609011, 13896597011}
+
+# Price ceiling for machines on the Buy Box (new) feed only. That feed runs
+# roughly an order of magnitude wider than the used ones -- it hits the
+# 150-result cap where the used types return nothing -- and expensive new
+# hardware carries the thinnest resale margin, so it is capped separately.
+# Keepa's own currentRange can't express this: it applies to the whole query,
+# so it would cap GPUs and the used feeds too.
+BUYBOX_MACHINE_MAX = float(os.environ.get("BUYBOX_MACHINE_MAX", "1500"))
+
 CATEGORY_TITLE_FILTERS = {
     284822: re.compile(r"RTX\W{0,4}[45]0(50|60|70|80|90)", re.I),  # Graphics Cards
     13896615011: _DISCRETE_GPU,  # Traditional Laptops
@@ -214,6 +225,20 @@ def passes_title_filter(deal):
         if cat_id in cats and not pattern.search(title):
             return False
     return True
+
+
+def passes_price_cap(deal):
+    """Cap machine prices on the Buy Box (new) feed only.
+
+    GPUs are exempt (a 5090 is legitimately dear), and the used feeds are
+    exempt since they're already thin and priced well below new.
+    """
+    if PRICE_TYPE != 18:
+        return True
+    if not (set(deal.get("categories") or []) & MACHINE_CATEGORIES):
+        return True
+    price = price_of(deal)
+    return price is None or price <= BUYBOX_MACHINE_MAX * 100
 
 
 def deal_age_hours(deal):
@@ -399,7 +424,9 @@ def main():
     union, tokens_left = fetch_union()
     recent = {
         asin: d for asin, d in union.items()
-        if deal_age_hours(d) <= MAX_AGE_HOURS and passes_title_filter(d)
+        if deal_age_hours(d) <= MAX_AGE_HOURS
+        and passes_title_filter(d)
+        and passes_price_cap(d)
     }
 
     # Dedup on Keepa's deal event, not just price.
