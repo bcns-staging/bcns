@@ -51,10 +51,11 @@ DOMAIN = 1                      # amazon.com
 #   565098       Desktops         13896591011  Desktops > Minis
 #   13896603011  Desktops > All-in-Ones
 # Keepa resolves child nodes automatically, so a parent covers its children.
-#   284822       Graphics Cards
+#   284822       Graphics Cards   172500  Memory
 CATEGORIES = [
     int(x) for x in
-    os.environ.get("CATEGORIES", "565108,13896597011,284822").split(",") if x.strip()
+    os.environ.get("CATEGORIES", "565108,13896597011,284822,172500").split(",")
+    if x.strip()
 ]
 
 # Title patterns applied only to deals in a given category. Scoping matters:
@@ -81,11 +82,27 @@ _DISCRETE_GPU = re.compile(
 # parents we query. includeCategories=565108 (Laptops) returns items tagged
 # 13896615011 / 13896609011 and never 565108 itself, so a filter keyed on the
 # parent silently matches nothing and lets everything through.
+# Leaf nodes for "a whole machine" as opposed to a component.
+MACHINE_CATEGORIES = {13896615011, 13896609011, 13896597011}
+
+# Price ceiling for machines on the Buy Box (new) feed only. That feed runs
+# roughly an order of magnitude wider than the used ones -- it hits the
+# 150-result cap where the used types return nothing -- and expensive new
+# hardware carries the thinnest resale margin, so it is capped separately.
+# Keepa's own currentRange can't express this: it applies to the whole query,
+# so it would cap GPUs and the used feeds too.
+BUYBOX_MACHINE_MAX = float(os.environ.get("BUYBOX_MACHINE_MAX", "1500"))
+
 CATEGORY_TITLE_FILTERS = {
     284822: re.compile(r"RTX\W{0,4}[45]0(50|60|70|80|90)", re.I),  # Graphics Cards
     13896615011: _DISCRETE_GPU,  # Traditional Laptops
     13896609011: _DISCRETE_GPU,  # 2 in 1 Laptops
     13896597011: _DISCRETE_GPU,  # Desktop Towers
+    # Memory: DDR5 only. The negative lookbehind matters -- a bare DDR5 also
+    # matches GDDR5, the memory soldered onto graphics cards, and miscategorised
+    # products are common enough here to hit it (this category also returns
+    # network cables and microcontrollers).
+    172500: re.compile(r"(?<!G)DDR5", re.I),
 }
 # Keepa priceTypes. Only one per query -- each extra type is another call
 # (another 5 tokens). This same value indexes the current/avg/deltaPercent
@@ -95,6 +112,7 @@ PRICE_TYPE_LABELS = {
     1: "Marketplace New",
     2: "Used",
     9: "Warehouse",
+    18: "Buy Box",
     19: "Used - Like New",
     20: "Used - Very Good",
     21: "Used - Good",
@@ -213,6 +231,20 @@ def passes_title_filter(deal):
         if cat_id in cats and not pattern.search(title):
             return False
     return True
+
+
+def passes_price_cap(deal):
+    """Cap machine prices on the Buy Box (new) feed only.
+
+    GPUs are exempt (a 5090 is legitimately dear), and the used feeds are
+    exempt since they're already thin and priced well below new.
+    """
+    if PRICE_TYPE != 18:
+        return True
+    if not (set(deal.get("categories") or []) & MACHINE_CATEGORIES):
+        return True
+    price = price_of(deal)
+    return price is None or price <= BUYBOX_MACHINE_MAX * 100
 
 
 def deal_age_hours(deal):
@@ -398,7 +430,9 @@ def main():
     union, tokens_left = fetch_union()
     recent = {
         asin: d for asin, d in union.items()
-        if deal_age_hours(d) <= MAX_AGE_HOURS and passes_title_filter(d)
+        if deal_age_hours(d) <= MAX_AGE_HOURS
+        and passes_title_filter(d)
+        and passes_price_cap(d)
     }
 
     # Dedup on Keepa's deal event, not just price.

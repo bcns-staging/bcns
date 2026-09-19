@@ -27,9 +27,10 @@ python3 scanner.py
 | `DISCORD_WEBHOOK_URL` | *(required)* | Discord channel webhook |
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
-| `CATEGORIES` | `565108,13896597011,284822` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards |
+| `CATEGORIES` | `565108,13896597011,284822,172500` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards, Memory |
 | `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
-| `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
+| `BUYBOX_MACHINE_MAX` | `1500` | Price ceiling for laptops/towers on the Buy Box feed only |
+| `PRICE_TYPES` | `19,32,18` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used, 18=Buy Box) |
 | `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
 | `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
 | `DATE_RANGES` | `3` | Keepa buckets: 0=day, 1=week, 2=month, 3=90d. Comma-separated |
@@ -98,8 +99,20 @@ gcloud run jobs execute deal-scanner --region us-central1
 
 Keepa allows only one `priceTypes` value per query, so multiple deal types are
 rotated across runs rather than fetched together -- each extra type in a single
-run costs another 5 tokens. With two types on a 7-minute schedule, each is
-checked every 14 minutes at no extra cost.
+run costs another 5 tokens. With three types on a 7-minute schedule, each is
+checked every 21 minutes at no extra cost.
+
+Buy Box (`18`, new condition) looks far wider than the used types -- it hits
+the 150-result page cap and surfaced 34 deals in a 24-hour window where both
+used types had none. That volume is mostly illusory: 32 of those 34 were
+near-identical "Adamant Custom" workstation builds from a single seller,
+priced $3,600-$10,750.
+
+`BUYBOX_MACHINE_MAX` caps laptops and towers on that feed at $1,500, which
+removes the vendor spam and leaves genuine signal. GPUs are exempt (a 5090 is
+legitimately dear) and so are the used feeds, which already price well below
+new. Keepa's own `currentRange` can't express this -- it applies to the whole
+query, so it would cap GPUs and the used feeds too.
 
 The rotation cursor lives in state, and each type keeps its **own** seen-map:
 the same ASIN can appear under both types at different prices, and a shared map
@@ -126,6 +139,7 @@ a parent node covers its children.
 | `13896591011` | Desktops > Minis |
 | `13896603011` | Desktops > All-in-Ones |
 | `284822` | Graphics Cards |
+| `172500` | Memory |
 
 Amazon's own category tagging is unreliable -- a 27" ASUS monitor turned up
 under Towers, and a Psycho box set under PlayStation 5 > Consoles. Expect the
@@ -159,6 +173,12 @@ the "Radeon 610M".
 `13896609011` and never `565108` itself, so a filter keyed on the parent
 silently matches nothing and lets everything through. Towers (`13896597011`)
 and Graphics Cards (`284822`) are leaves and are tagged directly.
+
+Memory (`172500`) is restricted to DDR5 via `(?<!G)DDR5`. The negative
+lookbehind is load-bearing: a bare `DDR5` also matches **G**DDR5, the memory
+soldered onto graphics cards. Miscategorisation makes that a real risk -- this
+category also returns network cables and microcontrollers. LPDDR5 is allowed
+through. On a 150-deal sample it keeps 5, dropping DDR4/DDR3 and the junk.
 
 Expect the GPU feed to be quiet. Current-generation GPUs hold their price: across
 90 days the only RTX 40/50 card discounted at all was a 5060 Ti at 26%, under
