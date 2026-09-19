@@ -27,7 +27,7 @@ python3 scanner.py
 | `DISCORD_WEBHOOK_URL` | *(required)* | Discord channel webhook |
 | `STATE_PATH` | `state.json` | Where the "already sent" set is stored |
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
-| `CATEGORIES` | `565108,13896597011,284822` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards |
+| `CATEGORIES` | `565108,13896597011,284822,172500` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards, Memory |
 | `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
 | `BUYBOX_MACHINE_MAX` | `1500` | Price ceiling for laptops/towers on the Buy Box feed only |
 | `PRICE_TYPES` | `19,32,18` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used, 18=Buy Box) |
@@ -139,6 +139,7 @@ a parent node covers its children.
 | `13896591011` | Desktops > Minis |
 | `13896603011` | Desktops > All-in-Ones |
 | `284822` | Graphics Cards |
+| `172500` | Memory |
 
 Amazon's own category tagging is unreliable -- a 27" ASUS monitor turned up
 under Towers, and a Psycho box set under PlayStation 5 > Consoles. Expect the
@@ -172,6 +173,12 @@ the "Radeon 610M".
 `13896609011` and never `565108` itself, so a filter keyed on the parent
 silently matches nothing and lets everything through. Towers (`13896597011`)
 and Graphics Cards (`284822`) are leaves and are tagged directly.
+
+Memory (`172500`) is restricted to DDR5 via `(?<!G)DDR5`. The negative
+lookbehind is load-bearing: a bare `DDR5` also matches **G**DDR5, the memory
+soldered onto graphics cards. Miscategorisation makes that a real risk -- this
+category also returns network cables and microcontrollers. LPDDR5 is allowed
+through. On a 150-deal sample it keeps 5, dropping DDR4/DDR3 and the junk.
 
 Expect the GPU feed to be quiet. Current-generation GPUs hold their price: across
 90 days the only RTX 40/50 card discounted at all was a 5060 Ti at 26%, under

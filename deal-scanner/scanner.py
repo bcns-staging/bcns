@@ -51,10 +51,11 @@ DOMAIN = 1                      # amazon.com
 #   565098       Desktops         13896591011  Desktops > Minis
 #   13896603011  Desktops > All-in-Ones
 # Keepa resolves child nodes automatically, so a parent covers its children.
-#   284822       Graphics Cards
+#   284822       Graphics Cards   172500  Memory
 CATEGORIES = [
     int(x) for x in
-    os.environ.get("CATEGORIES", "565108,13896597011,284822").split(",") if x.strip()
+    os.environ.get("CATEGORIES", "565108,13896597011,284822,172500").split(",")
+    if x.strip()
 ]
 
 # Title patterns applied only to deals in a given category. Scoping matters:
@@ -97,6 +98,11 @@ CATEGORY_TITLE_FILTERS = {
     13896615011: _DISCRETE_GPU,  # Traditional Laptops
     13896609011: _DISCRETE_GPU,  # 2 in 1 Laptops
     13896597011: _DISCRETE_GPU,  # Desktop Towers
+    # Memory: DDR5 only. The negative lookbehind matters -- a bare DDR5 also
+    # matches GDDR5, the memory soldered onto graphics cards, and miscategorised
+    # products are common enough here to hit it (this category also returns
+    # network cables and microcontrollers).
+    172500: re.compile(r"(?<!G)DDR5", re.I),
 }
 # Keepa priceTypes. Only one per query -- each extra type is another call
 # (another 5 tokens). This same value indexes the current/avg/deltaPercent
