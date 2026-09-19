@@ -95,6 +95,7 @@ PRICE_TYPE_LABELS = {
     1: "Marketplace New",
     2: "Used",
     9: "Warehouse",
+    18: "Buy Box",
     19: "Used - Like New",
     20: "Used - Very Good",
     21: "Used - Good",

@@ -29,7 +29,7 @@ python3 scanner.py
 | `MIN_DISCOUNT` | `35` | Minimum % below average to alert on |
 | `CATEGORIES` | `565108,13896597011,284822` | Amazon browse nodes: Laptops, Desktop Towers, Graphics Cards |
 | `MIN_PRICE` / `MAX_PRICE` | `200` / `50000` | Price bounds in dollars |
-| `PRICE_TYPES` | `19,32` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used) |
+| `PRICE_TYPES` | `19,32,18` | Deal types to rotate through, one per run (19=Used-Like New, 32=Buy Box Used, 18=Buy Box) |
 | `MIN_REALERT_DROP` | `5` | How much cheaper (%) an already-alerted ASIN must get before alerting again |
 | `DRY_RUN` | `0` | `1` logs what would be posted instead of sending |
 | `DATE_RANGES` | `3` | Keepa buckets: 0=day, 1=week, 2=month, 3=90d. Comma-separated |
@@ -98,8 +98,13 @@ gcloud run jobs execute deal-scanner --region us-central1
 
 Keepa allows only one `priceTypes` value per query, so multiple deal types are
 rotated across runs rather than fetched together -- each extra type in a single
-run costs another 5 tokens. With two types on a 7-minute schedule, each is
-checked every 14 minutes at no extra cost.
+run costs another 5 tokens. With three types on a 7-minute schedule, each is
+checked every 21 minutes at no extra cost.
+
+Buy Box (`18`, new condition) is a far wider feed than the used types --
+it hits the 150-result page cap and surfaced 34 deals in a 24-hour window
+where both used types had none, since far more new products get discounted
+than used ones.
 
 The rotation cursor lives in state, and each type keeps its **own** seen-map:
 the same ASIN can appear under both types at different prices, and a shared map
